@@ -1,0 +1,7 @@
+# Dépendances de build (réinstallables avec npm install)
+node_modules/
+
+# Système / éditeur
+.DS_Store
+Thumbs.db
+*.log

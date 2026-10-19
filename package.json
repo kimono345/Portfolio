@@ -1,0 +1,12 @@
+{
+  "name": "portfolio-killian",
+  "private": true,
+  "description": "Outils de build du portfolio (le site publié est le dossier portfolio/)",
+  "scripts": {
+    "build:css": "tailwindcss -c tailwind.config.js -i tailwind.input.css -o portfolio/assets/css/tailwind.css --minify",
+    "watch:css": "tailwindcss -c tailwind.config.js -i tailwind.input.css -o portfolio/assets/css/tailwind.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}

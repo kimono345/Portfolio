@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grind Arena 3D</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; media-src 'self'; object-src 'none'; base-uri 'none'; frame-src 'none'">
+  <script type="module" crossorigin src="./assets/index-8GMOSnSI.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-1GoMZARq.css">
+</head>
+<body>
+  <div id="boot">
+    <div class="boot-mark">GRIND ARENA</div>
+    <div class="boot-bar"><span></span></div>
+  </div>
+  <div id="blocker">
+    <div id="instructions">
+      <p class="subtitle" data-i18n="menu.subtitle">The invasion has begun.</p>
+      <h1>Grind Arena</h1>
+      <div class="menu-actions">
+        <button id="btn-play" class="primary" data-i18n="menu.play">Play</button>
+        <div class="menu-actions-sub">
+          <button id="btn-options" data-i18n="menu.options">Options</button>
+          <button id="btn-debug" data-i18n="menu.debug">🛠 Debug</button>
+          <button id="btn-custom" data-i18n="menu.custom">Custom Mode</button>
+        </div>
+      </div>
+      <p class="small" data-i18n="menu.controls">
+        WASD / ZQSD: move &middot; Mouse: aim &middot; Left click: shoot &middot;
+        R: reload &middot; F: ultimate &middot; Shift: sprint &middot; Esc: pause
+      </p>
+    </div>
+  </div>
+  <div id="scope"></div>
+  <div id="crosshair"></div>
+  <div id="spellring"></div>
+  <canvas id="game"></canvas>
+</body>
+</html> 

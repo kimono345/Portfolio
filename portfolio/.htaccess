@@ -1,0 +1,8 @@
+# Les pages HTML doivent toujours être revérifiées auprès du serveur :
+# sans ça, le navigateur peut garder une ancienne version plusieurs jours.
+# (CSS et JS portent un numéro de version ?v=… dans les URL, ils peuvent rester en cache.)
+<IfModule mod_headers.c>
+    <FilesMatch "\.html$">
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
+</IfModule>

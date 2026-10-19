@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Killian Roche Rodriguez | Développeur full-stack</title>
+    <meta name="description" content="Portfolio de Killian Roche Rodriguez, développeur full-stack en alternance (BUT Informatique, Anglet). Applications web, 3D et jeux vidéo.">
+    <meta name="theme-color" content="#04050c">
+
+    <!-- Icônes -->
+    <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+
+    <!-- Aperçu de partage (LinkedIn, Discord, WhatsApp…).
+         Une fois le site en ligne, remplacer les chemins par des URL absolues (https://…), exigées par la plupart des réseaux. -->
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:title" content="Killian Roche Rodriguez · Développeur full-stack">
+    <meta property="og:description" content="Applications web, interfaces 3D et jeux vidéo. Développeur full-stack en alternance, ouvert aux missions freelance.">
+    <meta property="og:image" content="assets/img/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons CDN -->
+    <script defer src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+
+    <!-- Three.js CDN Stable -->
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- Styles du site + Tailwind compilé (généré par « npm run build:css » depuis portfolio_espace/, ne pas modifier à la main) -->
+    <link rel="stylesheet" href="assets/css/style.css?v=202610191611">
+    <link rel="stylesheet" href="assets/css/tailwind.css?v=202610191611">
+    <script>try { if (localStorage.getItem('portfolio-mode') === 'pro') document.documentElement.dataset.mode = 'pro'; } catch (e) {}</script>
+</head>
+<body class="selection:bg-brand-gold/20 selection:text-brand-gold">
+
+    <!-- ARRIÈRE-PLAN THREE.JS (Espace : étoiles, nébuleuses, étoiles filantes) -->
+    <div id="canvas-container"></div>
+
+    <!-- HEADER / NAVIGATION FLOTTANTE -->
+    <header class="fixed top-0 left-0 right-0 z-50 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+
+            <!-- Logo -->
+            <a href="#hero" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 rounded-xl bg-brand-card border border-brand-gold/30 flex items-center justify-center font-bold text-sm text-brand-gold group-hover:border-brand-gold transition-all shadow-md">
+                    KR
+                </div>
+                <div class="flex flex-col md:hidden lg:flex">
+                    <span class="font-bold text-sm text-white group-hover:text-brand-gold transition-colors whitespace-nowrap"><span class="md:hidden xl:inline">Killian Roche Rodriguez</span><span class="hidden md:inline xl:hidden">Killian R.</span></span>
+                    <span class="text-[10px] tracking-widest uppercase text-brand-muted whitespace-nowrap">Développeur full-stack</span>
+                </div>
+            </a>
+
+            <!-- Navigation Desktop -->
+            <nav class="hidden md:flex items-center gap-5 lg:gap-7 font-medium text-xs tracking-wider uppercase text-slate-300 glass-panel px-6 lg:px-8 py-3 rounded-full border border-white/10 shadow-lg">
+                <a href="#about" class="nav-link hover:text-brand-gold transition-colors">À Propos</a>
+                <a href="#experience" class="nav-link hover:text-brand-gold transition-colors">Parcours</a>
+                <a href="#skills" class="nav-link hover:text-brand-gold transition-colors">Compétences</a>
+                <a href="#projects" class="nav-link hover:text-brand-gold transition-colors">Projets</a>
+                <a href="#contact" class="nav-link hover:text-brand-gold transition-colors">Contact</a>
+            </nav>
+
+            <div class="flex items-center gap-3">
+                <!-- sur téléphone, le sélecteur est dans le menu ☰ (sinon il touche le nom) -->
+                <div class="mode-switch mode-switch--header" role="group" aria-label="Ambiance du site">
+                    <button type="button" data-mode-set="space" title="Mode espace"><i data-lucide="rocket" class="w-3.5 h-3.5"></i><span class="hidden xl:inline">Espace</span></button>
+                    <button type="button" data-mode-set="pro" title="Mode pro"><i data-lucide="briefcase" class="w-3.5 h-3.5"></i><span class="hidden xl:inline">Pro</span></button>
+                </div>
+
+                <!-- Statut (mène au contact ; le lien Contact est déjà dans le menu) -->
+                <a href="#contact" class="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-medium text-emerald-400 hover:bg-emerald-500/20 transition-colors whitespace-nowrap">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="xl:hidden">Freelance</span>
+                    <span class="hidden xl:inline">Ouvert aux missions freelance</span>
+                </a>
+
+                <!-- Bouton Mobile -->
+                <button id="mobile-menu-btn" class="md:hidden text-slate-300 hover:text-white p-2" aria-label="Ouvrir le menu">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Menu Mobile -->
+        <div id="mobile-menu" class="hidden md:hidden bg-brand-card/95 backdrop-blur-xl border-b border-brand-border px-6 py-6 flex-col gap-4 text-sm font-medium text-slate-300">
+            <a href="#about" class="mobile-link hover:text-brand-gold py-1">À Propos</a>
+            <a href="#experience" class="mobile-link hover:text-brand-gold py-1">Parcours</a>
+            <a href="#skills" class="mobile-link hover:text-brand-gold py-1">Compétences</a>
+            <a href="#projects" class="mobile-link hover:text-brand-gold py-1">Projets</a>
+            <a href="#contact" class="mobile-link hover:text-brand-gold py-1">Contact</a>
+            <div class="flex items-center justify-between pt-4 mt-1 border-t border-white/10">
+                <span class="text-xs uppercase tracking-wider text-brand-muted">Ambiance</span>
+                <div class="mode-switch" role="group" aria-label="Ambiance du site">
+                    <button type="button" data-mode-set="space"><i data-lucide="rocket" class="w-3.5 h-3.5"></i>Espace</button>
+                    <button type="button" data-mode-set="pro"><i data-lucide="briefcase" class="w-3.5 h-3.5"></i>Pro</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="relative z-10">
+
+        <!-- HERO SECTION -->
+        <section id="hero" class="min-h-screen flex items-center justify-center pt-24 pb-16 px-6 relative">
+            <div class="max-w-4xl mx-auto text-center space-y-8 my-auto">
+
+                <!-- Badge Statut -->
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-brand-gold/30 bg-brand-card/60 text-brand-muted text-xs font-medium tracking-wide backdrop-blur-md">
+                    <span class="w-2 h-2 rounded-full bg-brand-gold animate-ping"></span>
+                    <span>Développeur full-stack en alternance · BUT Informatique</span>
+                </div>
+
+                <!-- Grand Titre -->
+                <h1 class="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.12]">
+                    Faire de mes idées <br class="hidden sm:inline">
+                    <span class="text-gradient-gold">des projets bien réels.</span>
+                </h1>
+
+                <!-- Sous-titre -->
+                <p class="max-w-2xl mx-auto text-slate-300 text-base sm:text-lg font-normal leading-relaxed">
+                    Je suis Killian, développeur full-stack en alternance au Pays basque. J'aime partir d'une idée, me creuser la tête et la transformer en application concrète, du backend jusqu'aux interfaces 3D.
+                </p>
+
+                <!-- Boutons CTA HERO -->
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+                    <a href="#projects" class="w-full sm:w-auto px-8 py-3.5 rounded-lg bg-white text-brand-bg font-semibold text-sm hover:bg-brand-gold transition-all duration-300 flex items-center justify-center gap-2 shadow-xl shadow-black/40">
+                        <span>Explorer mes projets</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </a>
+                    <a href="#contact" class="w-full sm:w-auto px-8 py-3.5 rounded-lg glass-panel text-white font-medium text-sm hover:bg-white/10 transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="mail" class="w-4 h-4 text-brand-gold"></i>
+                        <span>Me contacter</span>
+                    </a>
+                </div>
+
+                <!-- Réseaux sociaux -->
+                <div class="pt-8 flex items-center justify-center gap-6 text-brand-muted">
+                    <a href="https://github.com/kimono345" target="_blank" rel="noopener" class="hover:text-white transition-colors" aria-label="GitHub"><i data-lucide="github" class="w-5 h-5"></i></a>
+                    <a href="mailto:killianrocherodriguez@gmail.com" class="hover:text-white transition-colors" aria-label="Email"><i data-lucide="mail" class="w-5 h-5"></i></a>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECTION À PROPOS -->
+        <section id="about" class="py-28 px-6 max-w-6xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-12 items-center">
+
+                <!-- Carte d'identité -->
+                <div class="md:col-span-5">
+                    <div class="relative max-w-sm mx-auto">
+                        <div class="aspect-[4/5] rounded-2xl glass-panel overflow-hidden p-3 relative">
+                            <div class="w-full h-full rounded-xl id-card flex flex-col items-center justify-center text-center p-6">
+                                <div class="w-24 h-24 rounded-full bg-brand-gold/10 border border-brand-gold/40 flex items-center justify-center mb-4 text-brand-gold text-3xl font-extrabold tracking-wide shadow-inner">
+                                    KR
+                                </div>
+                                <span class="font-bold text-xl text-white">Killian Roche Rodriguez</span>
+                                <span class="text-xs text-brand-gold font-medium mt-1">Développeur full-stack en alternance</span>
+                                <span class="text-xs text-brand-muted mt-3 flex items-center gap-1.5">
+                                    <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> Saint-Pierre-d'Irube (64)
+                                </span>
+                                <span class="text-xs text-brand-muted mt-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i> BUT Informatique · 3e année
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Présentation -->
+                <div class="md:col-span-7 space-y-6">
+                    <div class="space-y-2">
+                        <span class="text-xs uppercase tracking-widest text-brand-gold font-bold">À Propos</span>
+                        <h2 class="text-3xl sm:text-4xl font-bold text-white leading-tight">Des idées, du code, et l'envie de chercher.</h2>
+                    </div>
+
+                    <p class="text-slate-300 leading-relaxed text-sm sm:text-base">
+                        Étudiant en 3e année de BUT Informatique à Anglet, je suis en alternance chez <strong>Burographic</strong>. J'y développe des outils internes, comme un module d'archivage de documents avec OCR, et j'accompagne aussi l'installation de matériel informatique chez les clients.
+                    </p>
+                    <p class="text-slate-300 leading-relaxed text-sm sm:text-base">
+                        Ce qui me plaît dans le développement, c'est de partir d'une idée et de la rendre réelle, en me creusant la tête pour trouver comment. J'aime particulièrement la <strong>3D</strong> et le <strong>développement de jeux vidéo</strong> : ce portfolio, son système solaire et plusieurs de mes projets en sont le résultat.
+                    </p>
+
+                    <div class="pt-4 flex flex-wrap gap-3">
+                        <span class="px-3.5 py-1.5 rounded-lg bg-brand-card border border-brand-border text-xs font-medium text-slate-300 flex items-center gap-2">
+                            <i data-lucide="briefcase" class="w-3.5 h-3.5 text-brand-gold"></i> Expérience en entreprise
+                        </span>
+                        <span class="px-3.5 py-1.5 rounded-lg bg-brand-card border border-brand-border text-xs font-medium text-slate-300 flex items-center gap-2">
+                            <i data-lucide="box" class="w-3.5 h-3.5 text-brand-gold"></i> Interfaces 3D
+                        </span>
+                        <span class="px-3.5 py-1.5 rounded-lg bg-brand-card border border-brand-border text-xs font-medium text-slate-300 flex items-center gap-2">
+                            <i data-lucide="gamepad-2" class="w-3.5 h-3.5 text-brand-gold"></i> Jeux vidéo & game dev
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECTION PARCOURS ET TIMELINE -->
+        <section id="experience" class="py-28 px-6 max-w-5xl mx-auto border-t border-brand-border">
+            <div class="text-center max-w-2xl mx-auto mb-16 space-y-3">
+                <span class="text-xs uppercase tracking-widest text-brand-gold font-bold">Parcours</span>
+                <h2 class="text-3xl sm:text-4xl font-bold text-white">Expériences & Formation</h2>
+            </div>
+
+            <div class="relative border-l border-brand-border/80 pl-6 sm:pl-8 ml-2 sm:ml-32 space-y-12">
+
+                <!-- Alternance -->
+                <div class="relative group">
+                    <div class="sm:absolute sm:-left-40 sm:top-0 text-xs font-bold text-brand-gold uppercase tracking-wider mb-2 sm:mb-0">
+                        2026 — Présent
+                    </div>
+                    <div class="absolute -left-[31px] sm:-left-[39px] top-1.5 w-3.5 h-3.5 rounded-full bg-brand-gold border-4 border-brand-bg shadow-md shadow-brand-gold/50"></div>
+
+                    <div class="glass-panel p-6 sm:p-7 rounded-2xl space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <h3 class="text-lg font-bold text-white">Développeur full-stack en alternance</h3>
+                            <span class="text-xs font-semibold text-brand-gold px-3 py-1 rounded-full bg-brand-gold/10 border border-brand-gold/20">Burographic</span>
+                        </div>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            Développement du module interne d'archivage de documents avec OCR (base MySQL, complément Microsoft Outlook). Participation à l'installation de matériel informatique chez les clients : serveurs et copieurs.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Stage -->
+                <div class="relative group">
+                    <div class="sm:absolute sm:-left-40 sm:top-0 text-xs font-semibold text-brand-muted uppercase tracking-wider mb-2 sm:mb-0">
+                        Avr. — Juin 2026
+                    </div>
+                    <div class="absolute -left-[31px] sm:-left-[39px] top-1.5 w-3.5 h-3.5 rounded-full bg-brand-border border-4 border-brand-bg group-hover:bg-brand-gold transition-colors"></div>
+
+                    <div class="glass-panel p-6 sm:p-7 rounded-2xl space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <h3 class="text-lg font-bold text-white">Stage de développement · 2 mois</h3>
+                            <span class="tag text-xs font-medium px-3 py-1 rounded-full">Burographic</span>
+                        </div>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            Premier contact avec l'entreprise : démarrage du module d'archivage OCR et interventions chez les clients pour l'installation de serveurs et de copieurs. Ce stage a débouché sur l'alternance.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- BUT -->
+                <div class="relative group">
+                    <div class="sm:absolute sm:-left-40 sm:top-0 text-xs font-semibold text-brand-muted uppercase tracking-wider mb-2 sm:mb-0">
+                        2024 — 2027
+                    </div>
+                    <div class="absolute -left-[31px] sm:-left-[39px] top-1.5 w-3.5 h-3.5 rounded-full bg-brand-border border-4 border-brand-bg group-hover:bg-brand-gold transition-colors"></div>
+
+                    <div class="glass-panel p-6 sm:p-7 rounded-2xl space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <h3 class="text-lg font-bold text-white">BUT Informatique</h3>
+                            <span class="tag text-xs font-medium px-3 py-1 rounded-full">IUT de Bayonne et du Pays Basque · Anglet</span>
+                        </div>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            En 3e année, en alternance. Développement web et logiciel, bases de données, projets de groupe comme GreenScore Web, un plugin qui mesure l'empreinte carbone des sites visités.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Bac -->
+                <div class="relative group">
+                    <div class="sm:absolute sm:-left-40 sm:top-0 text-xs font-semibold text-brand-muted uppercase tracking-wider mb-2 sm:mb-0">
+                        2024
+                    </div>
+                    <div class="absolute -left-[31px] sm:-left-[39px] top-1.5 w-3.5 h-3.5 rounded-full bg-brand-border border-4 border-brand-bg group-hover:bg-brand-gold transition-colors"></div>
+
+                    <div class="glass-panel p-6 sm:p-7 rounded-2xl space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <h3 class="text-lg font-bold text-white">Baccalauréat général</h3>
+                            <span class="tag text-xs font-medium px-3 py-1 rounded-full">Lycée René Cassin · Bayonne</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECTION COMPÉTENCES -->
+        <section id="skills" class="py-28 px-6 max-w-6xl mx-auto border-t border-brand-border">
+            <div class="text-center max-w-2xl mx-auto mb-16 space-y-3">
+                <span class="text-xs uppercase tracking-widest text-brand-gold font-bold">Compétences</span>
+                <h2 class="text-3xl sm:text-4xl font-bold text-white">Ce que j'utilise</h2>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                <div class="glass-panel p-6 rounded-2xl space-y-5">
+                    <div class="flex items-center gap-3 border-b border-brand-border/50 pb-4">
+                        <div class="p-2.5 rounded-xl bg-brand-gold/10 text-brand-gold border border-brand-gold/20">
+                            <i data-lucide="code-2" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="font-bold text-white">Langages</h3>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-xs font-medium text-slate-300">
+                        <span class="tag px-2.5 py-1 rounded-md">PHP</span>
+                        <span class="tag px-2.5 py-1 rounded-md">JavaScript</span>
+                        <span class="tag px-2.5 py-1 rounded-md">Java</span>
+                        <span class="tag px-2.5 py-1 rounded-md">C++</span>
+                        <span class="tag px-2.5 py-1 rounded-md">Rust</span>
+                        <span class="tag px-2.5 py-1 rounded-md">SQL</span>
+                        <span class="tag px-2.5 py-1 rounded-md">HTML / CSS</span>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6 rounded-2xl space-y-5">
+                    <div class="flex items-center gap-3 border-b border-brand-border/50 pb-4">
+                        <div class="p-2.5 rounded-xl bg-brand-indigo/10 text-brand-indigo border border-brand-indigo/20">
+                            <i data-lucide="server" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="font-bold text-white">Web & Backend</h3>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-xs font-medium text-slate-300">
+                        <span class="tag px-2.5 py-1 rounded-md">MySQL</span>
+                        <span class="tag px-2.5 py-1 rounded-md">PDO</span>
+                        <span class="tag px-2.5 py-1 rounded-md">API REST</span>
+                        <span class="tag px-2.5 py-1 rounded-md">Authentification JWT</span>
+                        <span class="tag px-2.5 py-1 rounded-md">Tailwind CSS</span>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6 rounded-2xl space-y-5">
+                    <div class="flex items-center gap-3 border-b border-brand-border/50 pb-4">
+                        <div class="p-2.5 rounded-xl bg-brand-gold/10 text-brand-gold border border-brand-gold/20">
+                            <i data-lucide="box" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="font-bold text-white">3D & Jeux</h3>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-xs font-medium text-slate-300">
+                        <span class="tag px-2.5 py-1 rounded-md">Three.js</span>
+                        <span class="tag px-2.5 py-1 rounded-md">WebGL</span>
+                        <span class="tag px-2.5 py-1 rounded-md">Canvas API</span>
+                        <span class="tag px-2.5 py-1 rounded-md">Game design</span>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6 rounded-2xl space-y-5">
+                    <div class="flex items-center gap-3 border-b border-brand-border/50 pb-4">
+                        <div class="p-2.5 rounded-xl bg-brand-indigo/10 text-brand-indigo border border-brand-indigo/20">
+                            <i data-lucide="wrench" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="font-bold text-white">Outils & Terrain</h3>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-xs font-medium text-slate-300">
+                        <span class="tag px-2.5 py-1 rounded-md">Git</span>
+                        <span class="tag px-2.5 py-1 rounded-md">Composer</span>
+                        <span class="tag px-2.5 py-1 rounded-md">OCR</span>
+                        <span class="tag px-2.5 py-1 rounded-md">Installation serveurs & copieurs</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Langues -->
+            <div class="mt-6 glass-panel p-5 rounded-2xl flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm">
+                <span class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-muted"><i data-lucide="languages" class="w-4 h-4 text-brand-gold"></i> Langues</span>
+                <span class="text-white font-medium">Français <span class="text-brand-muted font-normal">· langue maternelle</span></span>
+                <span class="text-white font-medium">Anglais <span class="text-brand-muted font-normal">· B1</span></span>
+                <span class="text-white font-medium">Espagnol <span class="text-brand-muted font-normal">· A2</span></span>
+            </div>
+        </section>
+
+        <!-- SECTION PROJETS : vue grille (par défaut) ou vue univers 3D, mêmes données (assets/js/projects.js) -->
+        <section id="projects" class="py-28 px-6 max-w-7xl mx-auto border-t border-brand-border">
+            <div class="text-center max-w-2xl mx-auto mb-8 space-y-3">
+                <span class="text-xs uppercase tracking-widest text-brand-gold font-bold">Projets</span>
+                <h2 class="text-3xl sm:text-4xl font-bold text-white">Ce que j'ai construit</h2>
+                <p class="text-slate-300 text-sm leading-relaxed" data-view-text="grid">
+                    Filtrez par type ou par technologie, ou passez en vue Univers pour les explorer en 3D.
+                </p>
+                <p class="text-slate-300 text-sm leading-relaxed" data-view-text="universe" hidden>
+                    Chaque planète est un projet. Pilotez le vaisseau, approchez-vous d'une planète et ouvrez-la pour l'explorer.
+                </p>
+            </div>
+
+            <!-- Choix de la vue -->
+            <div class="flex justify-center mb-10">
+                <div class="view-switch" role="tablist" aria-label="Affichage des projets">
+                    <button type="button" role="tab" data-view="grid" aria-selected="true"><i data-lucide="layout-grid" class="w-4 h-4"></i>Grille</button>
+                    <button type="button" role="tab" data-view="universe" aria-selected="false"><i data-lucide="orbit" class="w-4 h-4"></i>Univers 3D</button>
+                </div>
+            </div>
+
+            <!-- VUE GRILLE : filtres et cartes générés depuis assets/js/projects.js -->
+            <div id="view-grid" class="max-w-6xl mx-auto">
+                <div id="project-filters" class="flex flex-wrap items-center justify-center gap-2 mb-12"></div>
+                <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
+            </div>
+
+            <!-- VUE UNIVERS : système solaire, initialisé seulement à la première ouverture -->
+            <div id="view-universe" hidden>
+                <div id="solar-wrap" tabindex="0" aria-label="Système solaire interactif des projets">
+                    <canvas id="solar-canvas"></canvas>
+                    <div id="solar-labels" class="absolute inset-0 pointer-events-none"></div>
+
+                    <!-- Écran de démarrage -->
+                    <div id="solar-start">
+                        <div class="flex flex-col items-center gap-3 text-center px-6">
+                            <div class="w-14 h-14 rounded-full border border-brand-gold/40 bg-brand-bg/70 flex items-center justify-center text-brand-gold shadow-lg shadow-brand-gold/10">
+                                <i data-lucide="rocket" class="w-6 h-6"></i>
+                            </div>
+                            <span class="hint-fine text-white font-semibold text-sm">Cliquez pour prendre les commandes</span>
+                            <span class="hint-fine text-brand-muted text-xs">Échap pour rendre la main</span>
+                            <span class="hint-coarse text-white font-semibold text-sm">Touchez pour prendre les commandes</span>
+                            <span class="hint-coarse text-brand-muted text-xs">Glissez pour tourner · pincez pour avancer · touchez une planète</span>
+                        </div>
+                    </div>
+
+                    <!-- HUD commandes (clavier / souris) -->
+                    <div class="hint-fine solar-hud absolute left-4 bottom-4 p-3 hidden sm:block pointer-events-none">
+                        <div class="flex items-center gap-4">
+                            <div class="grid grid-cols-3 gap-1 w-max">
+                                <span></span><span class="kbd">Z</span><span></span>
+                                <span class="kbd">Q</span><span class="kbd">S</span><span class="kbd">D</span>
+                            </div>
+                            <div class="space-y-1.5 leading-tight">
+                                <div><span class="kbd">Souris</span> glisser pour orienter</div>
+                                <div><span class="kbd">Espace</span> monter · <span class="kbd">Maj</span> descendre</div>
+                                <div><span class="kbd">E</span> ou clic : ouvrir le projet</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Boutons -->
+                    <div class="absolute top-4 left-4 flex gap-2">
+                        <button id="solar-reset" class="solar-hud px-3 py-2 flex items-center gap-2 hover:text-white hover:border-brand-gold/40 transition-colors">
+                            <i data-lucide="locate-fixed" class="w-3.5 h-3.5 text-brand-gold"></i> Vue d'ensemble
+                        </button>
+                        <button id="solar-pause" class="solar-hud px-3 py-2 flex items-center gap-2 hover:text-white hover:border-brand-gold/40 transition-colors">
+                            <i data-lucide="pause" class="w-3.5 h-3.5 text-brand-gold"></i> <span>Figer les orbites</span>
+                        </button>
+                    </div>
+
+                    <!-- Carte de proximité -->
+                    <div id="solar-proximity" class="solar-hud absolute pointer-events-none hidden-card right-4 top-4 p-4 w-64 space-y-1.5">
+                        <span id="prox-cat" class="text-[10px] font-bold uppercase tracking-widest text-brand-gold"></span>
+                        <div id="prox-title" class="text-white font-bold text-sm"></div>
+                        <p id="prox-short" class="text-slate-300 text-xs leading-relaxed"></p>
+                        <div class="pt-1 text-[11px] text-brand-muted">
+                            <span class="hint-fine"><span class="kbd">E</span> ou clic pour ouvrir</span><span class="hint-coarse">Touchez la planète pour ouvrir</span><span id="prox-live" class="hidden"> · <span class="text-emerald-400 font-semibold">démo jouable</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Accès direct (et navigation mobile) -->
+                <div id="planet-chips" class="flex flex-wrap items-center justify-center gap-2 mt-6"></div>
+            </div>
+        </section>
+
+        <!-- SECTION CONTACT -->
+        <section id="contact" class="py-28 px-6 max-w-6xl mx-auto border-t border-brand-border">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+
+                <div class="lg:col-span-5 space-y-8">
+                    <div class="space-y-3">
+                        <span class="text-xs uppercase tracking-widest text-brand-gold font-bold">Contact</span>
+                        <h2 class="text-3xl font-bold text-white">Une idée de projet ?</h2>
+                        <p class="text-slate-300 text-sm leading-relaxed">
+                            Je suis ouvert aux missions freelance : site web, application, outil sur mesure ou projet 3D. Écrivez-moi, je réponds par email.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4 text-sm">
+                        <div class="flex items-center gap-4 p-4 rounded-xl glass-panel">
+                            <div class="p-2.5 rounded-lg bg-brand-gold/10 text-brand-gold border border-brand-gold/20">
+                                <i data-lucide="mail" class="w-5 h-5"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <span class="block text-xs text-brand-muted font-medium">Email</span>
+                                <a href="mailto:killianrocherodriguez@gmail.com" class="text-white font-semibold hover:text-brand-gold transition-colors break-all">killianrocherodriguez@gmail.com</a>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-4 p-4 rounded-xl glass-panel">
+                            <div class="p-2.5 rounded-lg bg-brand-gold/10 text-brand-gold border border-brand-gold/20">
+                                <i data-lucide="github" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <span class="block text-xs text-brand-muted font-medium">GitHub</span>
+                                <a href="https://github.com/kimono345" target="_blank" rel="noopener" class="text-white font-semibold hover:text-brand-gold transition-colors">github.com/kimono345</a>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-4 p-4 rounded-xl glass-panel">
+                            <div class="p-2.5 rounded-lg bg-brand-gold/10 text-brand-gold border border-brand-gold/20">
+                                <i data-lucide="map-pin" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <span class="block text-xs text-brand-muted font-medium">Localisation</span>
+                                <span class="text-white font-medium">Saint-Pierre-d'Irube (64), Pays basque</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-7">
+                    <!-- Le formulaire ouvre la messagerie du visiteur (mailto), rien n'est envoyé par le site -->
+                    <form id="contact-form" class="glass-panel p-8 sm:p-10 rounded-2xl space-y-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label for="cf-name" class="block text-xs font-bold uppercase tracking-wider text-brand-muted mb-2">Nom</label>
+                                <input id="cf-name" type="text" required placeholder="Votre nom" class="w-full px-4 py-3 rounded-xl bg-brand-bg/80 border border-brand-border text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold transition-all text-sm">
+                            </div>
+                            <div>
+                                <label for="cf-subject" class="block text-xs font-bold uppercase tracking-wider text-brand-muted mb-2">Sujet</label>
+                                <input id="cf-subject" type="text" required placeholder="Mission freelance, question…" class="w-full px-4 py-3 rounded-xl bg-brand-bg/80 border border-brand-border text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold transition-all text-sm">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="cf-message" class="block text-xs font-bold uppercase tracking-wider text-brand-muted mb-2">Message</label>
+                            <textarea id="cf-message" rows="5" required placeholder="Décrivez votre projet…" class="w-full px-4 py-3 rounded-xl bg-brand-bg/80 border border-brand-border text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold transition-all text-sm resize-none"></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full py-4 rounded-xl bg-white text-brand-bg font-extrabold text-xs tracking-wider uppercase hover:bg-brand-gold transition-all duration-300 flex items-center justify-center gap-2 shadow-xl">
+                            <span>Écrire le message</span>
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                        </button>
+                        <p class="text-[11px] text-brand-muted text-center">Ouvre votre messagerie avec le message prérempli.</p>
+                    </form>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODALE APERÇU PROJET -->
+    <div id="project-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-md transition-opacity duration-300">
+        <div id="modal-box" class="glass-panel max-w-2xl w-full p-6 sm:p-8 rounded-2xl relative space-y-6 max-h-[92vh] overflow-y-auto border border-brand-gold/30">
+            <button id="close-modal" class="absolute top-5 right-5 text-slate-400 hover:text-white p-2">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <div class="space-y-2">
+                <span id="modal-category" class="text-xs font-bold text-brand-gold uppercase tracking-widest"></span>
+                <h3 id="modal-title" class="text-2xl font-extrabold text-white"></h3>
+            </div>
+            <div id="modal-preview" class="hidden space-y-2">
+                <div class="flex items-center justify-between text-[11px] text-brand-muted">
+                    <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>Démo en direct, utilisable ici</span>
+                    <a id="modal-fullscreen" href="#" target="_blank" class="flex items-center gap-1.5 hover:text-white transition-colors"><i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>Plein écran</a>
+                </div>
+                <div class="relative rounded-xl overflow-hidden border border-white/10 bg-black/40" style="height: min(62vh, 640px);">
+                    <div id="modal-preview-loader" class="absolute inset-0 flex items-center justify-center text-xs text-brand-muted">Chargement de la démo…</div>
+                    <iframe id="modal-iframe" title="Démo du projet" class="relative w-full h-full bg-white transition-opacity duration-300" loading="lazy" allow="fullscreen; autoplay" allowfullscreen></iframe>
+                </div>
+            </div>
+            <p id="modal-desc" class="text-slate-300 text-sm leading-relaxed"></p>
+            <div class="space-y-2">
+                <span class="text-xs font-bold text-brand-muted uppercase tracking-wider block">Stack Technique</span>
+                <div id="modal-tags" class="flex flex-wrap gap-2"></div>
+            </div>
+            <div class="flex flex-wrap items-center gap-4 pt-4 border-t border-brand-border/50">
+                <a id="modal-download" href="#" target="_blank" rel="noopener" class="px-5 py-2.5 rounded-lg bg-brand-gold text-brand-bg font-bold text-xs tracking-wider uppercase hover:bg-white transition-colors flex items-center gap-2">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    <span>Télécharger pour Windows</span>
+                </a>
+                <a id="modal-demo" href="#" target="_blank" class="px-5 py-2.5 rounded-lg bg-white text-brand-bg font-bold text-xs tracking-wider uppercase hover:bg-brand-gold transition-colors flex items-center gap-2">
+                    <span>Voir le projet</span>
+                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                </a>
+                <a id="modal-github" href="#" target="_blank" class="px-5 py-2.5 rounded-lg glass-panel text-white font-bold text-xs tracking-wider uppercase hover:bg-white/10 transition-colors flex items-center gap-2">
+                    <i data-lucide="github" class="w-3.5 h-3.5"></i>
+                    <span>Code Source</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="site-footer border-t border-white/10 py-10 px-6 relative z-10 text-xs text-brand-muted">
+        <div class="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-3 items-center gap-6 text-center sm:text-left">
+            <div class="space-y-1">
+                <p class="text-white font-semibold text-sm">Killian Roche Rodriguez</p>
+                <p>Développeur full-stack · Saint-Pierre-d'Irube (64)</p>
+            </div>
+            <nav class="flex items-center justify-center gap-3" aria-label="Liens">
+                <a href="https://github.com/kimono345" target="_blank" rel="noopener" class="footer-link" aria-label="GitHub" title="GitHub"><i data-lucide="github" class="w-4 h-4"></i></a>
+                <a href="mailto:killianrocherodriguez@gmail.com" class="footer-link" aria-label="Email" title="killianrocherodriguez@gmail.com"><i data-lucide="mail" class="w-4 h-4"></i></a>
+                <a href="#contact" class="footer-link" aria-label="Contact" title="Me contacter"><i data-lucide="message-circle" class="w-4 h-4"></i></a>
+            </nav>
+            <div class="flex items-center justify-center sm:justify-end gap-4">
+                <p>© <span id="year"></span> · Fait main avec Three.js</p>
+                <button type="button" id="back-to-top" class="footer-link" aria-label="Retour en haut" title="Retour en haut"><i data-lucide="arrow-up" class="w-4 h-4"></i></button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS différés (defer) : exécutés dans cet ordre, après la lecture du HTML et avant DOMContentLoaded -->
+    <script defer src="assets/js/mode.js?v=202610191549"></script>
+    <script defer src="assets/js/three-utils.js?v=202610191549"></script>
+    <script defer src="assets/js/projects.js?v=202610191556"></script>
+    <script defer src="assets/js/modal.js?v=202610191549"></script>
+    <script defer src="assets/js/projects-grid.js?v=202610191549"></script>
+    <script defer src="assets/js/projects-view.js?v=202610191549"></script>
+    <script defer src="assets/js/space-background.js?v=202610191549"></script>
+    <script defer src="assets/js/solar-system.js?v=202610191549"></script>
+    <script defer src="assets/js/ui.js?v=202610191549"></script>
+    <script defer src="assets/js/main.js?v=202610191549"></script>
+</body>
+</html>
