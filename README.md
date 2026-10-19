@@ -1,5 +1,7 @@
 # Portfolio — Killian Roche Rodriguez
 
+🌐 **En ligne : https://kimono345.github.io/Portfolio/**
+
 Portfolio de développeur full-stack : site statique en HTML / JavaScript, fond spatial et système solaire de projets en Three.js, mode « Pro » noir et or, démos jouables des projets.
 
 ## Structure
@@ -29,3 +31,7 @@ npm run build:css    # compilation minifiée avant publication
 Ajouter ou modifier un projet : `portfolio/assets/js/projects.js` (il alimente la grille et le système solaire).
 
 Après une modification de CSS ou de JS, augmenter le numéro `?v=` correspondant dans `portfolio/index.html` pour que les navigateurs ne gardent pas l'ancienne version en cache.
+
+## Mise en ligne
+
+Chaque `git push` sur `main` déclenche `.github/workflows/deploy.yml` : Tailwind est recompilé puis le dossier `portfolio/` est publié sur GitHub Pages.
