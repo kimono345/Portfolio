@@ -69,14 +69,14 @@ const PROJECTS = [
         color: 0x1f5fff, glow: 0x8fd0ff, type: 'ice', size: 1.5, orbit: 52, speed: 0.037
     },
     {
-        id: 'bureaucratie', name: 'Bureaucratie', category: 'Jeu incrémental',
-        icon: 'stamp', filters: ['jeu'],
-        short: 'Jeu incrémental au guichet : vérifiez, tamponnez, faites grandir votre administration.',
-        desc: "Jeu incrémental sur l'absurdité administrative. Au guichet, on compare chaque formulaire à la liste des règles (signature, case cochée, date de validité, tampon bleu, papier rose…) puis on tamponne « Approuvé » ou « Refusé », à la souris ou au clavier (A / R). La paperasse gagnée sert à recruter 7 services qui produisent tout seuls, se débloquent en chaîne et se boostent entre eux. Événements aléatoires (inspection surprise, visite du ministre, nouvelles circulaires), progression du Bureau 214 jusqu'au Bureau galactique, réformes administratives en guise de prestige, gains hors ligne et sauvegarde automatique. Un seul fichier HTML, en JavaScript natif sans aucune dépendance.",
-        tags: ['JavaScript', 'HTML / CSS', 'localStorage', 'Game design'],
-        image: 'assets/img/projects/bureaucratie.webp',
-        preview: 'projets/officeClicker/index.html',
-        demo: 'projets/officeClicker/index.html', github: '',
+        id: 'echeance', name: 'Échéance', category: 'Application web · Productivité',
+        icon: 'calendar-check', filters: ['web'],
+        short: 'Tableau de tâches à colonnes pour suivre ses projets, ses échéances et ses rappels.',
+        desc: "Tableau de tâches (kanban) pensé pour suivre ses projets au quotidien. À la première ouverture, on choisit un profil (développeur, freelance, créateur) qui prépare les bonnes colonnes, ou on compose son propre tableau de 2 à 8 colonnes ; on peut en avoir plusieurs. Chaque tâche a un client, une priorité, une date d'échéance, un rappel, un poids en points, des étapes à cocher et des notes. L'avancement est calculé en pourcentage pondéré, les tâches en retard ou proches de l'échéance ressortent, et un panneau regroupe les rappels du moment. Glisser-déposer à la souris, appui long avec vibration sur mobile, une colonne à la fois sur petit écran. Pas de compte : tout est sauvegardé dans le navigateur. Un seul fichier HTML, en JavaScript natif.",
+        tags: ['JavaScript', 'HTML / CSS', 'Drag & drop', 'localStorage', 'Responsive'],
+        image: 'assets/img/projects/echeance.webp',
+        preview: 'projets/echeance/index.html?v=202610201046',
+        demo: 'projets/echeance/index.html?v=202610201046', github: '',
         color: 0x5b3c9e, glow: 0xc3a6ff, type: 'ink', size: 1.8, orbit: 60, speed: 0.031, ring: true
     }
 ];
