@@ -331,13 +331,6 @@ body.driving .stage { height: 100%; }
         <div class="seg" id="side-style"></div>
         <div class="swatches" id="side-color"></div>
       </div>
-      <div class="group">
-        <h2>Numéro de course</h2>
-        <div class="field">
-          <label for="race-num">De 1 à 99, vide pour aucun</label>
-          <input type="text" id="race-num" maxlength="2" inputmode="numeric" autocomplete="off">
-        </div>
-      </div>
     </div>
 
     <!-- AMBIANCE -->
@@ -446,7 +439,7 @@ const ENVS = [
 const DEFAULT = {
   paint: 'volcan', custom: null, finish: 'metal', roof: 'noir',
   rim: 'etoile', rimFinish: 'noir', caliper: 'jaune', wing: 'lip', glass: 'teinte',
-  plate: 'OR-426-GE', sideText: 'ORAGE', sideStyle: 'sport', sideColor: 'noir', raceNum: '',
+  plate: 'OR-426-GE', sideText: 'ORAGE', sideStyle: 'sport', sideColor: 'noir',
   env: 'studio', lights: false, spin: false,
 };
 const KEY = 'atelier-orage-config';
@@ -761,24 +754,17 @@ add(plateGeo, plateMatR, -2.392, 0.58, 0, 0, -Math.PI / 2, 0).castShadow = false
 // Inscriptions latérales
 const decalMat = new THREE.MeshStandardMaterial({ transparent: true, roughness: .4, metalness: .1, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4 });
 const decalGeo = new THREE.PlaneGeometry(2.3, 0.575);
-const decalR = add(decalGeo, decalMat, -0.18, 0.56, W / 2 + 0.004);
-const decalL = add(decalGeo, decalMat, -0.18, 0.56, -W / 2 - 0.004, 0, Math.PI, 0);
+// centrées entre les passages de roue (de -0,82 m à +0,86 m), identiques des deux côtés
+const decalR = add(decalGeo, decalMat, 0.02, 0.56, W / 2 + 0.004);
+const decalL = add(decalGeo, decalMat, 0.02, 0.56, -W / 2 - 0.004, 0, Math.PI, 0);
 decalR.castShadow = decalL.castShadow = false;
 function drawDecal() {
   const style = byId(SIDE_STYLES, C.sideStyle);
   const color = byId(SIDE_COLORS, C.sideColor).hex;
   const tex = canvasTex(1600, 400, (g, w, h) => {
     g.clearRect(0, 0, w, h);
-    const num = String(C.raceNum || '').trim();
-    let textX = w * 0.40;
-    if (num) {
-      g.fillStyle = color === '#f4f4f4' ? '#121212' : '#f4f4f4';
-      g.beginPath(); g.arc(w * 0.84, h * 0.5, h * 0.36, 0, Math.PI * 2); g.fill();
-      g.lineWidth = 12; g.strokeStyle = color; g.stroke();
-      g.fillStyle = color; g.font = `${h * 0.42}px "Russo One", sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
-      g.fillText(num, w * 0.84, h * 0.53);
-      textX = w * 0.36;
-    }
+    // texte centré dans la texture : le côté gauche reçoit la même texture retournée, il doit être symétrique
+    const textX = w * 0.5;
     const txt = (C.sideText || '').trim();
     if (txt) {
       g.fillStyle = color;
@@ -1005,7 +991,6 @@ function renderUI() {
   options($('env'), ENVS, C.env, set('env', 'env'));
   if (document.activeElement !== $('plate')) $('plate').value = C.plate;
   if (document.activeElement !== $('side-text')) $('side-text').value = C.sideText;
-  if (document.activeElement !== $('race-num')) $('race-num').value = C.raceNum;
   $('plate-preview').textContent = (C.plate || ' ').toUpperCase();
 
   const finish = byId(FINISHES, C.finish).name;
@@ -1021,7 +1006,6 @@ function renderUI() {
     [null, `Plaque ${(C.plate || '—').toUpperCase()}`],
   ];
   if (C.sideText) items.push([byId(SIDE_COLORS, C.sideColor).hex, `« ${C.sideText} »`]);
-  if (C.raceNum) items.push([null, `N° ${C.raceNum}`]);
   const ul = $('recap'); ul.innerHTML = '';
   items.forEach(([c, t]) => {
     const li = document.createElement('li');
@@ -1033,7 +1017,6 @@ function renderUI() {
 
 $('plate').addEventListener('input', e => { C.plate = e.target.value.toUpperCase().replace(/[^A-Z0-9\- ]/g, '').slice(0, 9); e.target.value = C.plate; applyAll('plate'); });
 $('side-text').addEventListener('input', e => { C.sideText = e.target.value.slice(0, 14); applyAll('decal'); });
-$('race-num').addEventListener('input', e => { C.raceNum = e.target.value.replace(/\D/g, '').slice(0, 2).replace(/^0+/, ''); e.target.value = C.raceNum; applyAll('decal'); });
 $('lights').onclick = () => { C.lights = !C.lights; applyAll('lights'); };
 $('spin2').onclick = $('spin').onclick = () => { C.spin = !C.spin; applyAll('spin'); };
 $('reset').onclick = () => { C = Object.assign({}, DEFAULT, { env: C.env }); applyAll(); };
@@ -1149,12 +1132,16 @@ function clearance(x, z, maxIdx) {
 
 // ---------- Tracé de la route ----------
 const TURNS = [0, 0.011, -0.011, 0.022, -0.022];
+const MAX_K = 0.045; // courbure maximale : rayon de 22 m, que la voiture peut encore prendre
+const clampK = k => Math.max(-MAX_K, Math.min(MAX_K, k));
 function extendRoad(n) {
   const P = D.pts;
   if (!P.length) P.push({ x: 0, z: 0, y: roadY(0), th: 0 });
   for (let k = 0; k < n; k++) {
     const last = P[P.length - 1], s = P.length * SEG, old = P.length - 30;
     let curv = (noise1(s * 0.0032) - 0.5) * 0.028 + (noise1(s * 0.012 + 40) - 0.5) * 0.008;
+    // portions sinueuses : par endroits, des virages nettement plus serrés (rayon jusqu'à ~22 m)
+    curv += (noise1(s * 0.018 + 5) - 0.5) * 0.085 * smooth(0.38, 0.6, noise1(s * 0.0016 + 21));
     // la route serpente autour d'une direction générale qui varie lentement, sans jamais s'en écarter
     // de plus de ~80° : une boucle (qui demande un demi-tour complet) devient impossible
     const dir = (noise1(s * 0.0004 + 11) - 0.5) * 3;
@@ -1166,13 +1153,13 @@ function extendRoad(n) {
     for (const extra of TURNS) {
       let th = last.th, x = last.x, z = last.z, worst = Infinity;
       for (let j = 0; j < 30; j++) {
-        th += (curv + extra) * SEG; x += Math.cos(th) * SEG; z -= Math.sin(th) * SEG;
+        th += clampK(curv + extra) * SEG; x += Math.cos(th) * SEG; z -= Math.sin(th) * SEG;
         if (j % 3 === 2) worst = Math.min(worst, clearance(x, z, old));
       }
       if (!pick || worst > pick.worst) pick = { extra, worst };
       if (worst >= CLEAR) break;
     }
-    const th = last.th + (curv + pick.extra) * SEG;
+    const th = last.th + clampK(curv + pick.extra) * SEG;
     P.push({ x: last.x + Math.cos(th) * SEG, z: last.z - Math.sin(th) * SEG, y: roadY(s), th });
     indexSegment(P.length - 2);
     markDirty(P.length - 2);
@@ -1209,24 +1196,48 @@ const roadTex = (() => {
   const c = document.createElement('canvas'); c.width = 256; c.height = 512;
   const g = c.getContext('2d');
   g.fillStyle = '#3b3e43'; g.fillRect(0, 0, 256, 512);
-  for (let i = 0; i < 4000; i++) { g.fillStyle = `rgba(${Math.random() < .5 ? '255,255,255' : '0,0,0'},${Math.random() * .08})`; g.fillRect(Math.random() * 256, Math.random() * 512, 2, 2); }
+  for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${Math.random() < .5 ? '255,255,255' : '0,0,0'},${Math.random() * .11})`; g.fillRect(Math.random() * 256, Math.random() * 512, 2, 2); }
   g.fillStyle = '#e9e7df';
   g.fillRect(12, 0, 7, 512); g.fillRect(237, 0, 7, 512);
-  g.fillRect(124, 0, 8, 300);
+  g.fillRect(124, 0, 8, 170); // texture de 12 m : tiret de 4 m, espace de 8 m (comme sur route)
   const t = new THREE.CanvasTexture(c);
   t.encoding = THREE.sRGBEncoding; t.wrapT = THREE.RepeatWrapping; t.anisotropy = renderer.capabilities.getMaxAnisotropy();
   return t;
 })();
 const roadMat = new THREE.MeshStandardMaterial({ map: roadTex, roughness: .92, metalness: 0 });
 const shoulderMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x8f8676).convertSRGBToLinear(), roughness: 1, metalness: 0 });
-const groundMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, metalness: 0 });
+// Texture d'herbe (touffes, brins) multipliée par les couleurs du terrain : le sol défile visiblement
+const grassTex = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const g = c.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 2600; i++) {
+    const v = 120 + Math.floor(Math.random() * 110), x = Math.random() * 256, y = Math.random() * 256;
+    g.fillStyle = `rgb(${v},${v + 8},${v})`;
+    g.fillRect(x, y, 1 + Math.random() * 2, 3 + Math.random() * 7);
+  }
+  for (let i = 0; i < 90; i++) { // touffes plus sombres
+    g.fillStyle = `rgba(40,55,30,${0.10 + Math.random() * 0.12})`;
+    g.beginPath(); g.ellipse(Math.random() * 256, Math.random() * 256, 4 + Math.random() * 10, 3 + Math.random() * 6, Math.random() * 3, 0, 6.3); g.fill();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return t;
+})();
+const groundMat = new THREE.MeshStandardMaterial({ vertexColors: true, map: grassTex, roughness: 1, metalness: 0 });
+const postMat = new THREE.MeshStandardMaterial({ color: 0xf2f2ee, roughness: .6 });
+const reflMat = new THREE.MeshStandardMaterial({ color: 0xff7a1a, emissive: 0xff5a00, emissiveIntensity: .35, roughness: .3 });
+const postGeo = new THREE.BoxGeometry(0.12, 1, 0.12); postGeo.translate(0, 0.5, 0);
+const reflGeo = new THREE.BoxGeometry(0.13, 0.16, 0.13); reflGeo.translate(0, 0.82, 0);
+const bushGeo = new THREE.IcosahedronGeometry(1, 0);
+const bushMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, flatShading: true });
 const trunkMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x5a4030).convertSRGBToLinear(), roughness: 1 });
 const leafMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .9, flatShading: true });
 const rockMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x8b8a86).convertSRGBToLinear(), roughness: 1, flatShading: true });
 const trunkGeo = new THREE.CylinderGeometry(0.22, 0.3, 2, 6); trunkGeo.translate(0, 1, 0);
 const leafGeo = new THREE.ConeGeometry(1.9, 6, 7); leafGeo.translate(0, 3, 0);
 const rockGeo = new THREE.DodecahedronGeometry(1, 0);
-const SHARED = new Set([trunkGeo, leafGeo, rockGeo]);
+const SHARED = new Set([trunkGeo, leafGeo, rockGeo, postGeo, reflGeo, bushGeo]);
 const GRASS_A = new THREE.Color(0x6f8f3a).convertSRGBToLinear(), GRASS_B = new THREE.Color(0xa7a64e).convertSRGBToLinear(),
       GRASS_C = new THREE.Color(0x3f6a33).convertSRGBToLinear(), DIRT = new THREE.Color(0x7d725e).convertSRGBToLinear();
 const LEAF_COLS = [0x2f5a2c, 0x3d6b30, 0x24472a, 0x4f7a34, 0x6b7f2e].map(h => new THREE.Color(h).convertSRGBToLinear());
@@ -1249,7 +1260,7 @@ function ribbon(rows, mat) {
 function buildRoad(ci) {
   const P = D.pts, road = [], left = [], right = [];
   for (let i = ci * ROAD_CHUNK; i <= (ci + 1) * ROAD_CHUNK; i++) {
-    const p = P[i], [rx, rz] = rightOf(p), v = i * SEG / 18;
+    const p = P[i], [rx, rz] = rightOf(p), v = i * SEG / 12;
     const at = (lat, dy) => [p.x + rx * lat, p.y + dy, p.z + rz * lat];
     road.push({ l: at(-HALF, 0.04), r: at(HALF, 0.04), v });
     left.push({ l: at(-HALF - SHOULDER, -0.22), r: at(-HALF, 0.035), v });
@@ -1257,6 +1268,22 @@ function buildRoad(ci) {
   }
   const grp = new THREE.Group();
   grp.add(ribbon(road, roadMat), ribbon(left, shoulderMat), ribbon(right, shoulderMat));
+
+  // Balises de bord de route tous les 18 m, des deux côtés : elles défilent près de la voiture
+  const slots = [];
+  for (let i = ci * ROAD_CHUNK; i < (ci + 1) * ROAD_CHUNK; i++) {
+    if (i % 3) continue;
+    const p = P[i], [rx, rz] = rightOf(p);
+    for (const side of [-1, 1]) slots.push([p.x + rx * side * 5.3, p.y - 0.12, p.z + rz * side * 5.3, p.th]);
+  }
+  const posts = new THREE.InstancedMesh(postGeo, postMat, slots.length), refl = new THREE.InstancedMesh(reflGeo, reflMat, slots.length);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1), ps = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+  slots.forEach(([x, y, z, th], k) => {
+    m4.compose(ps.set(x, y, z), q.setFromAxisAngle(up, th), one);
+    posts.setMatrixAt(k, m4); refl.setMatrixAt(k, m4);
+  });
+  posts.castShadow = true;
+  grp.add(posts, refl);
   D.scene.add(grp);
   return grp;
 }
@@ -1272,11 +1299,12 @@ function buildTile(tx, tz) {
     H[j * W + i] = groundAt(x, z, near);
     dist[j * W + i] = near ? near.d : 1e3;
   }
-  const pos = new Float32Array(N * N * 3), nor = new Float32Array(N * N * 3), col = new Float32Array(N * N * 3);
+  const pos = new Float32Array(N * N * 3), nor = new Float32Array(N * N * 3), col = new Float32Array(N * N * 3), uv = new Float32Array(N * N * 2);
   const c = new THREE.Color(), n = new THREE.Vector3();
   for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
     const k = j * N + i, g = (j + 1) * W + (i + 1), x = x0 + i * step, z = z0 + j * step, h = H[g];
     pos.set([x, h, z], k * 3);
+    uv.set([x / 5, z / 5], k * 2); // texture d'herbe répétée tous les 5 m (coordonnées monde : pas de raccord visible)
     n.set(-(H[g + 1] - H[g - 1]) / (2 * step), 1, -(H[g + W] - H[g - W]) / (2 * step)).normalize();
     nor.set([n.x, n.y, n.z], k * 3);
     c.copy(GRASS_C).lerp(GRASS_A, noise2(x * 0.05, z * 0.05)).lerp(GRASS_B, smooth(2, 18, hills(x, z)) * .7);
@@ -1292,6 +1320,7 @@ function buildTile(tx, tz) {
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
   geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
   geo.setIndex(idx);
   const grp = new THREE.Group();
   const ground = new THREE.Mesh(geo, groundMat); ground.receiveShadow = true;
@@ -1327,6 +1356,23 @@ function buildTile(tx, tz) {
     });
     trunks.castShadow = leaves.castShadow = true;
     grp.add(trunks, leaves);
+  }
+  // Buissons bas le long de la route (entre 7,5 et 22 m de l'axe) : repères de vitesse au ras du sol
+  const bushes = [];
+  for (let k = 0; k < 60; k++) {
+    const x = x0 + rnd() * TILE, z = z0 + rnd() * TILE, s = 0.35 + rnd() * 0.55, ci = rnd(), sq = rnd();
+    const near = nearestOn(segs, x, z, 24);
+    if (!near || near.d < 7.5 + s || near.d > 22) continue;
+    bushes.push({ x, z, s, y: groundAt(x, z, nearestOn(segs, x, z, NEAR)), ci, sq });
+  }
+  if (bushes.length) {
+    const mesh = new THREE.InstancedMesh(bushGeo, bushMat, bushes.length);
+    bushes.forEach((b, k) => {
+      m4.compose(ps.set(b.x, b.y + 0.15 * b.s, b.z), q.identity(), sc.set(b.s * 1.3, b.s * (0.55 + b.sq * 0.3), b.s * 1.3));
+      mesh.setMatrixAt(k, m4);
+      mesh.setColorAt(k, LEAF_COLS[Math.floor(b.ci * LEAF_COLS.length)]);
+    });
+    grp.add(mesh);
   }
   if (rocks.length) {
     const mesh = new THREE.InstancedMesh(rockGeo, rockMat, rocks.length);
@@ -1550,6 +1596,33 @@ function setAuto(a) { D.auto = a; $('d-auto').classList.toggle('on', a); $('d-au
 const CAM_NAMES = ['Poursuite', 'Cinéma', 'Capot'];
 function cycleCam() { D.camMode = (D.camMode + 1) % 3; D.camPos = null; $('d-cam').textContent = 'Caméra : ' + CAM_NAMES[D.camMode]; }
 
+// Traînées d'air : des points fixes dans le décor, étirés dans le sens de la marche selon la vitesse.
+// On les dépasse comme le paysage, ce qui donne l'impression de vitesse sans bouger la caméra.
+const STREAKS = 70;
+const streakPts = Array.from({ length: STREAKS }, () => new THREE.Vector3(1e6, 0, 0));
+const streakGeo = new THREE.BufferGeometry();
+streakGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(STREAKS * 6), 3));
+const streakMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false });
+const streaks = new THREE.LineSegments(streakGeo, streakMat);
+streaks.frustumCulled = false;
+D.scene.add(streaks);
+function updateStreaks(fwdX, fwdZ) {
+  const v = Math.abs(D.v), k = smooth(14, 40, v); // visibles à partir de ~50 km/h, pleines vers 145 km/h
+  streaks.visible = k > 0;
+  if (!k) return;
+  streakMat.opacity = (D.time === 'nuit' ? 0.22 : 0.4) * k;
+  const cp = D.cam.position, rX = -fwdZ, rZ = fwdX, len = 0.6 + v * 0.07, a = streakGeo.attributes.position.array;
+  streakPts.forEach((p, n) => {
+    const dx = p.x - cp.x, dz = p.z - cp.z, along = dx * fwdX + dz * fwdZ, lat = dx * rX + dz * rZ;
+    if (along < -1 || along > 60 || Math.abs(lat) > 12) { // dépassée ou trop loin : réapparaît devant
+      const side = Math.random() < .5 ? -1 : 1, l = side * (2.2 + Math.random() * 8), f = 15 + Math.random() * 45;
+      p.set(cp.x + fwdX * f + rX * l, cp.y - 1.6 + Math.random() * 3.2, cp.z + fwdZ * f + rZ * l);
+    }
+    a.set([p.x, p.y, p.z, p.x - fwdX * len, p.y, p.z - fwdZ * len], n * 6);
+  });
+  streakGeo.attributes.position.needsUpdate = true;
+}
+
 // Physique simple et détendue
 const fwd = new THREE.Vector3(), tmpV = new THREE.Vector3(), lookV = new THREE.Vector3();
 function updateDrive(dt) {
@@ -1573,7 +1646,7 @@ function updateDrive(dt) {
       const dth = D.pts[j + 1].th - D.pts[j].th;
       curve = Math.max(curve, Math.abs(Math.atan2(Math.sin(dth), Math.cos(dth))) / SEG);
     }
-    const vMax = Math.max(9, Math.min(24, Math.sqrt(4 / Math.max(curve, 1e-4))));
+    const vMax = Math.max(7, Math.min(24, Math.sqrt(4 / Math.max(curve, 1e-4))));
     if (!throttle) throttle = D.v < vMax - 1 ? 0.75 : 0;
     if (D.v > vMax + 1.5) brake = 0.35;
   }
@@ -1587,7 +1660,7 @@ function updateDrive(dt) {
   if (!throttle && !brake && Math.abs(D.v) < 0.3) D.v = 0;
 
   D.steer += (steerIn - D.steer) * Math.min(1, dt * 4);
-  const yawRate = D.steer * D.v * 0.05 / (1 + Math.abs(D.v) * 0.025);
+  const yawRate = D.steer * D.v * 0.06 / (1 + Math.abs(D.v) * 0.025); // braquage suffisant pour les épingles (rayon 22 m)
   D.yaw += yawRate * dt;
   fwd.set(Math.cos(D.yaw), 0, -Math.sin(D.yaw));
   D.pos.addScaledVector(fwd, D.v * dt);
@@ -1630,7 +1703,10 @@ function updateDrive(dt) {
   const ground = sample(D.camPos.x, D.camPos.z).y + 0.6;
   if (D.camPos.y < ground) D.camPos.y = ground;
   D.cam.position.copy(D.camPos);
+  // légère vibration à haute vitesse (2 cm au plus), sans changer la position de base
+  if (D.camMode !== 1) D.cam.position.y += (noise1(D.dist * 0.9) - 0.5) * 0.04 * smooth(15, 45, Math.abs(D.v));
   D.cam.lookAt(lookV);
+  updateStreaks(fwd.x, fwd.z);
 
   $('d-speed').textContent = Math.round(Math.abs(D.v) * 3.6);
   $('d-dist').textContent = D.dist < 1000 ? Math.round(D.dist) + ' m parcourus' : (D.dist / 1000).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' km parcourus';
