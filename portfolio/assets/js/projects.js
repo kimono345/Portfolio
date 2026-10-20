@@ -63,7 +63,7 @@ const PROJECTS = [
         short: 'Configurateur 3D d’une voiture de sport, avec un mode essai routier jouable.',
         desc: "Configurateur automobile 3D de l'Orage GT-1, une sportive fictive entièrement modélisée en code (aucun modèle 3D importé). Peinture en 11 teintes ou couleur libre, 5 finitions (métallisée, mate, nacrée, chrome, carbone) rendue avec un vernis réaliste et des reflets d'environnement, jantes, étriers, aileron, vitrage, plaque d'immatriculation et inscription personnalisées sur les portières, lieux et éclairages de présentation, vues caméra. Le mode « Essai routier » permet de conduire la voiture au clavier ou au tactile, avec pilote automatique, cycle jour / coucher de soleil / nuit et son moteur synthétisé. La configuration est sauvegardée dans le navigateur. Un seul fichier HTML, en Three.js.",
         tags: ['Three.js', 'JavaScript', 'WebGL', 'Canvas API', 'Web Audio', 'localStorage'],
-        image: 'assets/img/projects/orage.webp?v=202610200943',
+        image: 'assets/img/projects/orange.png?v=202610200950',
         preview: 'projets/voiture/index.html?v=202610200934',
         demo: 'projets/voiture/index.html?v=202610200934', github: '',
         color: 0x1f5fff, glow: 0x8fd0ff, type: 'ice', size: 1.5, orbit: 52, speed: 0.037
