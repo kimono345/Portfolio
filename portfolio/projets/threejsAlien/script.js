@@ -469,11 +469,11 @@ function start()
 
     monVaisseauMere1 = vaisseauMere(0,800,0);
     monVaisseauMere1.scale.set(2,2,2);
-    monVaisseauMere2 = vaisseauMere(3500,1000,0);
+    monVaisseauMere2 = vaisseauMere(3500,1200,0);
     monVaisseauMere2.scale.set(2,2,2);
-    monVaisseauMere3 = vaisseauMere(-1750, 1000, 3031);
+    monVaisseauMere3 = vaisseauMere(-1750, 1200, 3031);
     monVaisseauMere3.scale.set(2,2,2);
-    monVaisseauMere4 = vaisseauMere(-1750, 1000, -3031);
+    monVaisseauMere4 = vaisseauMere(-1750, 1200, -3031);
     monVaisseauMere4.scale.set(2,2,2);
     
 
