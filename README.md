@@ -14,7 +14,7 @@ portfolio/                  ← le site publié (dossier à mettre en ligne)
 │   ├── css/tailwind.css    ← généré, ne pas modifier à la main
 │   ├── js/                 ← scripts (projects.js = données des projets)
 │   └── img/                ← favicon, image de partage, captures des projets
-└── projets/                ← démos jouables (devisArtisan, Grind Arena, PokéDB, Atelier Orage, Échéance)
+└── projets/                ← démos jouables (devisArtisan, Grind Arena, PokéDB, Atelier Orage, Échéance, Flotte Alien)
 tailwind.config.js          ← configuration Tailwind (couleurs, police)
 tailwind.input.css
 package.json

@@ -78,6 +78,17 @@ const PROJECTS = [
         preview: 'projets/echeance/index.html?v=202610201046',
         demo: 'projets/echeance/index.html?v=202610201046', github: '',
         color: 0x5b3c9e, glow: 0xc3a6ff, type: 'ink', size: 1.8, orbit: 60, speed: 0.031, ring: true
+    },
+    {
+        id: 'alien', name: 'Flotte Alien', category: '3D · Scène Three.js (BUT)',
+        icon: 'rocket', filters: ['parcours'],
+        short: 'Scène spatiale en Three.js : secoupes, vaisseaux mères et station de combat animés.',
+        desc: "Scène 3D réalisée en TD de Three.js (BUT Informatique) : une flotte alien entièrement construite à partir de formes de base (sphères, cylindres, tores) et de groupes d'objets. Une escadrille de secoupes avance en projetant des rayons tracteurs, un méga-vaisseau transporte des secoupes qu'il peut larguer, et quatre vaisseaux mères à gyroscope tournent autour d'une immense station de combat. Commandes au clavier : Espace pour charger et tirer les canons, flèches pour déplacer le vaisseau mère, & pour larguer une secoupe, R pour revenir au départ. Caméra libre à la souris et réglages de la caméra (champ de vision, plans proche et lointain) dans un panneau lil-gui.",
+        tags: ['Three.js', 'JavaScript', 'WebGL', 'Modules ES'],
+        image: 'assets/img/projects/alien.webp',
+        preview: 'projets/threejsAlien/index.html?v=202610211737',
+        demo: 'projets/threejsAlien/index.html?v=202610211737', github: '',
+        color: 0x2f9e57, glow: 0x6dffb0, type: 'rock', size: 1.6, orbit: 67, speed: 0.027
     }
 ];
 
