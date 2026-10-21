@@ -134,7 +134,7 @@ function MegaSecoupe(x, y, z){
     }
 
     // ---- secoupes de base transportées sous le vaisseau ----
-    var nbSecoupes = 4;
+    var nbSecoupes = 8;
     var secoupesTransportees = [];
     for (let i = 0; i < nbSecoupes; i++) {
         var pivotSecoupe = new THREE.Group();
