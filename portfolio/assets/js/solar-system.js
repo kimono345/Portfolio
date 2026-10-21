@@ -333,7 +333,8 @@ function initSolarSystem() {
             // le survol n'existe pas au doigt : on vise directement le point touché
             setPointer(e);
             const target = pickPlanet(e.pointerType === 'mouse' ? 0 : 36);
-            if (target) { flyTo(target); openProjectModal(target.p); }
+            // on laisse d'abord la caméra se centrer sur la planète, la fiche s'ouvre à l'arrivée
+            if (target) { flyTo(target); pendingOpen = target; pendingSince = performance.now(); }
         }
         if (e.pointerType !== 'mouse') pointer.set(-10, -10);
     });
@@ -359,6 +360,8 @@ function initSolarSystem() {
         yaw = euler.y; pitch = euler.x;
     }
 
+    // planète dont la fiche s'ouvrira quand la caméra sera arrivée (annulé si on reprend la main)
+    let pendingOpen = null, pendingSince = 0;
     function flyTo(planet) { flyTarget = planet; flyHome = false; }
     document.getElementById('solar-reset').addEventListener('click', () => { flyTarget = null; flyHome = true; setActive(true); });
     const pauseBtn = document.getElementById('solar-pause');
@@ -459,6 +462,7 @@ function initSolarSystem() {
         scene.children.forEach(o => { if (o.material && o.material.uniforms && o.material.uniforms.uTime) o.material.uniforms.uTime.value = t; });
 
         // Déplacement
+        if (pendingOpen && pendingOpen !== flyTarget) pendingOpen = null; // trajet interrompu : pas d'ouverture
         if (flyTarget) {
             flyTarget.holder.getWorldPosition(worldPos);
             const r = flyTarget.p.size;
@@ -469,6 +473,10 @@ function initSolarSystem() {
             targetQ.setFromRotationMatrix(lookM);
             camera.quaternion.slerp(targetQ, 1 - Math.pow(0.01, dt));
             velocity.set(0, 0, 0);
+            if (pendingOpen === flyTarget) {
+                const arrived = camera.position.distanceTo(desired) < r * 0.6 + 0.3 && camera.quaternion.angleTo(targetQ) < 0.06;
+                if (arrived || performance.now() - pendingSince > 3500) { pendingOpen = null; openProjectModal(flyTarget.p); }
+            }
         } else if (flyHome) {
             camera.position.lerp(HOME.pos, 1 - Math.pow(0.03, dt));
             euler.set(HOME.pitch, HOME.yaw, 0, 'YXZ');
