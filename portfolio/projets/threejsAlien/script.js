@@ -27,13 +27,13 @@ var secoupesLarguees = []; // les secoupes en cours de largage
 
 //materieux generaux
 const metal = new THREE.MeshStandardMaterial({
-        color: 0xcccccc,
-        metalness: 0.5,
-        roughness: 0.2
-    });
+    color: 0xcccccc,
+    metalness: 0.5,
+    roughness: 0.2
+});
 
 const verre = new THREE.MeshPhysicalMaterial({
-    color: 0x87ceeb,     
+    color: 0x87ceeb,
     metalness: 0,
     roughness: 0.05,     // très lisse = brillant
     transparent: true,
@@ -54,13 +54,12 @@ const sphereBleue = new THREE.MeshStandardMaterial({
 });
 
 // creation vaisseau
-function secoupe(x=0,y=0,z=0)
-{
+function secoupe(x = 0, y = 0, z = 0) {
     //sphère plate
     var secoupe1;
     const geometry = new THREE.SphereGeometry(30, 64, 32);
     geometry.scale(1.2, 0.3, 1.2);
-    
+
     secoupe1 = new THREE.Mesh(geometry, metal);
     scene.add(secoupe1);
     // néon vert autour
@@ -70,12 +69,12 @@ function secoupe(x=0,y=0,z=0)
     );
     secoupe1NeonFille.rotation.x = Math.PI / 2; // on couche l'anneau
     secoupe1.add(secoupe1NeonFille);
-    secoupe1NeonFille.position.set(0,-3.5,0) //mettre neon en doussus de la secoupe
+    secoupe1NeonFille.position.set(0, -3.5, 0) //mettre neon en doussus de la secoupe
 
     //cokpit
     const demiRond = new THREE.SphereGeometry(28, 26, 8, 0, Math.PI * 2, 0, Math.PI / 2);
     demiRond.scale(1, 0.5, 1);
-    var cokpit = new THREE.Mesh(demiRond,metal);
+    var cokpit = new THREE.Mesh(demiRond, metal);
     secoupe1.add(cokpit);
     //neon autour du cokpit
     var secoupe1NeonCokpit = new THREE.Mesh(
@@ -83,17 +82,17 @@ function secoupe(x=0,y=0,z=0)
         neonBleu
     );
     secoupe1NeonCokpit.rotation.x = Math.PI / 2; // on couche l'anneau
-    secoupe1.add(secoupe1NeonCokpit);    
-    secoupe1NeonCokpit.position.set(0,4.5,0)
+    secoupe1.add(secoupe1NeonCokpit);
+    secoupe1NeonCokpit.position.set(0, 4.5, 0)
 
-    secoupe1.position.set(x,y,z);
+    secoupe1.position.set(x, y, z);
 
     return secoupe1;
 }
 
 //fait spawn rayon trateur pour une secoupe donnée
-function spawnRayonTracteur(secoupe, delaiDebut, delaiFin){
-        var rayon = new THREE.Mesh(
+function spawnRayonTracteur(secoupe, delaiDebut, delaiFin) {
+    var rayon = new THREE.Mesh(
         new THREE.CylinderGeometry(28, 40, 100, 64, 1, true), // true = tube ouvert
         new THREE.MeshStandardMaterial({
             color: 0x00c8ff,
@@ -106,18 +105,18 @@ function spawnRayonTracteur(secoupe, delaiDebut, delaiFin){
         })
     );
     rayon.position.set(0, -50, 0);
-    setTimeout(() => { secoupe.add(rayon);}, delaiDebut);  // apparaît après le délai
+    setTimeout(() => { secoupe.add(rayon); }, delaiDebut);  // apparaît après le délai
     setTimeout(() => secoupe.remove(rayon), delaiDebut + delaiFin);
     return rayon; // pratique si tu veux le supprimer après
 }
 
 //fait une mega secoupe porte-vaisseaux
-function MegaSecoupe(x, y, z){
+function MegaSecoupe(x, y, z) {
     var vaisseau = new THREE.Group(); // base
     scene.add(vaisseau);
 
-    var base = secoupe(0, 0, 0);   
-    vaisseau.add(base);         
+    var base = secoupe(0, 0, 0);
+    vaisseau.add(base);
     base.scale.set(8, 4, 8);
 
     //lumieres en couronne sous le vaisseau
@@ -165,7 +164,7 @@ function MegaSecoupe(x, y, z){
 }
 
 //largue la prochaine secoupe du vaisseau après un délai en ms
-function larguerSecoupe(vaisseau, delai){
+function larguerSecoupe(vaisseau, delai) {
     setTimeout(() => {
         var s = vaisseau.userData.secoupes.shift(); // prend la première secoupe
         scene.attach(s);                            // la détache du vaisseau
@@ -173,13 +172,13 @@ function larguerSecoupe(vaisseau, delai){
     }, delai);
 }
 
-function vaisseauMere(x, y, z){
+function vaisseauMere(x, y, z) {
     var base = new THREE.Group(); // base
     scene.add(base);
 
     var hauteursLignes = [-8, 8]; // mêmes hauteurs pour le cylindre et les bras
 
-        // cylindre principal, creusé en demi-cercle sur le dessus ia pour creuser
+    // cylindre principal, creusé en demi-cercle sur le dessus ia pour creuser
     var profil = [];
     profil.push(new THREE.Vector2(0, -37.5));    // centre du dessous
     profil.push(new THREE.Vector2(100, -37.5));  // bord du dessous
@@ -283,7 +282,7 @@ function vaisseauMere(x, y, z){
         pivot.add(bout);
 
         var vitre = new THREE.Mesh(
-            new THREE.CylinderGeometry(28.5, 28.5, 30, 32, 1, false, 0, Math.PI), 
+            new THREE.CylinderGeometry(28.5, 28.5, 30, 32, 1, false, 0, Math.PI),
             neonBleu
         );
         vitre.position.x = 205;
@@ -303,7 +302,7 @@ function vaisseauMere(x, y, z){
         var sens = (t % 2 === 0) ? 1 : -1;               // une sur deux tourne dans l'autre sens
         var points = [];
         for (let i = 0; i < 8; i++) {
-            var r = 24;                        
+            var r = 24;
             var angle = i * 0.35 * sens;                 // tourne un peu plus à chaque point
             points.push(new THREE.Vector3(
                 r * Math.cos(angle),
@@ -329,7 +328,7 @@ function vaisseauMere(x, y, z){
 }
 
 //fait tirer le canon du vaisseau mere
-function tirerCanon(vaisseau, delaiD, delaiF){
+function tirerCanon(vaisseau, delaiD, delaiF) {
     var yDepart = -95;
 
     // boule de charge
@@ -360,7 +359,7 @@ function tirerCanon(vaisseau, delaiD, delaiF){
 }
 
 //fait spawn une station de combat
-function stationCombat(x, y, z){
+function stationCombat(x, y, z) {
     var base = new THREE.Group();
     scene.add(base);
 
@@ -395,9 +394,9 @@ function stationCombat(x, y, z){
     base.position.set(x, y, z);
     return base;
 }
+
 // ================= SCÈNE + RENDU =================
-function start()
-{
+function start() {
     // ---------------- SCENE ----------------
     scene = new THREE.Scene();
 
@@ -419,7 +418,7 @@ function start()
             this.obj = obj;
             this.minProp = minProp;
             this.maxProp = maxProp;
-            this.minDif = minDif;
+            this.minDif = minDif; 
         }
         get min() {
             return this.obj[this.minProp];
@@ -448,11 +447,11 @@ function start()
     gui.add(minMaxGUIHelper, 'max', 0.1, 50, 0.1).name('far').onChange(updateCamera);
 
     const controls = new OrbitControls(camera, renderer.domElement);
-	controls.target.set( 0, 5, 0 );
-	controls.update();
+    controls.target.set(0, 5, 0);
+    controls.update();
     // ---------------- LIGHTS ----------------
     var myAmbientLight = new THREE.AmbientLight(0xd0d0d0, 0.3);
-    scene.add(myAmbientLight);
+    scene.add(myAmbientLight); 
 
 
     var directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
@@ -460,26 +459,25 @@ function start()
 
     // ---------------- OBJECTS ----------------
     maSecoupe1 = secoupe(0, -100, 0);
-    maSecoupe2 = secoupe(-90,-100, -60); 
+    maSecoupe2 = secoupe(-90, -100, -60);
     maSecoupe3 = secoupe(90, -100, -60);
-    monRayon1 = spawnRayonTracteur(maSecoupe1,2000,1000);
-    monRayon1 = spawnRayonTracteur(maSecoupe2,3000,1000);
-    monRayon1 = spawnRayonTracteur(maSecoupe3,4000,1000);
-    maMegaSecoupe1 = MegaSecoupe(0,500,500);
+    monRayon1 = spawnRayonTracteur(maSecoupe1, 2000, 1000);
+    monRayon1 = spawnRayonTracteur(maSecoupe2, 3000, 1000);
+    monRayon1 = spawnRayonTracteur(maSecoupe3, 4000, 1000);
+    maMegaSecoupe1 = MegaSecoupe(0, 500, 500);
 
-    monVaisseauMere1 = vaisseauMere(0,800,0);
-    monVaisseauMere1.scale.set(2,2,2);
-    monVaisseauMere2 = vaisseauMere(3500,1200,0);
-    monVaisseauMere2.scale.set(2,2,2);
+    monVaisseauMere1 = vaisseauMere(0, 800, 0);
+    monVaisseauMere1.scale.set(2, 2, 2);
+    monVaisseauMere2 = vaisseauMere(3500, 1200, 0);
+    monVaisseauMere2.scale.set(2, 2, 2);
     monVaisseauMere3 = vaisseauMere(-1750, 1200, 3031);
-    monVaisseauMere3.scale.set(2,2,2);
+    monVaisseauMere3.scale.set(2, 2, 2);
     monVaisseauMere4 = vaisseauMere(-1750, 1200, -3031);
-    monVaisseauMere4.scale.set(2,2,2);
-    
+    monVaisseauMere4.scale.set(2, 2, 2);
 
 
     maStation1 = stationCombat(0, 0, -4000); // loin derrière, elle est énorme
-    maStation1.scale.set(15,15,15);
+    maStation1.scale.set(15, 15, 15);
 
 
     // groupage pour escoudron de secoupes
@@ -513,41 +511,58 @@ function start()
         }
 
         if (event.key === 'ArrowUp') {
-            monVaisseauMere1.position.z -= 30;   
+            monVaisseauMere1.position.z -= 30;
         }
         if (event.key === 'ArrowDown') {
-            monVaisseauMere1.position.z += 30;  
+            monVaisseauMere1.position.z += 30;
         }
         if (event.key === 'ArrowLeft') {
-            monVaisseauMere1.position.x -= 30;  
+            monVaisseauMere1.position.x -= 30;
         }
         if (event.key === 'ArrowRight') {
-            monVaisseauMere1.position.x += 30;   
+            monVaisseauMere1.position.x += 30;
         }
 
         if (event.key === '&') {
             larguerSecoupe(maMegaSecoupe1, 0);
         }
         if (event.key === 'r') {
-            monVaisseauMere1.position.set(0,800,0);
+            monVaisseauMere1.position.set(0, 800, 0);
+        }
+        if (event.key === 'z') {
+            camera.position.z -= 30;
+        }
+        if (event.key === 's') {
+            camera.position.z += 30;
+        }
+        if (event.key === 'q') {
+            camera.position.x -= 30;
+        }
+        if (event.key === 'd') {
+            camera.position.x += 30;
+        }
+        if (event.key === 'a') {
+            camera.position.y -= 30;
+        }
+        if (event.key === 'e') {
+            camera.position.y += 30;
         }
     });
-    
 
-        // ---------------- RENDER SCENE ----------------
-        toRender();
-    }
+
+    // ---------------- RENDER SCENE ----------------
+    toRender();
+}
 
 // BOUCLE DE RENDU
-function toRender()
-{
+function toRender() {
     maSecoupe1.rotateY(0.02);  // pivote sur son axe y
     groupeSecoupe.position.z += 0.5;
     if (groupeSecoupe.position.z == 200) {
         groupeSecoupe.position.z -= 200;
-        monRayon1 = spawnRayonTracteur(maSecoupe1,2000,1000);
-        monRayon1 = spawnRayonTracteur(maSecoupe2,3000,1000);
-        monRayon1 = spawnRayonTracteur(maSecoupe3,4000,1000);
+        monRayon1 = spawnRayonTracteur(maSecoupe1, 2000, 1000);
+        monRayon1 = spawnRayonTracteur(maSecoupe2, 3000, 1000);
+        monRayon1 = spawnRayonTracteur(maSecoupe3, 4000, 1000);
     }
     //maMegaSecoupe1.rotateY(0.02);
     monVaisseauMere1.userData.gyro.rotation.y += 0.01;
@@ -564,10 +579,10 @@ function toRender()
 
 
     for (let s of secoupesLarguees) {
-        if (s.position.y>=300) {
+        if (s.position.y >= 300) {
             s.position.y -= 1;
         }
-        s.rotateY(0.05);  
+        s.rotateY(0.05);
     }
 
 

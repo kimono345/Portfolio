@@ -172,6 +172,26 @@ body.driving .stage { height: 100%; }
   max-width: calc(100% - 32px);
 }
 .chipbtn.exit { background: var(--text); color: var(--bg); font-weight: 700; }
+.drive-menu-btn { display: none; }
+.speedo em.warn { background: rgba(214, 40, 40, .92); animation: off-pulse .8s ease-in-out infinite alternate; }
+@keyframes off-pulse { to { transform: scale(1.06); } }
+.game-over { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; pointer-events: auto; background: rgba(8, 9, 12, .55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); animation: go-in .35s ease; }
+.game-over[hidden] { display: none; }
+.game-over.crash { background: radial-gradient(circle at 50% 50%, rgba(8, 9, 12, .5), rgba(150, 18, 18, .55)); }
+@keyframes go-in { from { opacity: 0; } }
+.go-card { text-align: center; padding: 26px 30px 20px; border-radius: 20px; width: min(420px, 100%); background: rgba(12, 14, 17, .86); border: 1px solid rgba(255,255,255,.14); text-shadow: none; animation: go-pop .4s cubic-bezier(.2, 1.4, .4, 1); }
+@keyframes go-pop { from { transform: scale(.85); opacity: 0; } }
+.go-card small { font-size: 12px; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; color: #ff8a6a; }
+.go-card h2 { margin: 6px 0 8px; font-family: var(--f-display); font-size: clamp(30px, 5vw, 42px); line-height: 1.05; }
+.go-card p { margin: 0 0 18px; font-size: 14px; opacity: .85; }
+.go-card p strong { color: #e9d7b0; }
+.go-stats { display: flex; justify-content: center; gap: 30px; margin-bottom: 20px; }
+.go-stats b { display: block; font-family: var(--f-display); font-size: 26px; font-variant-numeric: tabular-nums; }
+.go-stats span { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; opacity: .7; }
+.go-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.go-hint { margin-top: 12px; font-size: 12px; opacity: .6; }
+@media (pointer: coarse) { .go-hint { display: none; } }
+body.game-over-on .touchpad, body.game-over-on .drive-bar { visibility: hidden; }
 .touchpad { display: none; }
 @media (pointer: coarse) {
   .drive-help { display: none; }
@@ -182,6 +202,29 @@ body.driving .stage { height: 100%; }
   }
   .touchpad button { height: 64px; border-radius: 16px; border: 1px solid rgba(255,255,255,.25); background: rgba(12,14,17,.45); color: #fff; font-weight: 700; font-size: 16px; touch-action: none; }
   .touchpad button.on { background: rgba(233, 215, 176, .8); color: var(--accent-ink); }
+  .touchpad { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+  .drive-menu-btn {
+    display: flex; align-items: center; gap: 8px; position: absolute; pointer-events: auto;
+    right: max(14px, env(safe-area-inset-right, 0px)); top: calc(14px + env(safe-area-inset-top, 0px));
+    height: 44px; padding: 0 16px; border-radius: 999px; font-family: var(--f-body); font-size: 14px; font-weight: 700;
+    color: #fff; background: rgba(12, 14, 17, .6); border: 1px solid rgba(255,255,255,.18);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); text-shadow: none;
+  }
+  .drive-menu-btn span { font-size: 18px; line-height: 1; }
+  .drive-menu-btn[aria-expanded="true"] { background: var(--text); color: var(--bg); }
+  .drive-bar {
+    display: none; left: auto; transform: none; bottom: auto;
+    right: max(14px, env(safe-area-inset-right, 0px)); top: calc(66px + env(safe-area-inset-top, 0px));
+    grid-template-columns: 1fr 1fr; gap: 6px; padding: 8px; border-radius: 18px;
+    width: min(300px, calc(100% - 28px)); max-height: calc(100% - 170px); overflow-y: auto;
+  }
+  .drive-bar.open { display: grid; }
+  .drive-bar .sep { display: none; }
+  .drive-bar .chipbtn { white-space: normal; min-height: 44px; background: rgba(255,255,255,.06); color: #fff; }
+  .drive-bar .chipbtn.on { background: var(--text); color: var(--bg); }
+  .drive-bar #d-cam, .drive-bar .exit { grid-column: 1 / -1; }
+  .drive-bar .exit { background: var(--text); color: var(--bg); }
+  body.game-over-on .drive-menu-btn { visibility: hidden; }
 }
 
 @media (max-width: 860px) {
@@ -197,6 +240,14 @@ body.driving .stage { height: 100%; }
   .specs { display: none; }
   .hint { display: none; }
   .hud-top { left: max(16px, env(safe-area-inset-left, 0px)); }
+  .hud-bottom {
+    left: max(10px, env(safe-area-inset-left, 0px)); right: max(10px, env(safe-area-inset-right, 0px)); transform: none;
+    bottom: 10px; max-width: none; flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto;
+    border-radius: 16px; scrollbar-width: none; overscroll-behavior-x: contain;
+  }
+  .hud-bottom::-webkit-scrollbar { display: none; }
+  .hud-bottom .chipbtn { flex: 0 0 auto; padding: 9px 12px; }
+  .hud-bottom .chipbtn.drive { position: sticky; right: 0; margin-left: auto; box-shadow: -10px 0 14px rgba(12, 14, 17, .7); }
   .pane, .recap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 }
 @media (prefers-reduced-motion: reduce) { .switch::after { transition: none; } }
@@ -251,7 +302,8 @@ body.driving .stage { height: 100%; }
         <button data-touch="brake">Frein</button>
         <button data-touch="gas">Gaz</button>
       </div>
-      <div class="drive-bar" role="toolbar" aria-label="Essai routier">
+      <button class="drive-menu-btn" id="d-menu" aria-expanded="false" aria-controls="d-bar"><span aria-hidden="true">☰</span>Menu</button>
+      <div class="drive-bar" id="d-bar" role="toolbar" aria-label="Essai routier">
         <button class="chipbtn toggle" id="d-auto" aria-pressed="false">Pilote auto</button>
         <button class="chipbtn" id="d-cam">Caméra : Poursuite</button>
         <span class="sep" aria-hidden="true"></span>
@@ -261,6 +313,22 @@ body.driving .stage { height: 100%; }
         <span class="sep" aria-hidden="true"></span>
         <button class="chipbtn toggle on" id="d-sound">Son</button>
         <button class="chipbtn exit" id="d-exit">Retour à l'atelier</button>
+      </div>
+      <div class="game-over" id="d-over" role="dialog" aria-modal="true" aria-labelledby="d-over-title" hidden>
+        <div class="go-card">
+          <small>Game over</small>
+          <h2 id="d-over-title">Accident !</h2>
+          <p id="d-over-msg"></p>
+          <div class="go-stats">
+            <div><b id="d-over-dist">0 m</b><span>parcourus</span></div>
+            <div><b id="d-over-best">0 m</b><span>record</span></div>
+          </div>
+          <div class="go-actions">
+            <button class="chipbtn drive" id="d-retry">Recommencer</button>
+            <button class="chipbtn exit" id="d-over-exit">Retour à l'atelier</button>
+          </div>
+          <div class="go-hint">Entrée pour recommencer · Échap pour quitter</div>
+        </div>
       </div>
     </div>
   </div>
@@ -889,7 +957,10 @@ function buildSeat(style, z) {
 function buildSteeringWheel(style) {
   const hub = new THREE.Group(); hub.position.set(0.20, 0.84, DRV_Z); hub.rotation.z = 0.35; // inclinaison vers le conducteur
   cabinGroup.add(hub);
-  const col = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.035, 0.22, 12), M.trim); col.rotation.z = Math.PI / 2; col.position.x = 0.11; hub.add(col);
+  // colonne de direction : descend vers l'avant et rentre sous la planche de bord (elle ne passe plus devant les écrans)
+  const colA = -0.6, colL = 0.26;
+  const col = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.035, colL, 12), M.trim);
+  col.rotation.z = colA - Math.PI / 2; col.position.set(Math.cos(colA) * colL / 2, Math.sin(colA) * colL / 2, 0); hub.add(col);
   steerSpin.clear(); steerSpin.rotation.set(0, 0, 0); hub.add(steerSpin);
   const face = new THREE.Group(); face.rotation.y = -Math.PI / 2; steerSpin.add(face); // jante dans le plan face au conducteur
   const R = 0.165, T = 0.017;
@@ -1559,7 +1630,7 @@ const D = {
   on: false, scene: new THREE.Scene(), cam: new THREE.PerspectiveCamera(58, 1, 0.3, 1500),
   pts: [], grid: new Map(), roads: new Map(), tiles: new Map(), dirty: new Set(),
   idx: 0, pos: new THREE.Vector3(), yaw: 0, v: 0, steer: 0, dist: 0, y: 0,
-  auto: false, camMode: 0, time: 'soir', keys: {}, touch: {}, audio: null, muted: false, envs: {}, bgs: {},
+  auto: false, over: null, offT: 0, camMode: 0, time: 'soir', keys: {}, touch: {}, audio: null, muted: false, envs: {}, bgs: {},
 };
 
 // Bruit déterministe (la route et le paysage sont les mêmes à chaque essai)
@@ -2040,6 +2111,7 @@ function enterDrive() {
   if (D.on) return;
   D.on = true;
   tween = null;
+  hideGameOver();
   document.body.classList.add('driving');
   $('drive-hud').hidden = false;
   setCutaway(false); // en conduite la voiture est toujours complète
@@ -2061,6 +2133,8 @@ function enterDrive() {
 function exitDrive() {
   if (!D.on) return;
   D.on = false;
+  hideGameOver();
+  setDriveMenu(false);
   document.body.classList.remove('driving');
   $('drive-hud').hidden = true;
   D.scene.remove(car);
@@ -2084,6 +2158,7 @@ window.addEventListener('keydown', e => {
   if (DRIVE_KEYS.includes(e.code)) e.preventDefault();
   if (e.repeat) return;
   if (e.code === 'Escape') return exitDrive();
+  if (D.over) { if (e.code === 'Enter' || e.code === 'KeyR') { e.preventDefault(); retryDrive(); } return; }
   if (e.code === 'Space') return setAuto(!D.auto);
   if (e.code === 'KeyC') return cycleCam();
   if (e.code === 'KeyM') return setMuted(!D.muted);
@@ -2128,6 +2203,46 @@ function updateStreaks(fwdX, fwdZ) {
 // tirée au hasard parmi les options de l'atelier (peinture, finition, toit, jantes, étriers, aileron, vitrage).
 const TRAFFIC_MAX = 3;
 const CAR_LEN = 4.7, CAR_WID = 1.95; // gabarit pour les accrochages
+// Fin de partie : un choc franc avec une autre voiture, ou plus de OFFROAD_MAX secondes hors de la route
+const OFFROAD_MAX = 4, CRASH_SPEED = 5; // s ; vitesse de rapprochement (m/s, ~18 km/h) au-delà de laquelle c'est un accident
+const RECORD_KEY = 'atelier-orage-record';
+const fmtDist = d => d < 1000 ? Math.round(d) + ' m' : (d / 1000).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' km';
+function gameOver(reason) {
+  if (D.over) return;
+  D.over = reason;
+  D.keys = {}; D.touch = {}; document.querySelectorAll('[data-touch]').forEach(b => b.classList.remove('on'));
+  let best = 0;
+  try { best = +localStorage.getItem(RECORD_KEY) || 0; } catch (e) {}
+  const record = D.dist > best && D.dist > 50;
+  if (D.dist > best) { best = D.dist; try { localStorage.setItem(RECORD_KEY, String(Math.round(best))); } catch (e) {} }
+  $('d-over-title').textContent = reason === 'crash' ? 'Accident !' : 'Sortie de route';
+  $('d-over-msg').innerHTML = (reason === 'crash' ? 'Vous avez percuté une autre voiture.' : `Plus de ${OFFROAD_MAX} secondes hors de la route.`)
+    + (record ? ' <strong>Nouveau record !</strong>' : '');
+  $('d-over-dist').textContent = fmtDist(D.dist);
+  $('d-over-best').textContent = fmtDist(best);
+  $('d-over').classList.toggle('crash', reason === 'crash');
+  $('d-over').hidden = false;
+  document.body.classList.add('game-over-on');
+  if (D.audio) D.audio.ac.suspend();
+  $('d-retry').focus({ preventScroll: true });
+}
+function hideGameOver() {
+  D.over = null; D.offT = 0;
+  $('d-over').hidden = true;
+  document.body.classList.remove('game-over-on');
+}
+function retryDrive() {
+  if (!D.over) return;
+  hideGameOver();
+  clearTraffic();
+  // on repart sur la voie de droite, au point de route le plus proche (le décor déjà construit autour reste en place)
+  const i = Math.max(3, D.idx), p = D.pts[i], [rx, rz] = rightOf(p);
+  D.idx = i;
+  D.pos.set(p.x + rx * LANE, p.y, p.z + rz * LANE);
+  D.yaw = p.th; D.v = 8; D.steer = 0; D.dist = 0; D.y = p.y; D.pitch = 0;
+  D.camPos = null;
+  startAudio(); setMuted(D.muted);
+}
 const FINISH_ODDS = ['metal', 'metal', 'metal', 'nacre', 'nacre', 'mate', 'mate', 'chrome', 'carbone'];
 D.traffic = []; D.nextCar = 3;
 const pickOne = list => list[Math.floor(Math.random() * list.length)];
@@ -2243,10 +2358,14 @@ function updateTraffic(dt) {
 function collideTraffic() {
   const fx = Math.cos(D.yaw), fz = -Math.sin(D.yaw), rx = Math.sin(D.yaw), rz = Math.cos(D.yaw);
   for (const t of D.traffic) {
+    if (!t.life) continue; // pas encore placée sur la route
     const dx = t.obj.position.x - D.pos.x, dz = t.obj.position.z - D.pos.z;
     const along = dx * fx + dz * fz, side = dx * rx + dz * rz;
     const pa = CAR_LEN - Math.abs(along), ps = CAR_WID - Math.abs(side);
     if (pa <= 0 || ps <= 0) continue;
+    // choc franc (voiture en face, ou rattrapée trop vite) : fin de partie ; simple frottement sinon
+    const closing = t.dir > 0 ? Math.abs(D.v - t.v) : Math.abs(D.v) + t.v;
+    if (closing > CRASH_SPEED) { gameOver('crash'); return; }
     if (pa < ps) { D.pos.x -= fx * Math.sign(along) * pa; D.pos.z -= fz * Math.sign(along) * pa; }
     else { D.pos.x -= rx * Math.sign(side) * ps; D.pos.z -= rz * Math.sign(side) * ps; }
     D.v = t.dir > 0 && along > 0 ? Math.min(D.v, t.v * 0.8) : D.v * 0.3;
@@ -2290,6 +2409,9 @@ function updateDrive(dt) {
   const s = sample(D.pos.x, D.pos.z);
   D.idx = s.idx;
   const offroad = !s.onRoad;
+  // compte à rebours hors piste (il se recharge deux fois plus vite une fois revenu sur la route)
+  D.offT = offroad ? (D.offT || 0) + dt : Math.max(0, (D.offT || 0) - dt * 2);
+  if (D.offT > OFFROAD_MAX) gameOver('offroad');
   let acc = throttle * 6.5 - brake * (D.v > 0 ? 24 : 3) - 0.03 * D.v - 0.0011 * D.v * Math.abs(D.v);
   if (offroad) acc -= Math.sign(D.v) * (1.8 + Math.abs(D.v) * 0.06);
   D.v = Math.max(-6, Math.min(56, D.v + acc * dt));
@@ -2361,11 +2483,23 @@ function updateDrive(dt) {
   drawCluster(Math.abs(D.v) * 3.6);
   $('d-dist').textContent = D.dist < 1000 ? Math.round(D.dist) + ' m parcourus' : (D.dist / 1000).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' km parcourus';
   $('d-terrain').hidden = !offroad;
+  if (offroad) {
+    const left = Math.max(0, Math.ceil(OFFROAD_MAX - D.offT));
+    $('d-terrain').textContent = `Hors route · revenez sur la route (${left} s)`;
+    $('d-terrain').classList.toggle('warn', D.offT > OFFROAD_MAX / 2);
+  }
   updateAudio(throttle);
 }
 
 $('drive-btn').addEventListener('click', enterDrive);
 $('d-exit').addEventListener('click', exitDrive);
+$('d-retry').addEventListener('click', retryDrive);
+// au tactile, la barre de conduite est un menu replié : il se referme après un choix ou en touchant la route
+function setDriveMenu(open) { $('d-bar').classList.toggle('open', open); $('d-menu').setAttribute('aria-expanded', open); }
+$('d-menu').addEventListener('click', () => setDriveMenu(!$('d-bar').classList.contains('open')));
+$('d-bar').addEventListener('click', e => { if (e.target.closest('button')) setDriveMenu(false); });
+canvas.addEventListener('pointerdown', () => { if (D.on) setDriveMenu(false); });
+$('d-over-exit').addEventListener('click', exitDrive);
 $('d-auto').addEventListener('click', () => setAuto(!D.auto));
 $('d-cam').addEventListener('click', cycleCam);
 $('d-sound').addEventListener('click', () => setMuted(!D.muted));
@@ -2390,7 +2524,7 @@ function loop() {
     camera.fov = tween.fromFov + (tween.toFov - tween.fromFov) * e; camera.updateProjectionMatrix();
     if (tween.t >= 1) { const done = tween.after; tween = null; if (done) done(); }
   }
-  if (D.on) { updateDrive(dt); updateCabinClip(); renderer.render(D.scene, D.cam); return; }
+  if (D.on) { if (!D.over) updateDrive(dt); updateCabinClip(); renderer.render(D.scene, D.cam); return; } // partie finie : l'image reste figée
   controls.update();
   updateCabinClip();
   renderer.render(scene, camera);
