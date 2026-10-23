@@ -1,11 +1,18 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+import {BloomPass} from 'three/addons/postprocessing/BloomPass.js';
+import {FilmPass} from 'three/addons/postprocessing/FilmPass.js';
+import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
 
 
 var scene;
 var renderer;
 var camera;
+var loader = new THREE.TextureLoader();
+var composer;
 
 
 //variable 2
@@ -21,37 +28,92 @@ var monVaisseauMere2;
 var monVaisseauMere3;
 var monVaisseauMere4;
 var maStation1;
-var secoupesLarguees = []; // les secoupes en cours de largage
+var secoupesLarguees = [];
+var maFlamme;
 
 
 
 //materieux generaux
+var lumiereFeu = new THREE.PointLight(0xff7a1a, 5, 300, 0);
 const metal = new THREE.MeshStandardMaterial({
     color: 0xcccccc,
     metalness: 0.5,
     roughness: 0.2
 });
-
-const verre = new THREE.MeshPhysicalMaterial({
-    color: 0x87ceeb,
-    metalness: 0,
-    roughness: 0.05,     // très lisse = brillant
-    transparent: true,
-    opacity: 1,        // on voit à travers
-    clearcoat: 1,        // couche vernie qui fait les reflets
-    clearcoatRoughness: 0
-});
-
 const neonBleu = new THREE.MeshStandardMaterial({
     color: 0x00c8ff,
     emissive: 0x00c8ff,
     emissiveIntensity: 3
 });
+
 const blanc = new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 0.2, roughness: 0.3 });
-const sphereBleue = new THREE.MeshStandardMaterial({
-    color: 0x00c8ff, emissive: 0x00c8ff, emissiveIntensity: 0.8,
-    metalness: 0.8, roughness: 0.1
-});
+
+//fonction qui fait une surface plate avec la texture d'un png ca vien de https://threejs.org/manual/#transparency
+function makeInstance(geometry, color, rotY, url, x = 0, y = 0, z = 0) {
+    const texture = loader.load(url);
+    const material = new THREE.MeshPhongMaterial({
+        color,
+        map: texture,
+        transparent: true,
+        alphaTest: 0.5,
+        side: THREE.DoubleSide,
+    });
+
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    mesh.rotation.y = rotY;
+    mesh.position.set(x, y, z);
+    return mesh;
+}
+
+//fonction pour faire direction instande d'une objetc avec un nb de face donné
+function makeInstanceV(nbFaces, url,largeur,hauteur, x = 0, y = 0, z = 0) {
+    const texture = loader.load(url);
+    var plan = new THREE.PlaneGeometry(largeur, hauteur);
+    const material = new THREE.MeshPhongMaterial({
+        map: texture,
+        transparent: true,
+        alphaTest: 0.5,
+        side: THREE.DoubleSide,
+    });
+
+    const groupe = new THREE.Group();
+    scene.add(groupe);
+
+    for (let index = 0; index < nbFaces; index++) {
+        var f1 = new THREE.Mesh(plan, material);
+        f1.rotation.y= index*Math.PI/nbFaces;
+        groupe.add(f1);
+    }
+
+    groupe.position.set(x, y, z);
+    groupe.position.set(x, y + hauteur / 2, z); // posé sur le point y
+    return groupe;
+}
+
+//fonctino pour faire du feu basé la fonction du haut
+function flamme(x, y, z) {
+    const textureFlamme = loader.load('resources/images/flamme.png');
+    const material = new THREE.MeshBasicMaterial({
+        map: textureFlamme,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+    });
+    var plan = new THREE.PlaneGeometry(20, 40);
+    var feu = new THREE.Group();
+    var f1 = new THREE.Mesh(plan, material);
+    var f2 = new THREE.Mesh(plan, material);
+    f2.rotation.y = Math.PI / 2;
+    feu.add(f1);
+    feu.add(f2);
+    feu.add(lumiereFeu);
+    feu.position.set(x, y + 20, z); 
+    scene.add(feu);
+    return feu;
+}
 
 // creation vaisseau
 function secoupe(x = 0, y = 0, z = 0) {
@@ -104,13 +166,14 @@ function spawnRayonTracteur(secoupe, delaiDebut, delaiFin) {
             depthWrite: false        // évite les bugs d'affichage avec la transparence demande par ia la texture
         })
     );
+    var flash = new THREE.PointLight(0x00c8ff, 3, 1000, 0);
     rayon.position.set(0, -50, 0);
-    setTimeout(() => { secoupe.add(rayon); }, delaiDebut);  // apparaît après le délai
-    setTimeout(() => secoupe.remove(rayon), delaiDebut + delaiFin);
+    setTimeout(() => { secoupe.add(rayon); secoupe.add(flash);}, delaiDebut);  // apparaît après le délai
+    setTimeout(() => { secoupe.remove(rayon); secoupe.remove(flash);}, delaiDebut + delaiFin);
     return rayon; // pratique si tu veux le supprimer après
 }
 
-//fait une mega secoupe porte-vaisseaux
+
 function MegaSecoupe(x, y, z) {
     var vaisseau = new THREE.Group(); // base
     scene.add(vaisseau);
@@ -119,7 +182,6 @@ function MegaSecoupe(x, y, z) {
     vaisseau.add(base);
     base.scale.set(8, 4, 8);
 
-    //lumieres en couronne sous le vaisseau
     var nbBarres = 8;
     for (let i = 0; i < nbBarres; i++) {
         var pivot = new THREE.Group();           // tourne autour du centre
@@ -132,7 +194,6 @@ function MegaSecoupe(x, y, z) {
         pivot.add(barre);
     }
 
-    // ---- secoupes de base transportées sous le vaisseau ----
     var nbSecoupes = 8;
     var secoupesTransportees = [];
     for (let i = 0; i < nbSecoupes; i++) {
@@ -157,7 +218,7 @@ function MegaSecoupe(x, y, z) {
         pivotSecoupe.add(petite);
         secoupesTransportees.push(petite);
     }
-    vaisseau.userData.secoupes = secoupesTransportees; // pour les larguer plus tard explique cette ligxne
+    vaisseau.userData.secoupes = secoupesTransportees;
 
     vaisseau.position.set(x, y, z);
     return vaisseau;
@@ -338,6 +399,8 @@ function tirerCanon(vaisseau, delaiD, delaiF) {
     // laser du tir
     var laser = new THREE.Mesh(new THREE.CylinderGeometry(13, 13, 1000, 16, 1, true), neonBleu);
     laser.position.y = yDepart - 500;
+    var flash = new THREE.PointLight(0x00c8ff, 10, 1000, 0);
+    flash.position.y = -150;
 
     // 1. charge
     setTimeout(() => {
@@ -349,16 +412,18 @@ function tirerCanon(vaisseau, delaiD, delaiF) {
     setTimeout(() => {
         vaisseau.remove(charge);
         vaisseau.add(laser);
+        vaisseau.add(flash);
     }, delaiD + 1500);
 
     // 3. fin
     setTimeout(() => {
         vaisseau.remove(laser);
+        vaisseau.remove(flash);
         vaisseau.userData.enCharge = false;
     }, delaiD + 1500 + delaiF);
 }
 
-//fait spawn une station de combat
+
 function stationCombat(x, y, z) {
     var base = new THREE.Group();
     scene.add(base);
@@ -395,7 +460,95 @@ function stationCombat(x, y, z) {
     return base;
 }
 
-// ================= SCÈNE + RENDU =================
+
+function destroyer(x, y, z) {
+    var vaisseau = new THREE.Group();
+    scene.add(vaisseau);
+
+    // corps : secoupe de base agrandie (même échelle sur les 3 axes = pas de déformation)
+    var corps = secoupe(0, 0, 0);
+    corps.scale.set(3, 3, 3);              // rayon 108, demi-épaisseur 27
+    vaisseau.add(corps);
+
+    // ---- réglages des tourelles ----
+    var nbTourelles = 8;
+    var tx = 70;                           // distance du centre
+    var longueur = 25;                     // longueur des canons
+    var angleBas = Math.PI / 4;            // inclinaison vers le bas (0 = horizontal, Math.PI / 2 = vertical)
+
+    // hauteur calculée pour coller sous la coque à cette distance
+    var ty = -27 * Math.sqrt(1 - (tx / 108) ** 2);
+
+    // direction des canons, calculée à partir de l'angle
+    var dirX = Math.cos(angleBas);         // part vers l'extérieur
+    var dirY = -Math.sin(angleBas);        // part vers le bas
+
+    for (let i = 0; i < nbTourelles; i++) {
+        var pivot = new THREE.Group();
+        pivot.rotation.y = i * (Math.PI * 2 / nbTourelles);
+        vaisseau.add(pivot);
+
+        var tourelle = new THREE.Mesh(new THREE.SphereGeometry(8, 16, 8), metal);
+        tourelle.position.set(tx, ty, 0);
+        pivot.add(tourelle);
+
+        for (let decal of [-3, 3]) {       // deux canons côte à côte
+            var canon = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 2.5, longueur, 8), metal);
+            canon.rotation.z = -(Math.PI / 2 + angleBas); // oriente le canon selon l'angle
+            canon.position.set(
+                tx + dirX * longueur / 2,  // milieu du canon
+                ty + dirY * longueur / 2,
+                decal
+            );
+            pivot.add(canon);
+
+            var bout = new THREE.Mesh(new THREE.SphereGeometry(2, 8, 6), neonBleu);
+            bout.position.set(
+                tx + dirX * longueur,      // bout du canon
+                ty + dirY * longueur,
+                decal
+            );
+            pivot.add(bout);
+        }
+    }
+
+    vaisseau.position.set(x, y, z);
+    return vaisseau;
+}
+
+
+function chasseurSecoupe(x, y, z) {
+    var vaisseau = new THREE.Group();
+    scene.add(vaisseau);
+
+    // corps : secoupe de base, taille normale
+    var corps = secoupe(0, 0, 0);
+    vaisseau.add(corps);
+
+    // une tourelle de chaque côté, sur le bord
+    for (let cote of [-1, 1]) {
+        var tourelle = new THREE.Group();
+        tourelle.position.x = cote * 34;   // collée au bord (rayon de la secoupe : 36)
+        vaisseau.add(tourelle);
+
+        tourelle.add(new THREE.Mesh(new THREE.SphereGeometry(4, 16, 8), metal));
+
+        for (let decal of [-1.5, 1.5]) {   // deux petits canons vers l'avant
+            var canon = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1, 12, 8), metal);
+            canon.rotation.x = Math.PI / 2;
+            canon.position.set(0, decal, 7);
+            tourelle.add(canon);
+
+            var bout = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 6), neonBleu);
+            bout.position.set(0, decal, 13.5);
+            tourelle.add(bout);
+        }
+    }
+
+    vaisseau.position.set(x, y, z);
+    return vaisseau;
+}
+
 function start() {
     // ---------------- SCENE ----------------
     scene = new THREE.Scene();
@@ -407,7 +560,7 @@ function start() {
     document.body.appendChild(renderer.domElement);
 
     // ---------------- CAMERA ----------------
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 30000);
     camera.position.set(1200, 1500, 1000);
     //camera.lookAt(new THREE.Vector3(0, 0, 0));
     //scene.add(camera);
@@ -418,7 +571,7 @@ function start() {
             this.obj = obj;
             this.minProp = minProp;
             this.maxProp = maxProp;
-            this.minDif = minDif; 
+            this.minDif = minDif;
         }
         get min() {
             return this.obj[this.minProp];
@@ -444,17 +597,43 @@ function start() {
     gui.add(camera, 'fov', 1, 180).onChange(updateCamera);
     const minMaxGUIHelper = new MinMaxGUIHelper(camera, 'near', 'far', 0.1);
     gui.add(minMaxGUIHelper, 'min', 0.1, 50, 0.1).name('near').onChange(updateCamera);
-    gui.add(minMaxGUIHelper, 'max', 0.1, 50, 0.1).name('far').onChange(updateCamera);
+    gui.add(minMaxGUIHelper, 'max', 100, 30000, 1).name('far').onChange(updateCamera);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.target.set(0, 5, 0);
     controls.update();
-    // ---------------- LIGHTS ----------------
-    var myAmbientLight = new THREE.AmbientLight(0xd0d0d0, 0.3);
-    scene.add(myAmbientLight); 
 
+
+    //post precessing de ce que j'ai compris du tuto bloompass ca rends limage flou et le film pass c'est pour l'effet de particule (grain) car je veux faire un effet un peux ancienne camera retro qui colle aux alien
+    //ca vien du tuto pour le post precessing https://threejs.org/manual/#post-processing
+
+    composer = new EffectComposer(renderer);
+
+    composer.addPass( new RenderPass( scene, camera ) );
+
+	const bloomPass = new BloomPass(
+        1,    // strength
+        25,   // kernel size
+        0.3,    // sigma ? jsp ce que c'est mais reduire le parametre rends l'image bcp moins flou
+        256,  // blur render target resolution
+	);
+	composer.addPass( bloomPass );
+
+	const filmPass = new FilmPass(
+		4, // intensity
+		false, // grayscale
+	);
+	composer.addPass( filmPass );
+
+	const outputPass = new OutputPass();
+	composer.addPass( outputPass );
+
+    // ---------------- LIGHTS ----------------
+    var myAmbientLight = new THREE.AmbientLight(0x8899ff, 0.3);
+    scene.add(myAmbientLight);
 
     var directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    directionalLight.position.set(1000, 2000, 500);
     scene.add(directionalLight);
 
     // ---------------- OBJECTS ----------------
@@ -476,9 +655,19 @@ function start() {
     monVaisseauMere4.scale.set(2, 2, 2);
 
 
-    maStation1 = stationCombat(0, 0, -4000); // loin derrière, elle est énorme
+    maStation1 = stationCombat(0, 0, -4000);
     maStation1.scale.set(15, 15, 15);
 
+    destroyer(0, 600, 1000);
+
+    for (let i = -2; i <= 2; i++) {
+        chasseurSecoupe(i * 90, 600, 600 - Math.abs(i) * 60);
+    }
+
+    makeInstanceV(3, 'resources/images/tree-02.png', 40, 60);           // arbre à l'origine
+    makeInstanceV(3, 'resources/images/tree-01.png', 40, 70, 100, 0, 0); // palmier
+    //spawn flamme
+    maFlamme = flamme(50,0,0);
 
     // groupage pour escoudron de secoupes
     groupeSecoupe = new THREE.Group();
@@ -554,7 +743,7 @@ function start() {
     toRender();
 }
 
-// BOUCLE DE RENDU
+// boucle de rendu pour les anim (a chaque frame)
 function toRender() {
     maSecoupe1.rotateY(0.02);  // pivote sur son axe y
     groupeSecoupe.position.z += 0.5;
@@ -582,87 +771,19 @@ function toRender() {
         if (s.position.y >= 300) {
             s.position.y -= 1;
         }
-        s.rotateY(0.05);
     }
 
+    //anime flamme intesiter de la lumiere change et la taille aussi
+    lumiereFeu.intensity = 4 + Math.random() * 10;
+    maFlamme.scale.y = 1+Math.random()/10;
+    
 
-    renderer.render(scene, camera);
+
+    //renderer.render(scene, camera);
+    composer.render(); 
     requestAnimationFrame(toRender);
 }
 
 
 
 start();
-
-
-
-
-
-
-// //fait spawn aile pour le megavaisseau
-// function aile(parent, z){
-//     var aileGroupe = new THREE.Group();
-//     aileGroupe.rotation.x = Math.PI / 2; // plat
-//     aileGroupe.position.z = z;
-//     parent.add(aileGroupe);
-
-//     // gros cylindre au centre
-//     var centre = new THREE.Mesh(new THREE.CylinderGeometry(25, 25, 50, 32), metal);
-//     centre.scale.set(0.8, 0.8, 0.5);
-//     aileGroupe.add(centre);
-
-//     // cote droit
-//     var quartDroit = new THREE.Mesh(new THREE.SphereGeometry(60, 32, 54, Math.PI / 2, Math.PI, 0, Math.PI / 2), metal);
-//     quartDroit.scale.set(1.5, 0.6, 0.1);
-//     quartDroit.position.x =  18; // collé au flanc du cylindre
-//     quartDroit.position.y = -18; // collé au flanc du cylindre
-//     aileGroupe.add(quartDroit);
-
-//     // cote gauche
-//     var quartGauche = new THREE.Mesh(new THREE.SphereGeometry(60, 32, 16, -Math.PI / 2, Math.PI, 0, Math.PI / 2), metal);
-//     quartGauche.scale.set(1.5, 0.6, 0.1);
-//     quartGauche.position.x = -18; // collé au flanc du cylindre
-//     quartGauche.position.y = -18; // collé au flanc du cylindre
-//     aileGroupe.add(quartGauche);
-
-//     return aileGroupe;
-// }
-
-// //fait une mega secoupe
-// function MegaSecoupe(x, y, z){
-//     var vaisseau = new THREE.Group(); // base
-//     scene.add(vaisseau);
-
-//     // colonne vertebrale
-//     var colonne = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 200, 32), metal);
-//     colonne.rotation.x = Math.PI / 2; // on met dans le bon sens
-//     vaisseau.add(colonne);
-
-//     // je mets trois aile sur le vaisseau
-//     for (let i = 0; i < 3; i++) {
-//         aile(vaisseau, 45-i*52);
-//     }
-
-//     // tete du vaisseau
-//     var tete;
-//     const demiRond = new THREE.SphereGeometry(60, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-//     demiRond.scale(1.6, 0.8, 0.25);
-//     tete = new THREE.Mesh(demiRond,metal);
-//     vaisseau.add(tete);
-//     tete.rotation.x = Math.PI/2;
-//     tete.position.set(0,0,80) //position de la tete du vaisseau
-
-//     // queue du vaisseau
-//     var queue;
-//     const demiRond1 = new THREE.SphereGeometry(40, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-//     demiRond1.scale(1, 1.2, 0.25);
-//     queue = new THREE.Mesh(demiRond1,metal);
-//     vaisseau.add(queue);
-//     queue.rotation.x= 3*Math.PI/2;
-//     queue.rotation.y= 3*Math.PI/2;
-//     queue.position.set(0,0,-90) //position de la tete du vaisseau
-
-
-//     vaisseau.position.set(x, y, z);
-//     return vaisseau;
-// }
