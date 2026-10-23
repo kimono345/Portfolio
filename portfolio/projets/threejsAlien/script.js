@@ -628,6 +628,21 @@ function start() {
 	const outputPass = new OutputPass();
 	composer.addPass( outputPass );
 
+    //on rajoute la possibile de modifier les reglage a la main dans l'interface util c'est un copier coll ede la doc https://threejs.org/manual/#post-processing 
+    {
+    const folder = gui.addFolder('BloomPass');
+    folder.add(bloomPass, 'enabled').name('activé');
+    folder.add(bloomPass.combineUniforms.strength, 'value', 0, 2).name('strength');
+    folder.open();
+    }
+    {
+    const folder = gui.addFolder('FilmPass');
+    folder.add(filmPass, 'enabled').name('activé');
+    folder.add(filmPass.uniforms.grayscale, 'value').name('grayscale');
+    folder.add(filmPass.uniforms.intensity, 'value', 0, 1).name('intensity');
+    folder.open();
+    }
+
     // ---------------- LIGHTS ----------------
     var myAmbientLight = new THREE.AmbientLight(0x8899ff, 0.3);
     scene.add(myAmbientLight);
