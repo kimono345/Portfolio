@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Circuit Brawl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Fredoka:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../../assets/css/tailwind.css?v=202610283300">
+<style>
+    :root { --encre: #1e1b2e; }
+    body { font-family: "Fredoka", ui-rounded, system-ui, sans-serif; color: var(--encre); background: #9fdcff; }
+
+    /* Décor : une rue de ville (ciel, immeubles dessinés par game.js, trottoir, route) */
+    .decor { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .ciel { position: absolute; inset: 0; background: linear-gradient(#6ec8ff 0%, #a8e0ff 45%, #ffe2b8 78%); }
+    .soleil { position: absolute; right: 12%; top: 9%; width: 90px; height: 90px; border-radius: 50%;
+        background: #fff3b0; box-shadow: 0 0 0 14px rgba(255,243,176,.35), 0 0 60px 30px rgba(255,236,160,.45); }
+    /* --sol = distance entre le bas de l'écran et le haut du trottoir, recalée par game.js sur les socles de l'équipe */
+    .pret .ville, .pret .trottoir, .pret .route { transition: bottom .35s ease, height .35s ease; }
+    .pret .ville { transition: none; }
+    .ville { position: absolute; left: 0; right: 0; top: 0; bottom: var(--sol, 30vh); }
+    .trottoir { position: absolute; left: 0; right: 0; bottom: calc(var(--sol, 30vh) - 64px); height: 64px; border-top: 4px solid var(--encre);
+        background: repeating-linear-gradient(90deg, #e3e6eb 0 96px, #c4c9d2 96px 100px); }
+    .trottoir::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 9px; background: #9aa1ad; border-top: 3px solid var(--encre); }
+    .route { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--sol, 30vh) - 64px); background: #4b5163; }
+    .route::after { content: ""; position: absolute; left: 0; right: 0; top: var(--tirets, 46px); height: 8px; margin-top: -4px;
+        background: repeating-linear-gradient(90deg, #ffd23f 0 60px, transparent 60px 110px); }
+
+    .titre { font-family: "Lilita One", "Fredoka", system-ui, sans-serif; letter-spacing: .02em; }
+    /* Texte blanc cerné de noir, comme dans les jeux mobiles */
+    .contour { color: #fff; paint-order: stroke fill; -webkit-text-stroke: .18em var(--encre); }
+    .bloc { background: #fff; border: 3px solid var(--encre); border-radius: 18px; box-shadow: 0 4px 0 var(--encre); }
+    .bouton {
+        font-family: "Lilita One", system-ui, sans-serif; letter-spacing: .03em;
+        border: 3px solid var(--encre); border-radius: 18px; box-shadow: 0 5px 0 var(--encre);
+        transition: transform .08s, box-shadow .08s, filter .15s;
+    }
+    .bouton:hover:not(:disabled) { filter: brightness(1.08); }
+    .bouton:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 var(--encre); }
+    .bouton:disabled { filter: grayscale(.85); opacity: .55; cursor: not-allowed; }
+
+    /* Socle métallique sous chaque robot de l'équipe */
+    .socle { position: absolute; left: 6%; right: 6%; bottom: 6%; height: 20%; border-radius: 50%;
+        background: radial-gradient(ellipse at 50% 30%, #f1f5f9, #94a3b8 70%); border: 3px solid var(--encre);
+        box-shadow: 0 4px 0 var(--encre); transition: background .2s, box-shadow .2s; }
+    .socle.cible { background: radial-gradient(ellipse at 50% 30%, #fff, #7dd3fc 70%); }
+    .socle.fusion { background: radial-gradient(ellipse at 50% 30%, #fff, #4ade80 70%); animation: pulse-socle .8s ease-in-out infinite; }
+    .socle.choisi { background: radial-gradient(ellipse at 50% 30%, #fff, #fde047 70%); }
+    @keyframes pulse-socle { 50% { box-shadow: 0 4px 0 var(--encre), 0 0 0 6px rgba(74,222,128,.5); } }
+    /* Glisser-déposer : la case ou le bouton visé grossit */
+    .emplacement, .article { touch-action: none; user-select: none; -webkit-user-select: none; }
+    .emplacement.vise .socle { transform: scale(1.18); box-shadow: 0 4px 0 var(--encre), 0 0 0 6px rgba(255,255,255,.7); }
+    #btn-vendre.vise, #btn-geler.vise { transform: scale(1.12); box-shadow: 0 5px 0 var(--encre), 0 0 0 5px rgba(255,255,255,.8); }
+
+    /* Tapis roulant de la boutique */
+    .tapis { background: repeating-linear-gradient(90deg, #5b6b82 0 26px, #4a586d 26px 52px); background-size: 52px 100%;
+        border: 3px solid var(--encre); border-radius: 22px; box-shadow: inset 0 6px 0 rgba(255,255,255,.15), 0 5px 0 var(--encre);
+        animation: tapis 2s linear infinite; }
+    @keyframes tapis { to { background-position: 52px 0; } }
+
+    /* Robots : chaque unité est un conteneur pour dimensionner ses chiffres */
+    .unite { container-type: inline-size; }
+    .stat-n { font-size: 25cqw; line-height: 1; }
+    .idle { animation: respire 2.6s ease-in-out infinite; transform-origin: 50% 92%; }
+    @keyframes respire { 50% { transform: translateY(-3%) scale(1.03, .97); } }
+    .emplacement:hover .sprite, .article:hover .sprite { animation: gigote .5s ease-in-out; }
+    @keyframes gigote { 25% { transform: rotate(-7deg); } 75% { transform: rotate(7deg); } }
+    .helice { transform-box: fill-box; transform-origin: center; animation: helice .22s linear infinite; }
+    @keyframes helice { 50% { transform: scaleX(.15); } }
+    .orbite { transform-box: view-box; transform-origin: 50px 54px; animation: orbite 7s linear infinite; }
+    @keyframes orbite { to { transform: rotate(360deg); } }
+    .ampoule { animation: ampoule 1.4s ease-in-out infinite; }
+    @keyframes ampoule { 50% { opacity: .45; } }
+    .oeil { transform-box: fill-box; transform-origin: center; animation: cligne 4.2s infinite; }
+    @keyframes cligne { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+    .bouclier { position: absolute; inset: 2% 4% 18%; border-radius: 50%; border: 3px solid rgba(56,189,248,.9);
+        background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.7), rgba(125,211,252,.25) 45%, rgba(56,189,248,.15) 70%);
+        box-shadow: 0 0 12px rgba(56,189,248,.6); pointer-events: none; }
+    .fleche { animation: fleche .6s ease-in-out infinite alternate; }
+    @keyframes fleche { to { transform: translate(-50%, -6px); } }
+
+    /* Objets gelés : bloc de glace par-dessus */
+    .glace { position: absolute; inset: 8% 2% 4%; border-radius: 16px; pointer-events: none; z-index: 15;
+        background: linear-gradient(135deg, rgba(255,255,255,.75) 0 12%, rgba(186,230,253,.55) 12% 55%, rgba(125,211,252,.5) 55%);
+        border: 3px solid #e0f2fe; box-shadow: inset 0 0 0 2px rgba(56,189,248,.6), 0 0 14px rgba(125,211,252,.7); }
+    .glace::after { content: "❄"; position: absolute; right: 6%; top: 2%; font-size: 18px; color: #fff; text-shadow: 0 0 4px #0ea5e9; }
+
+    /* Échoppes de la boutique : store rayé, vitrine claire, comptoir en bois */
+    .echoppe { position: relative; display: flex; flex-direction: column; padding: 46px 10px 0; border-radius: 16px 16px 8px 8px;
+        border: 3px solid var(--encre); box-shadow: 0 5px 0 var(--encre); background: #fff7e8; }
+    .auvent { position: absolute; left: -10px; right: -10px; top: -12px; height: 44px; border: 3px solid var(--encre); border-radius: 12px;
+        box-shadow: 0 4px 0 var(--encre); background: repeating-linear-gradient(90deg, var(--c1) 0 26px, #fff 26px 52px); }
+    .auvent span { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 0 12px; border-radius: 999px;
+        font-family: "Lilita One", sans-serif; font-size: 15px; letter-spacing: .06em; background: #fff; border: 3px solid var(--encre); white-space: nowrap; }
+    .comptoir { height: 18px; margin: 0 -10px; border-top: 3px solid var(--encre); border-radius: 0 0 6px 6px;
+        background: repeating-linear-gradient(90deg, #c98a4b 0 60px, #b97a3e 60px 63px); }
+    .pion { position: absolute; bottom: 22%; z-index: 2; }
+    /* Boss : beaucoup plus gros, il grandit vers l'arrière pour ne pas chevaucher ton équipe */
+    .pion[data-boss] .unite { scale: 1.55; transform-origin: 10% 100%; }
+    .pion[data-boss] .unite::before { content: '👑'; position: absolute; top: -18%; left: 50%; transform: translateX(-50%) rotate(-8deg);
+        font-size: 34cqw; z-index: 5; filter: drop-shadow(0 3px 0 rgba(30,27,46,.4)); }
+    .boss-alerte { animation: boss-alerte 1s ease-in-out infinite; }
+    /* Synergies : la puce se soulève, une infobulle dessinée s'ouvre au-dessus */
+    .synergie { transition: transform .15s cubic-bezier(.3,1.6,.6,1), box-shadow .15s; outline: none; }
+    .synergie:hover, .synergie:focus-visible { transform: translateY(-3px) scale(1.06); box-shadow: 0 5px 0 var(--encre) !important; }
+    .bulle-synergie { position: fixed; left: 0; top: 0; z-index: 45; width: min(19rem, calc(100vw - 16px)); pointer-events: none;
+        background: #fff; border: 3px solid var(--encre); border-radius: 18px; box-shadow: 0 6px 0 var(--encre);
+        opacity: 0; transform: translateY(8px) scale(.95); transform-origin: 50% 100%;
+        transition: opacity .15s ease-out, transform .2s cubic-bezier(.3,1.5,.6,1); }
+    .bulle-synergie.dessous { transform-origin: 50% 0; transform: translateY(-8px) scale(.95); }
+    .bulle-synergie.visible { opacity: 1; transform: none; }
+    .bulle-pointe { position: absolute; bottom: -10px; width: 16px; height: 16px; margin-left: -8px; background: #fff;
+        border-right: 3px solid var(--encre); border-bottom: 3px solid var(--encre); transform: rotate(45deg); }
+    .bulle-synergie.dessous .bulle-pointe { bottom: auto; top: -10px; transform: rotate(225deg); }
+    /* Palier : écusson (blason) en chiffres romains */
+    .ecusson { display: inline-block; width: 1.75rem; height: 2rem; flex-shrink: 0; filter: drop-shadow(0 2px 0 var(--encre)); }
+    @media (max-width: 640px) { .ecusson { width: 1.35rem; height: 1.55rem; } }
+    /* Ligne palier · niveau · prix au-dessus des articles : version compacte */
+    .ligne-article .ecusson { width: 1.2rem; height: 1.4rem; }
+    .ligne-article .prix { font-size: .78rem; padding: 0 .3rem; border-width: 2px; }
+    @keyframes boss-alerte { 50% { transform: scale(1.08) rotate(-2deg); } }
+    .flottant { position: absolute; pointer-events: none; z-index: 30; white-space: nowrap; transform: translate(-50%, -50%); }
+    #message { transition: opacity .3s, transform .3s; }
+    /* Téléphone : HUD plus compact, et le niveau passe sous la ligne palier · prix des articles */
+    @media (max-width: 640px) {
+        #hud { gap: .35rem; }
+        #hud .bloc { padding-top: 0; padding-bottom: 0; }
+        #hud .bloc > span:first-child { width: 1.6rem; height: 1.6rem; font-size: .8rem; }
+        #hud .titre.text-xl { font-size: 1rem; }
+        .ligne-article { flex-wrap: wrap; justify-content: space-between; row-gap: 2px; }
+        .ligne-article .niveau-ligne { order: 3; width: 100%; justify-content: center; }
+        .echoppe { padding-left: 6px; padding-right: 6px; }
+        .ligne-article .ecusson { width: 1rem; height: 1.15rem; }
+        .ligne-article .prix { font-size: .68rem; padding: 0 .2rem; gap: 0; }
+        .ligne-article .prix span { font-size: .55rem; }
+        footer .bouton { padding-left: .6rem; padding-right: .6rem; height: 2.75rem; }
+        #btn-combat { height: 3.2rem; font-size: 1rem; }
+    }
+</style>
+</head>
+<body class="h-[100dvh] overflow-hidden antialiased">
+    <div class="decor" aria-hidden="true">
+        <div class="ciel"></div>
+        <div class="soleil"></div>
+        <div id="ville" class="ville"></div>
+        <div class="trottoir"></div>
+        <div class="route"></div>
+    </div>
+
+    <div class="relative z-10 flex h-full flex-col">
+        <header class="flex flex-wrap items-center gap-x-4 gap-y-2 px-3 pt-3 sm:px-5">
+            <h1 class="titre contour text-2xl sm:text-3xl">Circuit<span class="text-[#ffd23f]">Brawl</span></h1>
+            <div id="hud" class="order-last flex w-full flex-wrap items-center justify-center gap-2 md:order-none md:w-auto md:flex-1"></div>
+            <div class="ml-auto flex items-center gap-2 md:ml-0">
+                <button id="btn-aide" title="Aide" class="bouton grid h-10 w-10 place-items-center bg-white text-lg">?</button>
+                <button id="btn-nouvelle" title="Nouvelle partie" class="bouton grid h-10 w-10 place-items-center bg-white text-lg">↺</button>
+            </div>
+        </header>
+
+        <!-- Phase boutique -->
+        <main id="vue-boutique" class="flex min-h-0 flex-1 flex-col items-center justify-evenly gap-2 px-3 pb-2">
+            <!-- L'équipe se tient sur le trottoir, devant les immeubles -->
+            <section class="flex flex-col items-center">
+                <div class="mb-1 flex w-full items-center justify-between px-1">
+                    <span class="titre contour text-lg">Ton équipe</span>
+                    <span class="titre rounded-full bg-[#ffd23f] px-3 py-0.5 text-sm" style="border:3px solid var(--encre)">AVANT ➜</span>
+                </div>
+                <div id="equipe" class="flex gap-1 sm:gap-3"></div>
+                <div id="synergies" class="mt-2 flex flex-wrap justify-center gap-1.5"></div>
+            </section>
+
+            <!-- Boutique : deux échoppes installées sur la route, robots à gauche, pièces à droite -->
+            <section class="flex flex-col items-center">
+                <div id="titre-boutique" class="titre contour mb-4 text-lg"></div>
+                <div class="flex flex-wrap items-end justify-center gap-x-3 gap-y-7 sm:gap-6">
+                    <div class="echoppe" style="--c1:#ff6b6b">
+                        <div class="auvent"><span>ROBOTS</span></div>
+                        <div id="boutique" class="flex min-h-[6rem] items-end justify-center gap-1 sm:min-h-[8rem] sm:gap-3"></div>
+                        <div class="comptoir"></div>
+                    </div>
+                    <div class="echoppe" style="--c1:#4cc3ff">
+                        <div class="auvent"><span>PIÈCES</span></div>
+                        <div id="objets" class="flex min-h-[6rem] items-end justify-center gap-1 sm:min-h-[8rem] sm:gap-3"></div>
+                        <div class="comptoir"></div>
+                    </div>
+                </div>
+            </section>
+
+            <div id="detail" class="flex min-h-[4.5rem] w-full max-w-lg items-center gap-3 px-3 text-sm"></div>
+        </main>
+
+        <!-- Phase combat -->
+        <main id="vue-combat" class="hidden min-h-0 flex-1 flex-col items-center justify-center gap-3 px-3">
+            <div class="flex w-full max-w-[1700px] justify-between px-2">
+                <span class="titre contour text-lg">Ton équipe</span><span id="nom-adversaire" class="titre contour text-lg"></span>
+            </div>
+            <div id="arene" class="relative h-[min(58vh,30rem)] w-full max-w-[1700px]"></div>
+            <div id="resultat" class="relative z-20 flex h-24 items-center"></div>
+        </main>
+
+        <footer class="relative flex items-center justify-center gap-2 px-3 pb-5 sm:gap-3">
+            <div id="message" class="titre pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded-full px-4 py-1.5 text-sm text-white opacity-0" style="border:3px solid var(--encre)"></div>
+            <div id="actions-boutique" class="flex items-center gap-2 sm:gap-3">
+                <button id="btn-vendre" class="bouton h-12 whitespace-nowrap bg-[#ff6b6b] px-3 text-sm text-white sm:px-5 sm:text-base"></button>
+                <button id="btn-relancer" class="bouton h-12 whitespace-nowrap bg-[#4cc3ff] px-3 text-sm text-white sm:px-5 sm:text-base"></button>
+                <button id="btn-geler" class="bouton h-12 whitespace-nowrap bg-[#a5e9ff] px-3 text-sm text-white sm:px-5 sm:text-base"></button>
+                <button id="btn-combat" class="bouton h-14 whitespace-nowrap bg-[#4be08a] px-4 text-lg text-white sm:px-8 sm:text-xl"><span class="contour">COMBAT ➜</span></button>
+            </div>
+            <div id="actions-combat" class="hidden items-center gap-2 sm:gap-3">
+                <button id="btn-vitesse" class="bouton h-12 w-20 bg-white"></button>
+                <button id="btn-passer" class="bouton h-12 bg-white px-5">Passer ⏭</button>
+                <button id="btn-continuer" class="bouton hidden h-14 bg-[#4be08a] px-8 text-xl"><span class="contour">CONTINUER ➜</span></button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Calque des effets (chiffres flottants, étincelles, projectiles) -->
+    <div id="effets" class="pointer-events-none fixed inset-0 z-40 overflow-hidden"></div>
+
+    <!-- Infobulle des synergies -->
+    <div id="bulle-synergie" class="bulle-synergie" role="tooltip"></div>
+
+    <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-[#1e1b2e]/60 p-4">
+        <div id="modal-contenu" class="bloc max-h-full w-full max-w-xl overflow-y-auto p-6"></div>
+    </div>
+
+    <script type="module" src="game.js?v=202610283300"></script>
+</body>
+</html>

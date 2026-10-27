@@ -2,7 +2,7 @@
 // Après avoir ajouté des classes dans le HTML ou le JS : npm run build:css
 module.exports = {
     // Les classes sont aussi écrites dans le JS (cartes, filtres, système solaire) : il faut le scanner
-    content: ['./portfolio/index.html', './portfolio/assets/js/**/*.js'],
+    content: ['./portfolio/index.html', './portfolio/assets/js/**/*.js', './portfolio/projets/circuitbrawl/**/*.{html,js}'],
     darkMode: 'class',
     theme: {
         extend: {

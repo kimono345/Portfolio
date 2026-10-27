@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
-import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
-import {BloomPass} from 'three/addons/postprocessing/BloomPass.js';
-import {FilmPass} from 'three/addons/postprocessing/FilmPass.js';
-import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { BloomPass } from 'three/addons/postprocessing/BloomPass.js';
+import { FilmPass } from 'three/addons/postprocessing/FilmPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 
 var scene;
@@ -68,7 +68,7 @@ function makeInstance(geometry, color, rotY, url, x = 0, y = 0, z = 0) {
 }
 
 //fonction pour faire direction instande d'une objetc avec un nb de face donné
-function makeInstanceV(nbFaces, url,largeur,hauteur, x = 0, y = 0, z = 0) {
+function makeInstanceV(nbFaces, url, largeur, hauteur, x = 0, y = 0, z = 0) {
     const texture = loader.load(url);
     var plan = new THREE.PlaneGeometry(largeur, hauteur);
     const material = new THREE.MeshPhongMaterial({
@@ -83,7 +83,7 @@ function makeInstanceV(nbFaces, url,largeur,hauteur, x = 0, y = 0, z = 0) {
 
     for (let index = 0; index < nbFaces; index++) {
         var f1 = new THREE.Mesh(plan, material);
-        f1.rotation.y= index*Math.PI/nbFaces;
+        f1.rotation.y = index * Math.PI / nbFaces;
         groupe.add(f1);
     }
 
@@ -110,7 +110,7 @@ function flamme(x, y, z) {
     feu.add(f1);
     feu.add(f2);
     feu.add(lumiereFeu);
-    feu.position.set(x, y + 20, z); 
+    feu.position.set(x, y + 20, z);
     scene.add(feu);
     return feu;
 }
@@ -168,8 +168,8 @@ function spawnRayonTracteur(secoupe, delaiDebut, delaiFin) {
     );
     var flash = new THREE.PointLight(0x00c8ff, 3, 1000, 0);
     rayon.position.set(0, -50, 0);
-    setTimeout(() => { secoupe.add(rayon); secoupe.add(flash);}, delaiDebut);  // apparaît après le délai
-    setTimeout(() => { secoupe.remove(rayon); secoupe.remove(flash);}, delaiDebut + delaiFin);
+    setTimeout(() => { secoupe.add(rayon); secoupe.add(flash); }, delaiDebut);  // apparaît après le délai
+    setTimeout(() => { secoupe.remove(rayon); secoupe.remove(flash); }, delaiDebut + delaiFin);
     return rayon; // pratique si tu veux le supprimer après
 }
 
@@ -609,38 +609,81 @@ function start() {
 
     composer = new EffectComposer(renderer);
 
-    composer.addPass( new RenderPass( scene, camera ) );
+    composer.addPass(new RenderPass(scene, camera));
 
-	const bloomPass = new BloomPass(
+    const bloomPass = new BloomPass(
         1,    // strength
         25,   // kernel size
         0.3,    // sigma ? jsp ce que c'est mais reduire le parametre rends l'image bcp moins flou
         256,  // blur render target resolution
-	);
-	composer.addPass( bloomPass );
+    );
+    composer.addPass(bloomPass);
 
-	const filmPass = new FilmPass(
-		4, // intensity
-		false, // grayscale
-	);
-	composer.addPass( filmPass );
+    const filmPass = new FilmPass(
+        4, // intensity
+        false, // grayscale
+    );
+    composer.addPass(filmPass);
 
-	const outputPass = new OutputPass();
-	composer.addPass( outputPass );
+    const outputPass = new OutputPass();
+    composer.addPass(outputPass);
 
     //on rajoute la possibile de modifier les reglage a la main dans l'interface util c'est un copier coll ede la doc https://threejs.org/manual/#post-processing 
     {
-    const folder = gui.addFolder('BloomPass');
-    folder.add(bloomPass, 'enabled').name('activé');
-    folder.add(bloomPass.combineUniforms.strength, 'value', 0, 2).name('strength');
-    folder.open();
+        const folder = gui.addFolder('BloomPass');
+        folder.add(bloomPass, 'enabled').name('activé');
+        folder.add(bloomPass.combineUniforms.strength, 'value', 0, 2).name('strength');
+        folder.open();
     }
     {
-    const folder = gui.addFolder('FilmPass');
-    folder.add(filmPass, 'enabled').name('activé');
-    folder.add(filmPass.uniforms.grayscale, 'value').name('grayscale');
-    folder.add(filmPass.uniforms.intensity, 'value', 0, 1).name('intensity');
-    folder.open();
+        const folder = gui.addFolder('FilmPass');
+        folder.add(filmPass, 'enabled').name('activé');
+        folder.add(filmPass.uniforms.grayscale, 'value').name('grayscale');
+        folder.add(filmPass.uniforms.intensity, 'value', 0, 10).name('intensity');
+        folder.open();
+    }
+
+    //brouillard https://threejs.org/manual/#fog
+    class FogGUIHelper {
+        constructor(fog, backgroundColor) {
+            this.fog = fog;
+            this.backgroundColor = backgroundColor;
+        }
+        get near() {
+            return this.fog.near;
+        }
+        set near(v) {
+            this.fog.near = v;
+            this.fog.far = Math.max(this.fog.far, v);
+        }
+        get far() {
+            return this.fog.far;
+        }
+        set far(v) {
+            this.fog.far = v;
+            this.fog.near = Math.min(this.fog.near, v);
+        }
+        get color() {
+            return `#${this.fog.color.getHexString()}`;
+        }
+        set color(hexString) {
+            this.fog.color.set(hexString);
+            this.backgroundColor.set(hexString);
+        }
+    }
+
+    {
+        const near = 1000;
+        const far = 8000;
+        const color = 'lightblue'; 
+        scene.fog = new THREE.Fog(color, near, far);
+        scene.background = new THREE.Color(color);
+
+        const fogGUIHelper = new FogGUIHelper(scene.fog, scene.background);
+        const folder = gui.addFolder('Brouillard');
+        folder.add(fogGUIHelper, 'near', 1, 30000).listen(); // plage plus large que near..far
+        folder.add(fogGUIHelper, 'far', 1, 30000).listen();
+        folder.addColor(fogGUIHelper, 'color');
     }
 
     // ---------------- LIGHTS ----------------
@@ -682,7 +725,7 @@ function start() {
     makeInstanceV(3, 'resources/images/tree-02.png', 40, 60);           // arbre à l'origine
     makeInstanceV(3, 'resources/images/tree-01.png', 40, 70, 100, 0, 0); // palmier
     //spawn flamme
-    maFlamme = flamme(50,0,0);
+    maFlamme = flamme(50, 0, 0);
 
     // groupage pour escoudron de secoupes
     groupeSecoupe = new THREE.Group();
@@ -788,14 +831,14 @@ function toRender() {
         }
     }
 
-    //anime flamme intesiter de la lumiere change et la taille aussi
+    //anime flamme
     lumiereFeu.intensity = 4 + Math.random() * 10;
-    maFlamme.scale.y = 1+Math.random()/10;
-    
+    maFlamme.scale.y = 1 + Math.random() / 10;
+
 
 
     //renderer.render(scene, camera);
-    composer.render(); 
+    composer.render();
     requestAnimationFrame(toRender);
 }
 
