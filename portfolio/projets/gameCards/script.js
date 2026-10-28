@@ -27,19 +27,9 @@ const CHANCE_HOLO = 0.02;
 const MULTIPLICATEUR_HOLO = 3;
 const SEUIL_CHEF_OEUVRE = 90;
 const MANCHES_GAGNANTES = 3;
-const TAILLE_DECK = 5;
+const GAIN_DUEL = 30;
 const BONUS_HOLO = 5;         // duel : +5 sur toutes les stats d'une holo
 const BONUS_CHEF_OEUVRE = 5;  // duel : +5 en Metacritic pour un chef-d'œuvre
-const VICTOIRES_POUR_DEBLOQUER = 3;
-
-// Adversaires du duel : raretés de leur deck, gain en cas de victoire, et finesse de l'ordinateur
-// quand il attaque (forte = il joue sa meilleure carte sur sa meilleure stat)
-const NIVEAUX = [
-    { id: 'facile',     nom: 'Facile',     raretes: ['commune', 'peu-commune'],         gain: 15,  iaForte: false },
-    { id: 'normal',     nom: 'Normal',     raretes: ['commune', 'peu-commune', 'rare'], gain: 35,  iaForte: false },
-    { id: 'difficile',  nom: 'Difficile',  raretes: ['rare', 'epique'],                 gain: 70,  iaForte: true },
-    { id: 'legendaire', nom: 'Légendaire', raretes: ['epique', 'legendaire', 'mythique'], gain: 150, iaForte: true },
-];
 const CARTES_PAR_PAGE = 60; // collection affichée par tranches
 const URL_IMAGES = 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps';
 
@@ -85,7 +75,6 @@ const CLES = {
     collection: 'gameCards.collection',
     pieces: 'gameCards.pieces',
     dernierBooster: 'gameCards.dernierBooster',
-    duels: 'gameCards.duels',
 };
 
 function lire(cle, defaut) {
@@ -109,7 +98,6 @@ const etat = {
     collection: lire(CLES.collection, {}),       // { id: carte + exemplaires, holos, obtenue }
     pieces: lire(CLES.pieces, 0),
     dernierBooster: lire(CLES.dernierBooster, 0),
-    duels: { niveau: 'facile', deck: [], victoires: {}, ...lire(CLES.duels, {}) },
 };
 
 // Tous les jeux de data/jeux.json (chargés au démarrage), et les mêmes rangés par rareté
@@ -662,235 +650,90 @@ function bonusDuel(carte, stat) {
     return bonus;
 }
 const valeurDuel = (carte, stat) => carte[stat] + bonusDuel(carte, stat);
-const forceDuel = carte => Object.keys(STATS).reduce((s, stat) => s + valeurDuel(carte, stat), 0);
 
-const niveauDuel = () => NIVEAUX.find(n => n.id === etat.duels.niveau) || NIVEAUX[0];
-const victoiresDuel = id => etat.duels.victoires[id] || 0;
-const niveauDebloque = i => i === 0 || victoiresDuel(NIVEAUX[i - 1].id) >= VICTOIRES_POUR_DEBLOQUER;
+// Tirage d'une carte de duel : une rareté au hasard (même chance pour chacune), puis une carte dedans.
+// Une Mythique sort donc aussi souvent qu'une Commune.
+function tirerCarteJoueur() {
+    const parRarete = {};
+    for (const e of Object.values(etat.collection)) (parRarete[e.rarete] ??= []).push(e);
+    return auHasard(parRarete[auHasard(Object.keys(parRarete))]);
+}
+const tirerCarteOrdi = exclus => piocher(Math.floor(Math.random() * RARETES.length), exclus);
 
-const duel = {
-    enCours: false,
-    mainJoueur: [], mainOrdi: [],
-    utilisees: new Set(), utiliseesOrdi: new Set(),
-    joueur: 0, ordi: 0, manche: 0,
-    attaqueJoueur: true, carteOrdi: null, statOrdi: null,
-    choix: null,      // id de la carte sélectionnée dans la main
-    verrou: false,    // pendant la révélation d'une manche
-};
+const duel = { joueur: 0, ordi: 0, carteJoueur: null, carteOrdi: null, verrou: false };
 
-function afficherDuel() {
-    if (duel.enCours) return;
-    $('#duel-preparation').hidden = false;
-    $('#duel-combat').hidden = true;
-    // Le deck ne garde que des cartes encore dans la collection
-    etat.duels.deck = etat.duels.deck.filter(id => etat.collection[id]).slice(0, TAILLE_DECK);
-    afficherNiveaux();
-    afficherDeck();
-    afficherChoixDeck();
+function actionsDuel(html) {
+    $('#duel-actions').innerHTML = html;
 }
 
-function afficherNiveaux() {
-    $('#niveaux').innerHTML = NIVEAUX.map((n, i) => {
-        const ouvert = niveauDebloque(i);
-        const precedent = NIVEAUX[i - 1];
-        return `
-            <button class="niveau niveau-${n.id}${n.id === etat.duels.niveau ? ' actif' : ''}${ouvert ? '' : ' verrouille'}"
-                    data-niveau="${n.id}" aria-pressed="${n.id === etat.duels.niveau}">
-                <span class="niveau-nom">${ouvert ? '' : '🔒 '}${n.nom}</span>
-                <span class="niveau-raretes">${n.raretes.map(id => `<i class="rarete-${id}" title="${RARETES[indexRarete(id)].nom}"></i>`).join('')}</span>
-                <span class="niveau-gain">+${n.gain} ${PIECE}</span>
-                <span class="niveau-etat">${ouvert
-                    ? `${victoiresDuel(n.id)} victoire${victoiresDuel(n.id) > 1 ? 's' : ''}`
-                    : `${victoiresDuel(precedent.id)} / ${VICTOIRES_POUR_DEBLOQUER} victoires en ${precedent.nom}`}</span>
-            </button>`;
-    }).join('');
+function majScoreDuel() {
+    const pips = n => Array.from({ length: MANCHES_GAGNANTES }, (_, i) => `<i${i < n ? ' class="plein"' : ''}></i>`).join('');
+    $('#pips-joueur').innerHTML = pips(duel.joueur);
+    $('#pips-ordi').innerHTML = pips(duel.ordi);
+    $('#pips-joueur').setAttribute('aria-label', `${duel.joueur} manche(s) gagnée(s)`);
+    $('#pips-ordi').setAttribute('aria-label', `${duel.ordi} manche(s) gagnée(s)`);
 }
 
-function afficherDeck() {
-    const deck = etat.duels.deck;
-    $('#deck-slots').innerHTML = Array.from({ length: TAILLE_DECK }, (_, i) => {
-        const carte = etat.collection[deck[i]];
-        return carte
-            ? `<button class="deck-slot" data-deck="${carte.id}" aria-label="Retirer ${echapper(carte.nom)} du deck">${carteHTML(carte, { holo: carte.holos > 0 })}</button>`
-            : `<div class="deck-slot deck-slot-vide"><span>${i + 1}</span></div>`;
-    }).join('');
-    $('#deck-compte').textContent = `${deck.length} / ${TAILLE_DECK}`;
-    $('#btn-lancer-duel').disabled = deck.length < TAILLE_DECK || !donneesPretes();
-}
-
-function afficherChoixDeck() {
-    const entrees = Object.values(etat.collection);
-    if (entrees.length < TAILLE_DECK) {
-        $('#deck-choix').innerHTML = `<p class="vide">Il te faut au moins ${TAILLE_DECK} cartes pour composer un deck (tu en as ${entrees.length}).<br>
-            <a class="btn btn-principal" href="#accueil">Ouvrir des boosters</a></p>`;
+function demarrerDuel() {
+    if (!donneesPretes()) return;
+    if (!Object.keys(etat.collection).length) {
+        toast('Ouvre d’abord un booster pour avoir des cartes', 'erreur');
         return;
     }
-    const recherche = $('#deck-recherche').value.trim().toLowerCase();
-    const deck = new Set(etat.duels.deck);
-    $('#deck-choix').innerHTML = entrees
-        .filter(e => !recherche || e.nom.toLowerCase().includes(recherche))
-        .sort((a, b) => forceDuel(b) - forceDuel(a))
-        .slice(0, CARTES_PAR_PAGE)
-        .map(e => `
-            <button class="case-carte deck-carte${deck.has(e.id) ? ' choisie' : ''}" data-deck="${e.id}"
-                    aria-pressed="${deck.has(e.id)}" aria-label="${echapper(e.nom)}">
-                ${carteHTML(e, { holo: e.holos > 0 })}
-            </button>`).join('') || '<p class="vide">Aucune carte ne correspond.</p>';
-}
-
-function basculerDeck(id) {
-    const deck = etat.duels.deck;
-    if (deck.includes(id)) deck.splice(deck.indexOf(id), 1);
-    else if (deck.length < TAILLE_DECK) deck.push(id);
-    else return toast(`Ton deck est complet : retire une carte d’abord`);
-    sauvegarder();
-    afficherDeck();
-    afficherChoixDeck();
-}
-
-function deckAuto() {
-    etat.duels.deck = Object.values(etat.collection)
-        .sort((a, b) => forceDuel(b) - forceDuel(a))
-        .slice(0, TAILLE_DECK)
-        .map(e => e.id);
-    sauvegarder();
-    afficherDeck();
-    afficherChoixDeck();
-}
-
-function choisirNiveau(id) {
-    const i = NIVEAUX.findIndex(n => n.id === id);
-    if (!niveauDebloque(i)) {
-        return toast(`Gagne ${VICTOIRES_POUR_DEBLOQUER} duels en ${NIVEAUX[i - 1].nom} pour débloquer ce niveau`);
-    }
-    etat.duels.niveau = id;
-    sauvegarder();
-    afficherNiveaux();
-}
-
-function lancerDuel() {
-    if (etat.duels.deck.length < TAILLE_DECK || !donneesPretes()) return;
-    const niveau = niveauDuel();
-    duel.mainJoueur = etat.duels.deck.map(id => etat.collection[id]);
-    // Deck adverse : 5 jeux pris dans les raretés du niveau
-    const exclus = new Set(etat.duels.deck);
-    duel.mainOrdi = Array.from({ length: TAILLE_DECK }, () => {
-        const carte = piocher(indexRarete(auHasard(niveau.raretes)), exclus);
-        exclus.add(carte.id);
-        return carte;
-    });
-    Object.assign(duel, { enCours: true, joueur: 0, ordi: 0, manche: 0, utilisees: new Set(), utiliseesOrdi: new Set() });
-    $('#duel-preparation').hidden = true;
-    $('#duel-combat').hidden = false;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    duel.joueur = 0;
+    duel.ordi = 0;
+    duel.manche = 0;
     nouvelleManche();
-}
-
-// L'ordinateur attaque : sa meilleure stat, sur une carte au hasard ou sur sa meilleure carte
-function attaqueOrdi(cartes) {
-    const meilleureStat = carte => Object.keys(STATS).reduce((a, b) => valeurDuel(carte, a) >= valeurDuel(carte, b) ? a : b);
-    const carte = niveauDuel().iaForte
-        ? cartes.reduce((a, b) => valeurDuel(a, meilleureStat(a)) >= valeurDuel(b, meilleureStat(b)) ? a : b)
-        : auHasard(cartes);
-    return { carte, stat: meilleureStat(carte) };
 }
 
 function nouvelleManche() {
     duel.manche++;
-    duel.choix = null;
     duel.verrou = false;
-    duel.attaqueJoueur = duel.manche % 2 === 1;
-    const restantes = duel.mainOrdi.filter(c => !duel.utiliseesOrdi.has(c.id));
-    if (duel.attaqueJoueur) {
-        duel.carteOrdi = auHasard(restantes);
-        duel.statOrdi = null;
-    } else {
-        ({ carte: duel.carteOrdi, stat: duel.statOrdi } = attaqueOrdi(restantes));
-    }
+    duel.carteJoueur = tirerCarteJoueur();
+    duel.carteOrdi = tirerCarteOrdi(new Set([duel.carteJoueur.id]));
 
     $('#duel-joueur').className = 'duel-emplacement';
     $('#duel-ordi').className = 'duel-emplacement';
-    $('#duel-joueur').innerHTML = '<p class="emplacement-vide">Choisis une carte<br>dans ta main</p>';
-    // On voit le jeu adverse, pas ses stats
+    $('#duel-joueur').innerHTML = flipHTML(duel.carteJoueur, { holo: duel.carteJoueur.holos > 0, retournee: true });
+    // On voit le jeu adverse, pas ses stats : à toi de deviner où il est faible
     $('#duel-ordi').innerHTML = flipHTML(duel.carteOrdi, { retournee: true, cachee: true });
-    const nomOrdi = `<b>${echapper(duel.carteOrdi.nom)}</b>`;
-    if (duel.attaqueJoueur) {
-        $('#duel-message').innerHTML = `<b class="tag-attaque">Tu attaques</b> L’ordinateur joue ${nomOrdi}. Choisis ta carte, puis la stat.`;
-    } else {
-        const stat = STATS[duel.statOrdi];
-        $('#duel-ordi').querySelector(`li[data-stat="${duel.statOrdi}"]`).classList.add('stat-choisie');
-        $('#duel-message').innerHTML = `<b class="tag-defense">Tu défends</b> L’ordinateur attaque avec ${nomOrdi} en <b>${stat.icone} ${stat.nom}</b>. Choisis la carte qui défend.`;
-    }
     $('#duel-manche').textContent = `Manche ${duel.manche}`;
-    $('#duel-actions').innerHTML = '';
-    afficherMain();
+    $('#duel-message').innerHTML = `L’ordinateur joue <b>${echapper(duel.carteOrdi.nom)}</b>. Sur quelle stat penses-tu le battre ?`;
+    actionsDuel(Object.entries(STATS).map(([cle, stat]) => {
+        const bonus = bonusDuel(duel.carteJoueur, cle);
+        return `
+            <button class="btn-stat" data-stat="${cle}">
+                <span>${stat.icone} ${stat.nom}</span><b>${valeurDuel(duel.carteJoueur, cle)}</b>
+                ${bonus ? `<small>dont +${bonus} de bonus</small>` : ''}
+            </button>`;
+    }).join(''));
     majScoreDuel();
 }
 
-function afficherMain() {
-    $('#duel-main').innerHTML = duel.mainJoueur.map(carte => {
-        const utilisee = duel.utilisees.has(carte.id);
-        return `
-            <button class="main-carte${utilisee ? ' utilisee' : ''}${duel.choix === carte.id && !utilisee ? ' selectionnee' : ''}"
-                    data-jouer="${carte.id}"${utilisee || duel.verrou ? ' disabled' : ''} aria-label="Jouer ${echapper(carte.nom)}">
-                ${carteHTML(carte, { holo: carte.holos > 0 })}
-            </button>`;
-    }).join('');
-}
-
-const libelleBonus = (carte, stat) => bonusDuel(carte, stat) ? `<small>dont +${bonusDuel(carte, stat)} de bonus</small>` : '';
-
-function selectionnerCarte(id) {
-    if (duel.verrou || duel.utilisees.has(id)) return;
-    const carte = duel.mainJoueur.find(c => c.id === id);
-    duel.choix = id;
-    $('#duel-joueur').innerHTML = flipHTML(carte, { holo: carte.holos > 0, retournee: true });
-    afficherMain();
-
-    if (duel.attaqueJoueur) {
-        $('#duel-actions').innerHTML = Object.entries(STATS).map(([cle, stat]) => `
-            <button class="btn-stat" data-stat="${cle}">
-                <span>${stat.icone} ${stat.nom}</span><b>${valeurDuel(carte, cle)}</b>${libelleBonus(carte, cle)}
-            </button>`).join('');
-    } else {
-        const stat = STATS[duel.statOrdi];
-        $('#duel-joueur').querySelector(`li[data-stat="${duel.statOrdi}"]`).classList.add('stat-choisie');
-        $('#duel-actions').innerHTML = `
-            <button class="btn-stat btn-defendre" data-stat="${duel.statOrdi}">
-                <span>Défendre en ${stat.icone} ${stat.nom}</span><b>${valeurDuel(carte, duel.statOrdi)}</b>${libelleBonus(carte, duel.statOrdi)}
-            </button>`;
-    }
-}
-
-async function jouerManche(stat) {
-    if (duel.verrou || !duel.choix) return;
+async function choisirStat(stat) {
+    if (duel.verrou) return;
     duel.verrou = true;
-    const mienne = duel.mainJoueur.find(c => c.id === duel.choix);
-    const sienne = duel.carteOrdi;
-    duel.utilisees.add(mienne.id);
-    duel.utiliseesOrdi.add(sienne.id);
     $('#duel-actions').querySelectorAll('button').forEach(b => (b.disabled = true));
     $(`#duel-actions [data-stat="${stat}"]`).classList.add('choisie');
     $('#duel-joueur').querySelector(`li[data-stat="${stat}"]`).classList.add('stat-choisie');
-    afficherMain();
     await attendre(400);
 
     // Révélation des stats adverses
-    $('#duel-ordi').innerHTML = flipHTML(sienne, { retournee: true });
+    $('#duel-ordi').innerHTML = flipHTML(duel.carteOrdi, { retournee: true });
     $('#duel-ordi .carte').classList.add('revelation');
     $('#duel-ordi').querySelector(`li[data-stat="${stat}"]`).classList.add('stat-choisie');
     await attendre(700);
 
     // En cas d'égalité, la Popularité départage
-    const a = valeurDuel(mienne, stat);
-    const b = valeurDuel(sienne, stat);
-    let ecart = a - b;
+    const mienne = valeurDuel(duel.carteJoueur, stat);
+    const sienne = valeurDuel(duel.carteOrdi, stat);
+    let ecart = mienne - sienne;
     let departage = '';
     if (!ecart && stat !== 'popularite') {
-        const pa = valeurDuel(mienne, 'popularite');
-        const pb = valeurDuel(sienne, 'popularite');
-        ecart = pa - pb;
-        if (ecart) departage = ` Égalité, départagée par la Popularité (${pa} contre ${pb}).`;
+        const pm = valeurDuel(duel.carteJoueur, 'popularite');
+        const ps = valeurDuel(duel.carteOrdi, 'popularite');
+        ecart = pm - ps;
+        if (ecart) departage = ` Égalité, départagée par la Popularité (${pm} contre ${ps}).`;
     }
 
     let resultat = 'Égalité parfaite, personne ne marque.';
@@ -906,48 +749,25 @@ async function jouerManche(stat) {
         $('#duel-ordi').classList.add('gagne');
     }
     majScoreDuel();
-    $('#duel-message').innerHTML = `${STATS[stat].icone} ${STATS[stat].nom} : <b>${a}</b> contre <b>${b}</b>.${departage} <b>${resultat}</b>`;
+    $('#duel-message').innerHTML = `${STATS[stat].icone} ${STATS[stat].nom} : <b>${mienne}</b> contre <b>${sienne}</b>.${departage} <b>${resultat}</b>`;
 
-    const fini = duel.joueur >= MANCHES_GAGNANTES || duel.ordi >= MANCHES_GAGNANTES || duel.manche >= TAILLE_DECK;
-    if (fini) finDuel();
-    else $('#duel-actions').innerHTML = '<button class="btn btn-principal btn-grand" data-action="manche">Manche suivante</button>';
+    if (duel.joueur >= MANCHES_GAGNANTES || duel.ordi >= MANCHES_GAGNANTES) finDuel();
+    else actionsDuel('<button class="btn btn-principal btn-grand" data-action="manche">Manche suivante</button>');
 }
 
 function finDuel() {
-    duel.enCours = false;
-    const niveau = niveauDuel();
-    const i = NIVEAUX.indexOf(niveau);
-    const score = `${duel.joueur} à ${duel.ordi}`;
-    let message;
-    if (duel.joueur > duel.ordi) {
-        const dejaDebloque = niveauDebloque(i + 1);
-        etat.pieces += niveau.gain;
-        etat.duels.victoires[niveau.id] = victoiresDuel(niveau.id) + 1;
+    const victoire = duel.joueur >= MANCHES_GAGNANTES;
+    if (victoire) {
+        etat.pieces += GAIN_DUEL;
         sauvegarder();
         majEntete();
-        toast(`Victoire ! +${niveau.gain} pièces`, 'gain');
-        message = `<b class="victoire">Victoire ${score} !</b> Tu gagnes ${niveau.gain} pièces.`;
-        if (NIVEAUX[i + 1] && !dejaDebloque && niveauDebloque(i + 1)) {
-            message += ` <b class="victoire">Niveau ${NIVEAUX[i + 1].nom} débloqué !</b>`;
-        }
-    } else if (duel.joueur < duel.ordi) {
-        message = `<b class="defaite">Défaite ${score}.</b> Change ton deck ou retente ta chance !`;
-    } else {
-        message = `<b>Match nul ${score}.</b> Personne ne gagne de pièces.`;
+        toast(`Victoire ! +${GAIN_DUEL} pièces`, 'gain');
     }
     // Le détail de la dernière manche reste affiché au-dessus du résultat
-    $('#duel-message').innerHTML += `<br>${message}`;
-    $('#duel-actions').innerHTML = `
-        <button class="btn btn-principal btn-grand" data-action="rejouer">Rejouer avec ce deck</button>
-        <button class="btn btn-grand" data-action="preparer">Changer de deck ou d’adversaire</button>`;
-}
-
-function majScoreDuel() {
-    const pips = n => Array.from({ length: MANCHES_GAGNANTES }, (_, i) => `<i${i < n ? ' class="plein"' : ''}></i>`).join('');
-    $('#pips-joueur').innerHTML = pips(duel.joueur);
-    $('#pips-ordi').innerHTML = pips(duel.ordi);
-    $('#pips-joueur').setAttribute('aria-label', `${duel.joueur} manche(s) gagnée(s)`);
-    $('#pips-ordi').setAttribute('aria-label', `${duel.ordi} manche(s) gagnée(s)`);
+    $('#duel-message').innerHTML += victoire
+        ? `<br><b class="victoire">Victoire ${duel.joueur} à ${duel.ordi} !</b> Tu gagnes ${GAIN_DUEL} pièces.`
+        : `<br><b class="defaite">Défaite ${duel.joueur} à ${duel.ordi}.</b> Retente ta chance !`;
+    actionsDuel('<button class="btn btn-principal btn-grand" data-action="demarrer">Rejouer</button>');
 }
 
 // ---------- Effet d'inclinaison 3D (paquets, fiche) ----------
@@ -983,7 +803,6 @@ function afficherEcran(nom) {
     if (nom === 'accueil') afficherAccueil();
     if (nom === 'collection') afficherCollection();
     if (nom === 'regles') afficherRegles();
-    if (nom === 'duel') afficherDuel();
     window.scrollTo(0, 0);
 }
 
@@ -1039,33 +858,13 @@ function init() {
         if (e.target === $('#modale')) $('#modale').close();
     });
 
-    // Duel : préparation
-    $('#niveaux').addEventListener('click', e => {
-        const niveau = e.target.closest('[data-niveau]');
-        if (niveau) choisirNiveau(niveau.dataset.niveau);
-    });
-    for (const id of ['#deck-slots', '#deck-choix']) {
-        $(id).addEventListener('click', e => {
-            const carte = e.target.closest('[data-deck]');
-            if (carte) basculerDeck(Number(carte.dataset.deck));
-        });
-    }
-    $('#deck-recherche').addEventListener('input', afficherChoixDeck);
-    $('#btn-deck-auto').addEventListener('click', deckAuto);
-    $('#btn-lancer-duel').addEventListener('click', lancerDuel);
-
-    // Duel : combat
-    $('#duel-main').addEventListener('click', e => {
-        const carte = e.target.closest('[data-jouer]');
-        if (carte) selectionnerCarte(Number(carte.dataset.jouer));
-    });
+    // Duel
     $('#duel-actions').addEventListener('click', e => {
         const bouton = e.target.closest('button');
         if (!bouton) return;
-        if (bouton.dataset.stat) jouerManche(bouton.dataset.stat);
+        if (bouton.dataset.stat) choisirStat(bouton.dataset.stat);
+        else if (bouton.dataset.action === 'demarrer') demarrerDuel();
         else if (bouton.dataset.action === 'manche') nouvelleManche();
-        else if (bouton.dataset.action === 'rejouer') lancerDuel();
-        else if (bouton.dataset.action === 'preparer') afficherDuel();
     });
 
     // Inclinaison 3D à la souris uniquement
@@ -1097,7 +896,6 @@ function init() {
             const ecran = location.hash.slice(1) || 'accueil';
             if (ecran === 'accueil') afficherAccueil();
             if (ecran === 'regles') afficherRegles();
-            if (ecran === 'duel') afficherDuel();
         })
         .catch(e => {
             console.error(e);
