@@ -7,18 +7,27 @@
 // ---------- Règles du jeu (valeurs de départ, à équilibrer) ----------
 
 // Du plus rare au plus commun. `seuil` porte sur le nombre d'avis Steam.
-// Chaque carte tire d'abord sa rareté selon `chance` (en %), puis un jeu au hasard dans cette rareté.
+// Chaque carte tire d'abord sa rareté selon une colonne de chances (en %), puis un jeu au hasard dans cette rareté :
+//   `chance`          : les 4 premières cartes d'un booster
+//   `chanceGarantie`  : la 5ᵉ carte, garantie Peu commune ou mieux, avec sa propre table pour ne pas
+//                       servir de raccourci vers les hautes raretés
+//   `chanceDuel`      : les cartes tirées en duel (toi et l'ordinateur)
 // `prix` : achat direct dans le catalogue, volontairement bien plus cher que la chance en boosters.
 const RARETES = [
-    { id: 'mythique',    nom: 'Mythique',    seuil: 750000, chance: 0.2,  revente: 300, prix: 10000 },
-    { id: 'legendaire',  nom: 'Légendaire',  seuil: 200000, chance: 1,    revente: 100, prix: 4000 },
-    { id: 'epique',      nom: 'Épique',      seuil: 60000,  chance: 3,    revente: 40,  prix: 1500 },
-    { id: 'rare',        nom: 'Rare',        seuil: 12000,  chance: 8,    revente: 15,  prix: 600 },
-    { id: 'peu-commune', nom: 'Peu commune', seuil: 3000,   chance: 18,   revente: 5,   prix: 250 },
-    { id: 'commune',     nom: 'Commune',     seuil: 0,      chance: 69.8, revente: 2,   prix: 100 },
+    { id: 'mythique',    nom: 'Mythique',    seuil: 750000, chance: 0.1,  chanceGarantie: 0.05, chanceDuel: 3,  revente: 300, prix: 10000 },
+    { id: 'legendaire',  nom: 'Légendaire',  seuil: 200000, chance: 0.5,  chanceGarantie: 0.45, chanceDuel: 7,  revente: 100, prix: 4000 },
+    { id: 'epique',      nom: 'Épique',      seuil: 60000,  chance: 2,    chanceGarantie: 2.5,  chanceDuel: 12, revente: 40,  prix: 1500 },
+    { id: 'rare',        nom: 'Rare',        seuil: 12000,  chance: 7,    chanceGarantie: 12,   chanceDuel: 18, revente: 15,  prix: 600 },
+    { id: 'peu-commune', nom: 'Peu commune', seuil: 3000,   chance: 18,   chanceGarantie: 85,   chanceDuel: 25, revente: 5,   prix: 250 },
+    { id: 'commune',     nom: 'Commune',     seuil: 0,      chance: 72.4, chanceGarantie: 0,    chanceDuel: 35, revente: 2,   prix: 100 },
 ];
 const INDEX_RARE = RARETES.findIndex(r => r.id === 'rare');
-const INDEX_PEU_COMMUNE = RARETES.findIndex(r => r.id === 'peu-commune');
+const INDEX_LEGENDAIRE = RARETES.findIndex(r => r.id === 'legendaire');
+const INDEX_MYTHIQUE = RARETES.findIndex(r => r.id === 'mythique');
+
+// God pack : un booster sur 2 000 ne contient que des Légendaires et Mythiques, toutes holo
+const CHANCE_GOD_PACK = 1 / 2000;
+const PART_MYTHIQUE_GOD_PACK = 0.25; // en plus de la Mythique garantie
 
 const CARTES_PAR_BOOSTER = 5;
 const BOOSTERS_PAR_LOT = 10; // ouverture ×10
@@ -154,6 +163,7 @@ const CLES = {
     collection: 'gameCards.collection',
     pieces: 'gameCards.pieces',
     dernierBooster: 'gameCards.dernierBooster',
+    godPacks: 'gameCards.godPacks',
 };
 
 function lire(cle, defaut) {
@@ -177,6 +187,7 @@ const etat = {
     collection: lire(CLES.collection, {}),       // { id: carte + exemplaires, holos, obtenue }
     pieces: lire(CLES.pieces, 0),
     dernierBooster: lire(CLES.dernierBooster, 0),
+    godPacks: lire(CLES.godPacks, { nombre: 0, premier: null }), // trophée : combien, et la date du premier
 };
 
 // Tous les jeux de data/jeux.json (chargés au démarrage), et les mêmes rangés par rareté
@@ -275,9 +286,9 @@ function carteHTML(carte, { holo = false, compteur = 0, cachee = false } = {}) {
 }
 
 // Carte retournable (dos / face), pour les boosters et le duel
-function flipHTML(carte, { holo = false, retournee = false, nouvelle = false, cachee = false } = {}) {
+function flipHTML(carte, { holo = false, retournee = false, nouvelle = false, cachee = false, godPack = false } = {}) {
     return `
-        <div class="flip${retournee ? ' retournee' : ''}" data-rarete="${carte.rarete}" data-id="${carte.id}">
+        <div class="flip${retournee ? ' retournee' : ''}${godPack ? ' dos-divin' : ''}" data-rarete="${carte.rarete}" data-id="${carte.id}">
             <div class="flip-inner">
                 <div class="flip-face">
                     ${carteHTML(carte, { holo, cachee })}
@@ -364,15 +375,15 @@ function majCollectionDepuisDonnees() {
 const donneesPretes = () => tousLesJeux.length > 0;
 const totalJeux = () => tousLesJeux.length;
 
-// Tire un index de rareté selon les chances ; indexMax limite aux raretés >= celle-ci
-function tirerRarete(indexMax = RARETES.length - 1) {
-    const possibles = RARETES.slice(0, indexMax + 1);
-    let t = Math.random() * possibles.reduce((s, r) => s + r.chance, 0);
-    for (let i = 0; i < possibles.length; i++) {
-        t -= possibles[i].chance;
-        if (t < 0) return i;
+// Tire un index de rareté (dans RARETES) selon la colonne de chances `cle` ;
+// `possibles` limite le tirage à certaines raretés, leurs chances sont alors réparties entre elles
+function tirerRarete(cle = 'chance', possibles = RARETES) {
+    let t = Math.random() * possibles.reduce((s, r) => s + r[cle], 0);
+    for (const rarete of possibles) {
+        t -= rarete[cle];
+        if (t < 0) return indexRarete(rarete.id);
     }
-    return indexMax;
+    return indexRarete(possibles.at(-1).id);
 }
 
 // Pioche un jeu au hasard dans la rareté demandée, tous avec la même chance (sans doublon dans `exclus`)
@@ -470,10 +481,32 @@ function majPaquets() {
 
 // ---------- Ouverture de boosters ----------
 
-// Les 5 cartes d'un booster : 4 au hasard + la dernière Peu commune ou mieux
+// Commande de test, à taper dans la console : le prochain booster sera un god pack
+let prochainGodPack = false;
+window.forcerGodPack = () => {
+    prochainGodPack = true;
+    return 'Le prochain booster ouvert sera un god pack ✨';
+};
+
+// God pack : une Mythique garantie, puis des Légendaires (et parfois d'autres Mythiques), toutes holo
+function tirerGodPack() {
+    const exclus = new Set();
+    return Array.from({ length: CARTES_PAR_BOOSTER }, (_, i) => {
+        const index = i === 0 || Math.random() < PART_MYTHIQUE_GOD_PACK ? INDEX_MYTHIQUE : INDEX_LEGENDAIRE;
+        const carte = piocher(index, exclus);
+        exclus.add(carte.id);
+        return { carte, holo: true, godPack: true };
+    });
+}
+
+// Les 5 cartes d'un booster : 4 au hasard + la dernière Peu commune ou mieux (ou, très rarement, un god pack)
 function tirerBooster() {
+    if (prochainGodPack || Math.random() < CHANCE_GOD_PACK) {
+        prochainGodPack = false;
+        return tirerGodPack();
+    }
     const indices = Array.from({ length: CARTES_PAR_BOOSTER - 1 }, () => tirerRarete());
-    indices.push(tirerRarete(INDEX_PEU_COMMUNE));
+    indices.push(tirerRarete('chanceGarantie'));
     const exclus = new Set();
     return indices.map(index => {
         const carte = piocher(index, exclus);
@@ -493,9 +526,14 @@ async function ouvrirBooster(mode, nombreBoosters = 1) {
     }
     ouvertureEnCours = true;
 
-    const tirage = Array.from({ length: nombreBoosters }, tirerBooster).flat();
+    const tirage = Array.from({ length: nombreBoosters }, () => tirerBooster()).flat();
+    const godPacks = tirage.filter(t => t.godPack).length / CARTES_PAR_BOOSTER;
     if (mode === 'gratuit') etat.dernierBooster = Date.now();
     else etat.pieces -= prix;
+    if (godPacks) {
+        etat.godPacks.nombre += godPacks;
+        etat.godPacks.premier ??= Date.now();
+    }
     for (const t of tirage) t.nouvelle = ajouterACollection(t.carte, t.holo);
     sauvegarder();
     majEntete();
@@ -523,7 +561,9 @@ async function ouvrirBooster(mode, nombreBoosters = 1) {
 
     paquet.classList.add('secoue');
     await attendre(750);
-    paquet.classList.replace('secoue', 'dechire');
+    if (godPacks) await revelationGodPack(paquet);
+    paquet.classList.remove('secoue', 'divin');
+    paquet.classList.add('dechire');
     await attendre(600);
     $('#ouverture-scene').replaceChildren();
 
@@ -534,9 +574,13 @@ async function ouvrirBooster(mode, nombreBoosters = 1) {
         // ×10 : on ne retourne que les Rares et mieux, le reste est déjà visible en petit.
         // Les plus rares sont en haut, et se retournent en dernier (de bas en haut).
         const parRarete = [...tirage].reverse();
-        const vedettes = parRarete.filter(t => indexRarete(t.carte.rarete) <= INDEX_RARE);
-        const reste = parRarete.filter(t => indexRarete(t.carte.rarete) > INDEX_RARE);
+        const divines = parRarete.filter(t => t.godPack);
+        const vedettes = parRarete.filter(t => !t.godPack && indexRarete(t.carte.rarete) <= INDEX_RARE);
+        const reste = parRarete.filter(t => !t.godPack && indexRarete(t.carte.rarete) > INDEX_RARE);
         $('#tirage').innerHTML = `
+            ${divines.length ? `
+                <h2 class="tirage-titre titre-divin">✨ God pack ✨ <span>${divines.length} cartes divines</span></h2>
+                <div class="tirage-grille tirage-vedettes">${divines.map(t => flipHTML(t.carte, t)).join('')}</div>` : ''}
             ${vedettes.length ? `
                 <h2 class="tirage-titre">Tes meilleures cartes <span>Rare et plus · ${vedettes.length}</span></h2>
                 <div class="tirage-grille tirage-vedettes">${vedettes.map(t => flipHTML(t.carte, t)).join('')}</div>` : ''}
@@ -561,6 +605,45 @@ async function ouvrirBooster(mode, nombreBoosters = 1) {
 }
 
 let dernierTirage = [];
+
+// Mise en scène du god pack : le paquet devient doré et tremble, flash, pluie d'étincelles, titre géant
+async function revelationGodPack(paquet) {
+    paquet.classList.add('divin');
+    await attendre(1200);
+
+    const flash = document.createElement('div');
+    flash.className = 'flash-divin';
+    const etincelles = document.createElement('div');
+    etincelles.className = 'etincelles';
+    etincelles.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i < 60; i++) {
+        const e = document.createElement('span');
+        e.textContent = Math.random() < 0.5 ? '✦' : '✧';
+        e.style.left = `${Math.random() * 100}%`;
+        e.style.fontSize = `${10 + Math.random() * 22}px`;
+        e.style.animationDuration = `${2.2 + Math.random() * 2}s`;
+        e.style.animationDelay = `${Math.random() * 1.2}s`;
+        etincelles.append(e);
+    }
+    const titre = document.createElement('div');
+    titre.className = 'titre-godpack';
+    titre.setAttribute('role', 'status');
+    titre.textContent = 'GOD PACK';
+    document.body.append(flash, etincelles, titre);
+    setTimeout(() => flash.remove(), 1200);
+    setTimeout(() => titre.remove(), 2600);
+    setTimeout(() => etincelles.remove(), 5000);
+    await attendre(1600);
+}
+
+function majTropheeGodPack() {
+    const { nombre, premier } = etat.godPacks;
+    $('#trophee-godpack').hidden = !nombre;
+    if (nombre) {
+        $('#trophee-godpack').innerHTML = `✨ <b>${nombre}</b> god pack${nombre > 1 ? 's' : ''} ouvert${nombre > 1 ? 's' : ''}
+            <span>· le premier le ${new Date(premier).toLocaleDateString('fr-FR')}</span>`;
+    }
+}
 
 function majAideTirage() {
     const aRetourner = document.querySelectorAll('#tirage .flip[tabindex]').length;
@@ -605,7 +688,13 @@ function finTirage() {
     const holos = dernierTirage.filter(t => t.holo).length;
     $('#ouverture-aide').hidden = true;
     $('#btn-tout-retourner').hidden = true;
-    $('#bilan').innerHTML = `
+    const divines = dernierTirage.filter(t => t.godPack);
+    const mythiques = divines.filter(t => t.carte.rarete === 'mythique').length;
+    $('#bilan').classList.toggle('bilan-divin', divines.length > 0);
+    $('#bilan').innerHTML = (divines.length
+        ? `<span class="bilan-godpack">✨ GOD PACK ✨</span>
+           <span class="rarete-mythique"><b class="texte-rarete">${mythiques}</b> Mythique${mythiques > 1 ? 's' : ''}</span>`
+        : '') + `
         <span><b>${nouvelles}</b> nouvelle${nouvelles > 1 ? 's' : ''}</span>
         <span class="rarete-${meilleure.id}">Meilleure : <b class="texte-rarete">${meilleure.nom}</b></span>
         ${holos ? `<span>✨ <b>${holos}</b> holo${holos > 1 ? 's' : ''}</span>` : ''}`;
@@ -628,6 +717,7 @@ function afficherAccueil() {
         : 'Chargement des jeux…';
     $('#progression-barre').style.width = total ? `${Math.max(0.5, (entrees.length / total) * 100)}%` : '0';
     $('#progression-raretes').innerHTML = pucesRaretesHTML();
+    majTropheeGodPack();
 
     const recentes = entrees.sort((a, b) => b.obtenue - a.obtenue).slice(0, 8);
     $('#bloc-recentes').hidden = !recentes.length;
@@ -879,6 +969,8 @@ function afficherRegles() {
             <td><span class="pastille"></span>${r.nom}</td>
             <td>${r.seuil ? `≥ ${nombre(r.seuil)}` : `< ${nombre(RARETES[i - 1].seuil)}`}</td>
             <td>${chanceRarete(r)}</td>
+            <td>${r.chanceGarantie ? `${nombre(r.chanceGarantie)} %` : '—'}</td>
+            <td>${nombre(r.chanceDuel)} %</td>
             <td>${r.revente} ${PIECE}</td>
             <td>${nombre(r.prix)} ${PIECE}</td>
             <td>${entrees.filter(e => e.rarete === r.id).length} / ${nombre(jeuxParRarete[r.id]?.length || 0)}</td>
@@ -902,14 +994,15 @@ function reinitialiser() {
 
 // ---------- Duel ----------
 
-// Tirage d'une carte de duel : une rareté au hasard (même chance pour chacune), puis une carte dedans.
-// Une Mythique sort donc aussi souvent qu'une Commune.
+// Tirage d'une carte de duel : une rareté selon `chanceDuel`, puis une carte au hasard dedans.
+// Pour toi, seules les raretés que tu possèdes comptent (leurs chances se répartissent entre elles).
 function tirerCarteJoueur() {
     const parRarete = {};
     for (const e of Object.values(etat.collection)) (parRarete[e.rarete] ??= []).push(e);
-    return auHasard(parRarete[auHasard(Object.keys(parRarete))]);
+    const rarete = RARETES[tirerRarete('chanceDuel', RARETES.filter(r => parRarete[r.id]))];
+    return auHasard(parRarete[rarete.id]);
 }
-const tirerCarteOrdi = exclus => piocher(Math.floor(Math.random() * RARETES.length), exclus);
+const tirerCarteOrdi = exclus => piocher(tirerRarete('chanceDuel'), exclus);
 
 const duel = { joueur: 0, ordi: 0, carteJoueur: null, carteOrdi: null, verrou: false };
 

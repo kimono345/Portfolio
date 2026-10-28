@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=36">
+    <link rel="stylesheet" href="style.css?v=37">
 </head>
 <body>
 
@@ -113,6 +113,7 @@
                     </div>
                     <div class="barre"><i id="progression-barre"></i></div>
                     <div class="puces-raretes" id="progression-raretes"></div>
+                    <p class="trophee-godpack" id="trophee-godpack" hidden></p>
                 </div>
 
                 <div class="recentes" id="bloc-recentes" hidden>
@@ -260,7 +261,7 @@
             <div class="tableau-defile">
                 <table class="legende">
                     <thead>
-                        <tr><th>Rareté</th><th>Avis Steam</th><th>Chance</th><th>Revente</th><th>Achat</th><th>Possédées</th></tr>
+                        <tr><th>Rareté</th><th>Avis Steam</th><th>Chance</th><th>5ᵉ carte</th><th>Duel</th><th>Revente</th><th>Achat</th><th>Possédées</th></tr>
                     </thead>
                     <tbody id="legende-raretes"></tbody>
                 </table>
@@ -281,7 +282,7 @@
                 </article>
                 <article>
                     <h3>Boosters</h3>
-                    <p>5 cartes dont une Peu commune ou mieux. La rareté est tirée selon les chances du tableau, puis le jeu au hasard dans cette rareté. Un gratuit toutes les 10 minutes, ou 50 pièces.</p>
+                    <p>5 cartes. Les 4 premières suivent la colonne « Chance », la 5ᵉ est garantie Peu commune ou mieux et suit la colonne « 5ᵉ carte ». La rareté est tirée d’abord, puis le jeu au hasard dans cette rareté. Un gratuit toutes les 10 minutes, ou 50 pièces.</p>
                 </article>
                 <article>
                     <h3>✨ Holo</h3>
@@ -293,7 +294,11 @@
                 </article>
                 <article>
                     <h3>⚔ Duel</h3>
-                    <p>Premier à 3 manches, 30 pièces à la clé. Chaque carte est tirée en donnant la même chance à chaque rareté, puis une carte au hasard dedans. Tu vois le jeu adverse mais pas ses stats. En cas d’égalité, la Popularité départage.</p>
+                    <p>Premier à 3 manches, 30 pièces à la clé. Chaque carte est tirée selon les chances de la colonne « Duel », puis au hasard dans sa rareté. Tu vois le jeu adverse mais pas ses stats. En cas d’égalité, la Popularité départage.</p>
+                </article>
+                <article>
+                    <h3>✨ God pack</h3>
+                    <p>Un booster sur 2 000 est un god pack : 5 Légendaires ou Mythiques (dont au moins une Mythique), toutes holo. Le paquet devient doré à l’ouverture, impossible de le rater.</p>
                 </article>
                 <article>
                     <h3>🏅 GOTY</h3>
@@ -334,6 +339,6 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="script.js?v=33"></script>
+    <script src="script.js?v=36"></script>
 </body>
 </html>
