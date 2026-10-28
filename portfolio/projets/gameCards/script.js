@@ -30,13 +30,19 @@ const SEUIL_CHEF_OEUVRE = 90;
 const MANCHES_GAGNANTES = 3;
 const GAIN_DUEL = 30;
 const BONUS_HOLO = 5;         // duel : +5 sur toutes les stats d'une holo
-const BONUS_CHEF_OEUVRE = 5;  // duel : +5 en Metacritic pour un chef-d'œuvre
+const BONUS_CHEF_OEUVRE = 5;  // duel : +5 en Note public pour un chef-d'œuvre (Metacritic 90+)
 const CARTES_PAR_PAGE = 60; // collection affichée par tranches
 const URL_IMAGES = 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps';
 
+// Icônes Bootstrap Icons (licence MIT) en SVG : rendu identique sur tous les appareils, contrairement aux emoji
+const ICONES = {
+    pouce: '<svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.956 1.745C7.021.81 7.908.087 8.864.325l.261.066c.463.116.874.456 1.012.965.22.816.533 2.511.062 4.51a10 10 0 0 1 .443-.051c.713-.065 1.669-.072 2.516.21.518.173.994.681 1.2 1.273.184.532.16 1.162-.234 1.733q.086.18.138.363c.077.27.113.567.113.856s-.036.586-.113.856c-.039.135-.09.273-.16.404.169.387.107.819-.003 1.148a3.2 3.2 0 0 1-.488.901c.054.152.076.312.076.465 0 .305-.089.625-.253.912C13.1 15.522 12.437 16 11.5 16H8c-.605 0-1.07-.081-1.466-.218a4.8 4.8 0 0 1-.97-.484l-.048-.03c-.504-.307-.999-.609-2.068-.722C2.682 14.464 2 13.846 2 13V9c0-.85.685-1.432 1.357-1.615.849-.232 1.574-.787 2.132-1.41.56-.627.914-1.28 1.039-1.639.199-.575.356-1.539.428-2.59z"/></svg>',
+    sablier: '<svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 15a.5.5 0 1 1 0-1h1v-1a4.5 4.5 0 0 1 2.557-4.06c.29-.139.443-.377.443-.59v-.7c0-.213-.154-.451-.443-.59A4.5 4.5 0 0 1 3.5 3V2h-1a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-1v1a4.5 4.5 0 0 1-2.557 4.06c-.29.139-.443.377-.443.59v.7c0 .213.154.451.443.59A4.5 4.5 0 0 1 12.5 13v1h1a.5.5 0 0 1 0 1zm2-13v1c0 .537.12 1.045.337 1.5h6.326c.216-.455.337-.963.337-1.5V2zm3 6.35c0 .701-.478 1.236-1.011 1.492A3.5 3.5 0 0 0 4.5 13s.866-1.299 3-1.48zm1 0v3.17c2.134.181 3 1.48 3 1.48a3.5 3.5 0 0 0-1.989-3.158C8.978 9.586 8.5 9.052 8.5 8.351z"/></svg>',
+};
+
 const STATS = {
-    attaque:    { nom: 'Note public',     icone: '👍' },
-    defense:    { nom: 'Note Metacritic', icone: '📰' },
+    attaque:    { nom: 'Note public',     icone: ICONES.pouce },
+    anciennete: { nom: 'Ancienneté',      icone: ICONES.sablier },
     popularite: { nom: 'Popularité',      icone: '★' },
 };
 
@@ -124,13 +130,36 @@ const NOTE_MOYENNE = 76;
 const POIDS_MOYENNE = 10;
 const notePublic = (note, avis) => Math.round((note * avis + NOTE_MOYENNE * POIDS_MOYENNE) / (avis + POIDS_MOYENNE));
 
+// Ancienneté : moitié selon l'âge (année la plus ancienne → 100, la plus récente → 0),
+// moitié selon le rang (plus ancien que X % du catalogue). Le rang seul tasserait tous les jeux
+// d'avant 2012 vers 100, l'âge seul tasserait les jeux récents vers 0.
+let ancienneteParAnnee = {};
+
+function calculerAnciennete() {
+    const parAnnee = {};
+    for (const jeu of tousLesJeux) if (jeu.annee) parAnnee[jeu.annee] = (parAnnee[jeu.annee] || 0) + 1;
+    const annees = Object.keys(parAnnee).map(Number).sort((a, b) => a - b);
+    const total = annees.reduce((n, a) => n + parAnnee[a], 0);
+    const [plusAncienne, plusRecente] = [annees[0], annees.at(-1)];
+    let plusRecents = total;
+    ancienneteParAnnee = {};
+    for (const annee of annees) {
+        plusRecents -= parAnnee[annee];
+        const rang = plusRecents / total;
+        const age = (plusRecente - annee) / (plusRecente - plusAncienne || 1);
+        ancienneteParAnnee[annee] = Math.round((rang + age) * 50);
+    }
+}
+
+const anciennete = annee => ancienneteParAnnee[annee] ?? 0;
+
 function creerCarte(jeu) {
     return {
         id: jeu.id,
         nom: jeu.nom,
         image: `${URL_IMAGES}/${jeu.id}/${jeu.image || 'header.jpg'}`,
         attaque: notePublic(jeu.note, jeu.avis),
-        defense: jeu.metacritic ?? 0,
+        anciennete: anciennete(jeu.annee),
         popularite: popularite(jeu.avis),
         metacritic: jeu.metacritic,
         rarete: rareteDe(jeu.avis).id,
@@ -143,7 +172,8 @@ function creerCarte(jeu) {
 // `cachee` masque les stats (et le badge qui trahirait la défense) : carte adverse en duel
 function carteHTML(carte, { holo = false, compteur = 0, cachee = false } = {}) {
     const rarete = RARETES[indexRarete(carte.rarete)];
-    const infos = [carte.annee, carte.genres[0]].filter(Boolean).join(' · ');
+    // Sur la carte adverse du duel, l'année trahirait l'Ancienneté : on la cache aussi
+    const infos = [cachee ? null : carte.annee, carte.genres[0]].filter(Boolean).join(' · ');
     return `
         <article class="carte rarete-${rarete.id}${holo ? ' holo' : ''}${cachee ? ' stats-cachees' : ''}">
             <div class="carte-corps">
@@ -159,9 +189,8 @@ function carteHTML(carte, { holo = false, compteur = 0, cachee = false } = {}) {
                 <p class="carte-infos">${echapper(infos) || '&nbsp;'}</p>
                 <ul class="carte-stats">
                     ${Object.entries(STATS).map(([cle, stat]) => `
-                        <li data-stat="${cle}"${!cachee && cle === 'defense' && carte.metacritic == null
-                            ? ' class="par-defaut" title="Pas de note Metacritic : vaut 0"' : ''}>
-                            <span>${stat.icone} ${stat.nom}</span><b>${cachee ? '?' : cle === 'defense' && carte.metacritic == null ? '—' : carte[cle]}</b>
+                        <li data-stat="${cle}">
+                            <span>${stat.icone} ${stat.nom}</span><b>${cachee ? '?' : carte[cle]}</b>
                             <i style="--v:${cachee ? 0 : Math.min(100, carte[cle])}%"></i>
                         </li>`).join('')}
                 </ul>
@@ -229,6 +258,7 @@ async function chargerJeux() {
     groupesTags = groupes;
     for (const jeu of tousLesJeux) jeuxParRarete[rareteDe(jeu.avis).id].push(jeu);
     jeuxParId = new Map(tousLesJeux.map(jeu => [jeu.id, jeu]));
+    calculerAnciennete();
     genresCatalogue = genres;
     majCollectionDepuisDonnees();
 }
@@ -238,7 +268,9 @@ async function chargerJeux() {
 function majCollectionDepuisDonnees() {
     for (const entree of Object.values(etat.collection)) {
         const jeu = jeuxParId.get(entree.id);
-        if (jeu) Object.assign(entree, creerCarte(jeu));
+        if (!jeu) continue;
+        Object.assign(entree, creerCarte(jeu));
+        delete entree.defense; // ancienne stat Note Metacritic
     }
     sauvegarder();
 }
@@ -520,7 +552,7 @@ const TRIS = {
     rarete: (a, b) => indexRarete(a.rarete) - indexRarete(b.rarete) || b.popularite - a.popularite,
     recent: (a, b) => b.obtenue - a.obtenue,
     attaque: (a, b) => b.attaque - a.attaque,
-    defense: (a, b) => b.defense - a.defense,
+    anciennete: (a, b) => b.anciennete - a.anciennete,
     popularite: (a, b) => b.popularite - a.popularite,
     annee: (a, b) => (b.annee || 0) - (a.annee || 0),
     nom: (a, b) => a.nom.localeCompare(b.nom, 'fr'),
@@ -633,9 +665,10 @@ function afficherFiche(id) {
             ${carte.tags?.length ? `<p class="fiche-tags">${carte.tags.map(t => `<span${(groupesTags['Contenu sensible'] || []).includes(t)
                 ? ' class="tag-sensible"' : ''}>${echapper(t)}</span>`).join('')}</p>` : ''}
             <dl class="fiche-stats">
-                <div><dt>👍 Note public</dt><dd>${carte.attaque} %</dd></div>
-                <div><dt>📰 Metacritic</dt><dd>${carte.metacritic ?? '<span class="gris">aucune · 0</span>'}</dd></div>
+                <div><dt>${STATS.attaque.icone} Note public</dt><dd>${carte.attaque} %</dd></div>
+                <div><dt>${STATS.anciennete.icone} Ancienneté</dt><dd>${carte.anciennete} / 100 <span class="gris">· ${carte.annee}</span></dd></div>
                 <div><dt>★ Popularité</dt><dd>${carte.popularite} / 100</dd></div>
+                <div><dt>📰 Metacritic</dt><dd>${carte.metacritic ?? '<span class="gris">aucune</span>'}</dd></div>
             </dl>
             <p class="fiche-exemplaires">
                 ${e
@@ -777,7 +810,7 @@ function reinitialiser() {
 function bonusDuel(carte, stat) {
     let bonus = 0;
     if (carte.holos > 0) bonus += BONUS_HOLO;
-    if (stat === 'defense' && carte.metacritic >= SEUIL_CHEF_OEUVRE) bonus += BONUS_CHEF_OEUVRE;
+    if (stat === 'attaque' && carte.metacritic >= SEUIL_CHEF_OEUVRE) bonus += BONUS_CHEF_OEUVRE;
     return bonus;
 }
 const valeurDuel = (carte, stat) => carte[stat] + bonusDuel(carte, stat);

@@ -54,6 +54,8 @@ button { font: inherit; color: inherit; cursor: pointer; background: none; borde
 button:disabled { cursor: not-allowed; }
 svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
 [hidden] { display: none !important; }
+/* Icônes Bootstrap : pleines, à la taille du texte (les icônes du menu restent en trait) */
+svg.bi { width: 1em; height: 1em; fill: currentColor; stroke: none; vertical-align: -0.125em; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
 
 h1 { font-size: clamp(1.9rem, 5vw, 2.8rem); font-weight: 900; line-height: 1.05; letter-spacing: -0.02em; }
@@ -634,7 +636,6 @@ main {
 }
 .carte-stats li.stat-choisie { background: rgba(255, 255, 255, 0.1); outline: 2px solid var(--rar); outline-offset: 1cqi; }
 .carte-stats li.stat-choisie span { color: var(--texte); }
-.carte-stats li.par-defaut b { color: var(--texte-doux); font-style: italic; }
 
 /* Carte adverse en duel : le jeu est visible, ses stats sont cachées */
 .carte.stats-cachees .carte-stats b { color: var(--texte-doux); animation: mystere 1.6s ease-in-out infinite; }
