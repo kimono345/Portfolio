@@ -756,6 +756,21 @@ function afficherRegles() {
         </tr>`).join('');
 }
 
+// Efface tout ce que le jeu a enregistré (clés "gameCards.") et repart de zéro
+function reinitialiser() {
+    const cartes = Object.values(etat.collection).reduce((n, e) => n + e.exemplaires, 0);
+    const message = `Supprimer définitivement ta sauvegarde ?\n\nTu perdras tes ${nombre(cartes)} cartes et tes ${nombre(etat.pieces)} pièces. `
+        + 'Cette action ne peut pas être annulée.';
+    if (!confirm(message)) return;
+    try {
+        Object.keys(localStorage).filter(cle => cle.startsWith('gameCards.')).forEach(cle => localStorage.removeItem(cle));
+    } catch (e) {
+        console.warn('Suppression impossible', e);
+    }
+    location.hash = '#accueil';
+    location.reload();
+}
+
 // ---------- Duel ----------
 
 // Valeur d'une stat en duel, bonus compris
@@ -955,6 +970,7 @@ function init() {
         afficherCollection();
     });
     $('#btn-vendre-tout').addEventListener('click', vendreTousLesDoublons);
+    $('#btn-reinitialiser').addEventListener('click', reinitialiser);
 
     // Catalogue
     $('#catalogue-raretes').addEventListener('click', e => {

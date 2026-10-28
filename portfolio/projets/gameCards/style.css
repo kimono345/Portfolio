@@ -1036,6 +1036,24 @@ main {
 .regles h3 { font-size: 1rem; margin-bottom: 0.3rem; }
 .regles p { color: var(--texte-doux); font-size: 0.93rem; }
 
+/* Recommencer à zéro */
+.zone-danger {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    margin-top: 2.4rem;
+    padding: 1.2rem 1.4rem;
+    border-radius: var(--rayon);
+    border: 1px solid rgba(255, 90, 90, 0.35);
+    background: rgba(255, 90, 90, 0.05);
+}
+.zone-danger h3 { font-size: 1rem; margin-bottom: 0.3rem; }
+.zone-danger p { color: var(--texte-doux); font-size: 0.93rem; max-width: 620px; }
+.btn-danger { color: #ffb0b0; border-color: rgba(255, 90, 90, 0.5); background: rgba(255, 90, 90, 0.1); }
+.btn-danger:hover:not(:disabled) { background: rgba(255, 90, 90, 0.2); }
+
 /* =========================================================
    NOTIFICATIONS
    ========================================================= */
