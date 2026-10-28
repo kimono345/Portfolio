@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 
@@ -56,13 +56,13 @@
 
             <h2>Règles</h2>
             <ul class="regles">
-                <li><b>⚔ Attaque</b> = % d’avis positifs sur Steam</li>
-                <li><b>🛡 Défense</b> = note Metacritic, ou 50 sans note</li>
+                <li><b>👍 Note public</b> = % d’avis positifs des joueurs sur Steam</li>
+                <li><b>📰 Note Metacritic</b> = note de la presse, ou 50 (en gris) quand le jeu n’en a pas</li>
                 <li><b>★ Popularité</b> = nombre d’avis Steam (100 avis → 0, 1 million → 100)</li>
                 <li><b>Booster</b> : 5 cartes dont une Rare ou mieux, un gratuit toutes les 10 min, ou 50 🪙</li>
                 <li><b>Holo</b> : 2 % de chance par carte, revente ×3</li>
                 <li><b>Chef-d'œuvre</b> : badge des jeux notés 90+ sur Metacritic</li>
-                <li><b>Duel</b> : choisis une stat, la plus haute gagne la manche. 3 manches = 30 🪙</li>
+                <li><b>Duel</b> : tu vois le jeu adverse mais pas ses stats. Devine sa faiblesse, la plus haute stat gagne. 3 manches = 30 🪙</li>
             </ul>
         </section>
 
@@ -106,8 +106,8 @@
                 <select id="tri" aria-label="Trier">
                     <option value="rarete">Tri : rareté</option>
                     <option value="recent">Tri : obtenues récemment</option>
-                    <option value="attaque">Tri : attaque</option>
-                    <option value="defense">Tri : défense</option>
+                    <option value="attaque">Tri : note public</option>
+                    <option value="defense">Tri : note Metacritic</option>
                     <option value="popularite">Tri : popularité</option>
                     <option value="annee">Tri : année</option>
                     <option value="nom">Tri : nom</option>
@@ -127,7 +127,7 @@
                 <span>—</span>
                 <div><b id="score-ordi">0</b> Ordi</div>
             </div>
-            <p class="duel-message" id="duel-message">Premier à 3 manches gagnées. Chacun tire une carte, tu choisis la stat.</p>
+            <p class="duel-message" id="duel-message">Premier à 3 manches. Tu vois le jeu adverse mais pas ses stats : devine sur quelle stat tu peux le battre.</p>
 
             <div class="duel-plateau">
                 <div class="duel-cote">
@@ -155,6 +155,6 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="script.js?v=2"></script>
+    <script src="script.js?v=4"></script>
 </body>
 </html>

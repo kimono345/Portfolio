@@ -28,9 +28,9 @@ const GAIN_DUEL = 30;
 const URL_IMAGES = 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps';
 
 const STATS = {
-    attaque:    { nom: 'Attaque',    icone: '⚔' },
-    defense:    { nom: 'Défense',    icone: '🛡' },
-    popularite: { nom: 'Popularité', icone: '★' },
+    attaque:    { nom: 'Note public',     icone: '👍' },
+    defense:    { nom: 'Note Metacritic', icone: '📰' },
+    popularite: { nom: 'Popularité',      icone: '★' },
 };
 
 // ---------- Utilitaires ----------
@@ -119,11 +119,12 @@ function creerCarte(jeu) {
     };
 }
 
-function carteHTML(carte, { holo = false, compteur = 0 } = {}) {
+// `cachee` masque les stats (et le badge qui trahirait la défense) : carte adverse en duel
+function carteHTML(carte, { holo = false, compteur = 0, cachee = false } = {}) {
     const rarete = RARETES[indexRarete(carte.rarete)];
     const infos = [carte.annee, carte.genres[0]].filter(Boolean).join(' · ');
     return `
-        <article class="carte rarete-${rarete.id}${holo ? ' holo' : ''}">
+        <article class="carte rarete-${rarete.id}${holo ? ' holo' : ''}${cachee ? ' stats-cachees' : ''}">
             <div class="carte-corps">
                 <header class="carte-haut">
                     <span class="carte-rarete">${rarete.nom}${holo ? ' · Holo' : ''}</span>
@@ -131,15 +132,16 @@ function carteHTML(carte, { holo = false, compteur = 0 } = {}) {
                 </header>
                 <div class="carte-image">
                     ${carte.image ? `<img src="${echapper(carte.image)}" alt="" loading="lazy">` : ''}
-                    ${carte.metacritic >= SEUIL_CHEF_OEUVRE ? '<span class="badge-chef" title="Metacritic 90 ou plus">Chef-d’œuvre</span>' : ''}
+                    ${!cachee && carte.metacritic >= SEUIL_CHEF_OEUVRE ? '<span class="badge-chef" title="Metacritic 90 ou plus">Chef-d’œuvre</span>' : ''}
                 </div>
                 <h3 class="carte-nom">${echapper(carte.nom)}</h3>
                 <p class="carte-infos">${echapper(infos) || '&nbsp;'}</p>
                 <ul class="carte-stats">
                     ${Object.entries(STATS).map(([cle, stat]) => `
-                        <li data-stat="${cle}">
-                            <span>${stat.icone} ${stat.nom}</span><b>${carte[cle]}</b>
-                            <i style="--v:${Math.min(100, carte[cle])}%"></i>
+                        <li data-stat="${cle}"${!cachee && cle === 'defense' && carte.metacritic == null
+                            ? ' class="par-defaut" title="Pas de note Metacritic : 50 par défaut"' : ''}>
+                            <span>${stat.icone} ${stat.nom}</span><b>${cachee ? '?' : carte[cle]}</b>
+                            <i style="--v:${cachee ? 0 : Math.min(100, carte[cle])}%"></i>
                         </li>`).join('')}
                 </ul>
             </div>
@@ -147,12 +149,12 @@ function carteHTML(carte, { holo = false, compteur = 0 } = {}) {
 }
 
 // Carte retournable (dos / face), pour les boosters et le duel
-function flipHTML(carte, { holo = false, retournee = false, nouvelle = false } = {}) {
+function flipHTML(carte, { holo = false, retournee = false, nouvelle = false, cachee = false } = {}) {
     return `
         <div class="flip${retournee ? ' retournee' : ''}" data-rarete="${carte.rarete}">
             <div class="flip-inner">
                 <div class="flip-face">
-                    ${carteHTML(carte, { holo })}
+                    ${carteHTML(carte, { holo, cachee })}
                     ${nouvelle ? '<span class="badge-nouvelle">Nouvelle !</span>' : ''}
                 </div>
                 <div class="flip-dos" aria-hidden="true"><span>GC</span></div>
@@ -460,8 +462,9 @@ function nouvelleManche() {
     $('#duel-joueur').className = 'duel-emplacement';
     $('#duel-ordi').className = 'duel-emplacement';
     $('#duel-joueur').innerHTML = flipHTML(duel.carteJoueur, { holo: duel.carteJoueur.holos > 0, retournee: true });
-    $('#duel-ordi').innerHTML = flipHTML(duel.carteOrdi);
-    $('#duel-message').textContent = 'Choisis la stat avec laquelle tu attaques.';
+    // On voit le jeu adverse, pas ses stats : à toi de deviner où il est faible
+    $('#duel-ordi').innerHTML = flipHTML(duel.carteOrdi, { retournee: true, cachee: true });
+    $('#duel-message').textContent = `L’ordinateur joue ${duel.carteOrdi.nom}. Sur quelle stat penses-tu le battre ?`;
     actionsDuel(Object.entries(STATS).map(([cle, stat]) =>
         `<button class="btn btn-stat" data-stat="${cle}">${stat.icone} ${stat.nom} · ${duel.carteJoueur[cle]}</button>`).join(''));
     majScoreDuel();
@@ -472,8 +475,13 @@ async function choisirStat(stat) {
     const mienne = duel.carteJoueur[stat];
     const sienne = duel.carteOrdi[stat];
 
-    document.querySelectorAll(`#ecran-duel li[data-stat="${stat}"]`).forEach(li => li.classList.add('stat-choisie'));
-    $('#duel-ordi .flip').classList.add('retournee');
+    document.querySelectorAll(`#duel-joueur li[data-stat="${stat}"]`).forEach(li => li.classList.add('stat-choisie'));
+    await attendre(400);
+
+    // Révélation des stats adverses
+    $('#duel-ordi').innerHTML = flipHTML(duel.carteOrdi, { retournee: true });
+    $('#duel-ordi .carte').classList.add('revelation');
+    $('#duel-ordi').querySelector(`li[data-stat="${stat}"]`).classList.add('stat-choisie');
     await attendre(700);
 
     let resultat = 'égalité, personne ne marque.';

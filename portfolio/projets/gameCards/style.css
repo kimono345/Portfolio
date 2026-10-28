@@ -318,6 +318,12 @@ main {
 }
 .carte-stats li.stat-choisie { background: rgba(255, 255, 255, 0.1); outline: 2px solid var(--rar); outline-offset: 1cqi; }
 .carte-stats li.stat-choisie span { color: var(--texte); }
+.carte-stats li.par-defaut b { color: var(--texte-doux); font-style: italic; }
+
+/* Carte adverse en duel : le jeu est visible, ses stats sont cachées */
+.carte.stats-cachees .carte-stats b { color: var(--texte-doux); animation: mystere 1.6s ease-in-out infinite; }
+.carte.stats-cachees .carte-stats i { background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.12) 0 6px, transparent 6px 10px); }
+.carte.revelation .carte-stats b { animation: revele 0.6s cubic-bezier(0.2, 0.8, 0.3, 1.4); }
 
 /* Holo : reflet arc-en-ciel animé */
 .carte.holo .carte-corps::after {
@@ -584,6 +590,8 @@ main {
 @keyframes eclat-epique { from { box-shadow: 0 0 0 0 rgba(163, 82, 255, 0.9), 0 0 60px rgba(163, 82, 255, 0.8); } }
 @keyframes eclat-legendaire { from { box-shadow: 0 0 0 0 rgba(255, 184, 0, 1), 0 0 90px rgba(255, 184, 0, 0.9); } }
 @keyframes eclat-mythique { from { box-shadow: 0 0 0 0 rgba(255, 255, 255, 1), 0 0 120px rgba(255, 107, 154, 1); } }
+@keyframes mystere { 50% { opacity: 0.4; } }
+@keyframes revele { from { transform: scale(1.8); color: var(--accent); } }
 @keyframes toast-entree { from { opacity: 0; transform: translateY(8px); } }
 
 @media (prefers-reduced-motion: reduce) {
