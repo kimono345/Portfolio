@@ -8,25 +8,41 @@ var niveau = 1;
 
 var LANGUE = "fr_FR";
 var URL_DDRAGON = "https://ddragon.leagueoflegends.com";
+var DOSSIER_LOCAL = "./ddragon"; // copie locale créée par telecharger-donnees.ps1
+var base = "";                   // d'où viennent les fichiers : Data Dragon en ligne ou la copie locale
 
 
 // ================= CHARGEMENT DES DONNEES =================
 // async / await : on attend que chaque fichier soit téléchargé avant de continuer
 async function chargerDonnees() {
-    // 1. la dernière version du jeu
-    var reponse = await fetch(URL_DDRAGON + "/api/versions.json");
-    var versions = await reponse.json();
-    version = versions[0]; // la plus récente est en premier
-    document.getElementById("version").textContent = "Patch " + version;
+    // 1. la dernière version du jeu (en ligne si possible, sinon la copie locale)
+    var reponse;
+    var versions;
+    var texteVersion;
+    try {
+        reponse = await fetch(URL_DDRAGON + "/api/versions.json");
+        versions = await reponse.json();
+        version = versions[0]; // la plus récente est en premier
+        base = URL_DDRAGON + "/cdn/" + version;
+        texteVersion = "Patch " + version;
+    } catch (erreur) {
+        console.warn("Data Dragon injoignable, utilisation de la copie locale", erreur);
+        reponse = await fetch(DOSSIER_LOCAL + "/versions.json");
+        versions = await reponse.json();
+        version = versions[0];
+        base = DOSSIER_LOCAL;
+        texteVersion = "Patch " + version + " (copie locale)";
+    }
+    document.getElementById("version").textContent = texteVersion;
 
     // 2. les champions
-    reponse = await fetch(URL_DDRAGON + "/cdn/" + version + "/data/" + LANGUE + "/champion.json");
+    reponse = await fetch(base + "/data/" + LANGUE + "/champion.json");
     var donneesChampions = await reponse.json();
     champions = Object.values(donneesChampions.data); // on transforme l'objet en tableau
     champions.sort(function (a, b) { return a.name.localeCompare(b.name); });
 
     // 3. les objets
-    reponse = await fetch(URL_DDRAGON + "/cdn/" + version + "/data/" + LANGUE + "/item.json");
+    reponse = await fetch(base + "/data/" + LANGUE + "/item.json");
     var donneesObjets = await reponse.json();
     for (var id in donneesObjets.data) {
         var objet = donneesObjets.data[id];
@@ -73,7 +89,7 @@ function afficherChampions() {
             carte.className += " selection";
         }
         carte.innerHTML =
-            '<img src="' + URL_DDRAGON + "/cdn/" + version + "/img/champion/" + champion.image.full + '" alt="">' +
+            '<img src="' + base + "/img/champion/" + champion.image.full + '" alt="">' +
             champion.name;
         carte.title = champion.name + " - " + champion.title;
 
@@ -92,7 +108,7 @@ function choisirChampion(champion) {
 
     var zone = document.getElementById("champion-choisi");
     zone.innerHTML =
-        '<img src="' + URL_DDRAGON + "/cdn/" + version + "/img/champion/" + champion.image.full + '" alt="">' +
+        '<img src="' + base + "/img/champion/" + champion.image.full + '" alt="">' +
         "<div>" +
             "<h3>" + champion.name + "</h3>" +
             '<p class="titre">' + champion.title + "</p>" +
@@ -123,7 +139,7 @@ function afficherObjets() {
         var carte = document.createElement("div");
         carte.className = "carte";
         carte.innerHTML =
-            '<img src="' + URL_DDRAGON + "/cdn/" + version + "/img/item/" + objet.image.full + '" alt="">' +
+            '<img src="' + base + "/img/item/" + objet.image.full + '" alt="">' +
             objet.gold.total;
         carte.title = objet.name + " (" + objet.gold.total + " po)\n" + objet.plaintext;
 
@@ -168,7 +184,7 @@ function afficherBuild() {
 
         if (build[i] != null) {
             slot.className += " rempli";
-            slot.innerHTML = '<img src="' + URL_DDRAGON + "/cdn/" + version + "/img/item/" + build[i].image.full + '" alt="">';
+            slot.innerHTML = '<img src="' + base + "/img/item/" + build[i].image.full + '" alt="">';
             slot.title = build[i].name + " (clic pour retirer)";
             prix += build[i].gold.total;
         }
@@ -310,6 +326,6 @@ document.getElementById("niveau").addEventListener("input", function () {
 
 // ================= DEMARRAGE =================
 chargerDonnees().catch(function (erreur) {
-    document.getElementById("version").textContent = "Erreur de chargement des données";
+    document.getElementById("version").textContent = "Impossible de charger les données (Riot injoignable et pas de copie locale)";
     console.error(erreur);
 });
