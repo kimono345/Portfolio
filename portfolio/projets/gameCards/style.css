@@ -917,7 +917,8 @@ main {
     border: 3px solid var(--accent);
     border-radius: 10px;
 }
-.tirage .flip:not(.retournee) { cursor: pointer; }
+.tirage .flip { cursor: pointer; }
+.tirage .flip.retournee:hover .carte { transform: translateY(-4px); transition: transform 0.2s; }
 .tirage .flip:not(.retournee):hover .flip-inner { transform: rotateY(180deg) translateY(-8px); }
 .flip:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; border-radius: 14px; }
 

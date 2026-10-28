@@ -277,7 +277,7 @@ function carteHTML(carte, { holo = false, compteur = 0, cachee = false } = {}) {
 // Carte retournable (dos / face), pour les boosters et le duel
 function flipHTML(carte, { holo = false, retournee = false, nouvelle = false, cachee = false } = {}) {
     return `
-        <div class="flip${retournee ? ' retournee' : ''}" data-rarete="${carte.rarete}">
+        <div class="flip${retournee ? ' retournee' : ''}" data-rarete="${carte.rarete}" data-id="${carte.id}">
             <div class="flip-inner">
                 <div class="flip-face">
                     ${carteHTML(carte, { holo, cachee })}
@@ -573,10 +573,16 @@ function majAideTirage() {
 function retourner(flip) {
     if (!flip || flip.classList.contains('retournee')) return;
     flip.classList.add('retournee');
-    flip.removeAttribute('role');
-    flip.removeAttribute('aria-label');
+    flip.setAttribute('aria-label', 'Voir le détail de la carte');
     majAideTirage();
     if (!$('#tirage .flip:not(.retournee)')) finTirage();
+}
+
+// Clic sur une carte du tirage : la retourner si elle est face cachée, sinon ouvrir sa fiche
+function cliquerCarteTirage(flip) {
+    if (!flip) return;
+    if (flip.classList.contains('retournee')) afficherFiche(Number(flip.dataset.id));
+    else retourner(flip);
 }
 
 async function toutRetourner() {
@@ -1058,11 +1064,11 @@ function init() {
     $('#btn-autre').addEventListener('click', () => ouvrirBooster(tempsRestant() === 0 ? 'gratuit' : 'achat'));
     $('#btn-x10').addEventListener('click', () => ouvrirBooster('achat', BOOSTERS_PAR_LOT));
     $('#btn-autre-x10').addEventListener('click', () => ouvrirBooster('achat', BOOSTERS_PAR_LOT));
-    $('#tirage').addEventListener('click', e => retourner(e.target.closest('.flip')));
+    $('#tirage').addEventListener('click', e => cliquerCarteTirage(e.target.closest('.flip')));
     $('#tirage').addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            retourner(e.target.closest('.flip'));
+            cliquerCarteTirage(e.target.closest('.flip'));
         }
     });
 
