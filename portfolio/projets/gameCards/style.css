@@ -755,10 +755,12 @@ main {
     width: 96cqi;
     transform: translateX(-50%);
     color: #f6dc8a;
-    opacity: 0.28;
+    opacity: 0.3;
     pointer-events: none;
 }
-.filigrane-goty .laurier { display: block; width: 100%; height: auto; }
+/* Dessin au trait : contour doré fin, feuilles à peine teintées (la nouvelle forme garde ce rendu) */
+.filigrane-goty .laurier { display: block; width: 100%; height: auto; fill: rgba(246, 220, 138, 0.18); stroke: currentColor; stroke-width: 0.6; }
+.filigrane-goty .laurier path[fill="none"] { stroke: currentColor; }
 /* Le badge ×N du compteur ne passe pas sous le bandeau */
 .carte.goty .carte-haut { padding-right: 21cqi; }
 
