@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=12">
+    <link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
 
@@ -27,6 +27,10 @@
             <a href="#collection" data-ecran="collection">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7.5" height="9" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="9" rx="1.5"/><rect x="3" y="15" width="7.5" height="6" rx="1.5"/><rect x="13.5" y="15" width="7.5" height="6" rx="1.5"/></svg>
                 <span>Collection</span>
+            </a>
+            <a href="#catalogue" data-ecran="catalogue">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>
+                <span>Catalogue</span>
             </a>
             <a href="#duel" data-ecran="duel">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M14.5 6.5 18 3h3v3l-3.5 3.5M5 14l4 4M7 17l-3 3M3 19l2 2"/></svg>
@@ -138,7 +142,7 @@
                     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
                     <input type="search" id="filtre-nom" placeholder="Rechercher un jeu…" aria-label="Rechercher un jeu">
                 </label>
-                <select id="filtre-genre" aria-label="Filtrer par genre"></select>
+                <select id="filtre-genre" aria-label="Filtrer par genre ou thème"></select>
                 <select id="tri" aria-label="Trier">
                     <option value="rarete">Tri : rareté</option>
                     <option value="recent">Tri : obtenues récemment</option>
@@ -159,6 +163,44 @@
             <div class="grille" id="grille-collection"></div>
             <div class="plus">
                 <button class="btn" id="btn-plus" hidden>Afficher plus</button>
+            </div>
+        </section>
+
+        <!-- ── CATALOGUE ── -->
+        <section class="ecran" id="ecran-catalogue" hidden>
+            <div class="titre-ecran">
+                <h1>Catalogue</h1>
+                <p id="resume-catalogue"></p>
+            </div>
+            <p class="intro-catalogue">Toutes les cartes du jeu. Tu peux acheter directement celle qui te manque, mais c’est bien plus cher que de tenter ta chance en booster.</p>
+
+            <div class="puces-raretes filtre-puces" id="catalogue-raretes" role="group" aria-label="Filtrer par rareté"></div>
+
+            <div class="filtres">
+                <label class="recherche">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                    <input type="search" id="catalogue-nom" placeholder="Rechercher parmi tous les jeux…" aria-label="Rechercher un jeu dans le catalogue">
+                </label>
+                <select id="catalogue-genre" aria-label="Filtrer par genre ou thème">
+                    <option value="">Tous les genres et thèmes</option>
+                </select>
+                <select id="catalogue-tri" aria-label="Trier">
+                    <option value="popularite">Tri : popularité</option>
+                    <option value="note">Tri : note public</option>
+                    <option value="metacritic">Tri : note Metacritic</option>
+                    <option value="recent">Tri : plus récents</option>
+                    <option value="ancien">Tri : plus anciens</option>
+                    <option value="nom">Tri : nom</option>
+                </select>
+                <label class="interrupteur">
+                    <input type="checkbox" id="catalogue-manquantes">
+                    <span></span> Pas encore possédées
+                </label>
+            </div>
+
+            <div class="grille" id="grille-catalogue"></div>
+            <div class="plus">
+                <button class="btn" id="btn-catalogue-plus" hidden>Afficher plus</button>
             </div>
         </section>
 
@@ -206,7 +248,7 @@
             <div class="tableau-defile">
                 <table class="legende">
                     <thead>
-                        <tr><th>Rareté</th><th>Avis Steam</th><th>Chance</th><th>Revente</th><th>Possédées</th></tr>
+                        <tr><th>Rareté</th><th>Avis Steam</th><th>Chance</th><th>Revente</th><th>Achat</th><th>Possédées</th></tr>
                     </thead>
                     <tbody id="legende-raretes"></tbody>
                 </table>
@@ -242,6 +284,10 @@
                     <p>Premier à 3 manches, 30 pièces à la clé. Chaque carte est tirée en donnant la même chance à chaque rareté, puis une carte au hasard dedans. Tu vois le jeu adverse mais pas ses stats. En cas d’égalité, la Popularité départage.</p>
                 </article>
                 <article>
+                    <h3>🛒 Catalogue</h3>
+                    <p>Toutes les cartes du jeu, consultables à tout moment. Tu peux acheter une carte précise, à un prix élevé : de 100 pièces pour une Commune à 10 000 pour une Mythique.</p>
+                </article>
+                <article>
                     <h3>💰 Revente</h3>
                     <p>Les doublons se revendent selon leur rareté. Tu gardes toujours un exemplaire, la holo en priorité.</p>
                 </article>
@@ -264,6 +310,6 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="script.js?v=16"></script>
+    <script src="script.js?v=18"></script>
 </body>
 </html>

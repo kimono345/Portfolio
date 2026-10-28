@@ -10,12 +10,52 @@ const SOURCE = path.join(RACINE, 'games.csv');
 const CIBLE = path.join(RACINE, 'data', 'jeux.json');
 const NOMBRE = Number(process.argv[2]) || Infinity;
 
-// Genres Steam traduits ; ceux absents de la liste (Free To Play, Early Access…) sont ignorés
+// Genres Steam traduits ; ceux absents de la liste sont ignorés
 const GENRES = {
     'Action': 'Action', 'Adventure': 'Aventure', 'Casual': 'Casual', 'Indie': 'Indé',
     'RPG': 'RPG', 'Simulation': 'Simulation', 'Strategy': 'Stratégie',
     'Massively Multiplayer': 'MMO', 'Racing': 'Course', 'Sports': 'Sport',
+    'Free To Play': 'Free-to-play', 'Early Access': 'Accès anticipé',
 };
+
+// Thèmes tirés des tags Steam (posés par les joueurs), traduits et regroupés pour les filtres.
+// Plusieurs tags peuvent donner le même thème (Rogue-like et Rogue-lite → Roguelike).
+// Le groupe "Contenu sensible" lit aussi les genres officiels Steam du même nom.
+const GROUPES_TAGS = {
+    'Gameplay': {
+        'Réflexion': ['Puzzle'], 'Plateforme': ['Platformer'], 'Tir': ['Shooter', 'FPS'],
+        'Survie': ['Survival'], 'Monde ouvert': ['Open World'], 'Roguelike': ['Rogue-like', 'Rogue-lite'],
+        'Visual novel': ['Visual Novel'], 'Point & click': ['Point & Click'], 'Combat en duel': ['Fighting'],
+        'Bac à sable': ['Sandbox'], 'Gestion': ['Management', 'City Builder'], 'Tower defense': ['Tower Defense'],
+        'Metroidvania': ['Metroidvania'], 'Battle royale': ['Battle Royale'], 'Rythme': ['Rhythm'],
+        'Jeu de cartes': ['Card Game', 'Deckbuilding'], 'Infiltration': ['Stealth'],
+        "Beat'em all": ['Hack and Slash', "Beat 'em up"], 'Souls-like': ['Souls-like'],
+        'Tour par tour': ['Turn-Based Strategy', 'Turn-Based'], 'Objets cachés': ['Hidden Object'],
+        'Bullet hell': ['Bullet Hell'], 'Dungeon crawler': ['Dungeon Crawler'], 'JRPG': ['JRPG'],
+        'Simulation de vie': ['Life Sim', 'Farming Sim'], 'Romance': ['Romance', 'Dating Sim'],
+    },
+    'Modes': {
+        'Multijoueur': ['Multiplayer', 'PvP'], 'Coopération': ['Co-op', 'Online Co-Op'], 'Réalité virtuelle': ['VR'],
+    },
+    'Univers': {
+        'Horreur': ['Horror'], 'Science-fiction': ['Sci-fi', 'Space', 'Cyberpunk'], 'Fantasy': ['Fantasy', 'Medieval'],
+        'Post-apocalyptique': ['Post-apocalyptic', 'Zombies'], 'Guerre': ['War', 'Military'], 'Anime': ['Anime'],
+        'Pixel art': ['Pixel Graphics'], 'Narratif': ['Story Rich'], 'Enquête': ['Mystery', 'Detective'],
+        'Comédie': ['Comedy'], 'Relaxant': ['Relaxing', 'Cozy'],
+    },
+    'Contenu sensible': {
+        'Contenu sexuel': ['Sexual Content', 'Hentai', 'NSFW'], 'Nudité': ['Nudity'],
+        'Violence': ['Violent'], 'Gore': ['Gore'],
+    },
+};
+const listeTags = Object.values(GROUPES_TAGS).flatMap(groupe => Object.keys(groupe));
+const tagVersTheme = {};
+for (const groupe of Object.values(GROUPES_TAGS)) {
+    for (const [theme, tagsSteam] of Object.entries(groupe)) for (const t of tagsSteam) tagVersTheme[t] = theme;
+}
+
+// Codage compact des listes : un caractère par genre ou thème (62 possibles)
+const ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 // Ce ne sont pas des jeux (Wallpaper Engine, logiciels de dessin…)
 const LOGICIELS = ['Utilities', 'Design & Illustration', 'Animation & Modeling', 'Video Production',
@@ -71,7 +111,11 @@ for (const l of lignes) {
         avis,
         note: Math.round((positifs / avis) * 100),
         metacritic: Number(l[col['Metacritic score']]) || null,
-        genres: genresSteam.map(g => GENRES[g]).filter(Boolean).slice(0, 3),
+        genres: genresSteam.map(g => GENRES[g]).filter(Boolean),
+        // Tags des joueurs + genres officiels "Violent", "Nudity"… ; rangés dans l'ordre de listeTags
+        tags: [...new Set([...(l[col.Tags] ? l[col.Tags].split(',') : []), ...genresSteam]
+            .map(t => tagVersTheme[t]).filter(Boolean))]
+            .sort((a, b) => listeTags.indexOf(a) - listeTags.indexOf(b)),
     };
     if (image && image !== 'header.jpg') jeu.image = image;
     jeux.push(jeu);
@@ -82,13 +126,17 @@ jeux.sort((a, b) => b.avis - a.avis);
 const garde = jeux.slice(0, NOMBRE);
 
 // Format compact pour alléger le fichier : un tableau par jeu au lieu d'un objet,
-// et les genres sous forme de chiffres (index dans `genres`, 10 genres au plus).
-// [id, nom, année, avis, note, metacritic, "chiffres des genres", image (seulement si spéciale)]
+// et genres / thèmes codés par un caractère chacun (position dans ALPHABET).
+// [id, nom, année, avis, note, metacritic, "codes genres", "codes thèmes", image (seulement si spéciale)]
 const listeGenres = Object.values(GENRES);
+const coder = (valeurs, liste) => valeurs.map(v => ALPHABET[liste.indexOf(v)]).join('');
+if (listeGenres.length > ALPHABET.length || listeTags.length > ALPHABET.length) throw new Error('trop de genres ou de thèmes');
 const compact = {
     genres: listeGenres,
+    tags: listeTags,
+    groupesTags: Object.fromEntries(Object.entries(GROUPES_TAGS).map(([nom, groupe]) => [nom, Object.keys(groupe)])),
     jeux: garde.map(j => {
-        const ligne = [j.id, j.nom, j.annee, j.avis, j.note, j.metacritic, j.genres.map(g => listeGenres.indexOf(g)).join('')];
+        const ligne = [j.id, j.nom, j.annee, j.avis, j.note, j.metacritic, coder(j.genres, listeGenres), coder(j.tags, listeTags)];
         if (j.image) ligne.push(j.image);
         return ligne;
     }),

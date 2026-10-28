@@ -8,13 +8,14 @@
 
 // Du plus rare au plus commun. `seuil` porte sur le nombre d'avis Steam.
 // Chaque carte tire d'abord sa rareté selon `chance` (en %), puis un jeu au hasard dans cette rareté.
+// `prix` : achat direct dans le catalogue, volontairement bien plus cher que la chance en boosters.
 const RARETES = [
-    { id: 'mythique',    nom: 'Mythique',    seuil: 750000, chance: 0.2,  revente: 300 },
-    { id: 'legendaire',  nom: 'Légendaire',  seuil: 200000, chance: 1,    revente: 100 },
-    { id: 'epique',      nom: 'Épique',      seuil: 60000,  chance: 3,    revente: 40 },
-    { id: 'rare',        nom: 'Rare',        seuil: 12000,  chance: 8,    revente: 15 },
-    { id: 'peu-commune', nom: 'Peu commune', seuil: 3000,   chance: 18,   revente: 5 },
-    { id: 'commune',     nom: 'Commune',     seuil: 0,      chance: 69.8, revente: 2 },
+    { id: 'mythique',    nom: 'Mythique',    seuil: 750000, chance: 0.2,  revente: 300, prix: 10000 },
+    { id: 'legendaire',  nom: 'Légendaire',  seuil: 200000, chance: 1,    revente: 100, prix: 4000 },
+    { id: 'epique',      nom: 'Épique',      seuil: 60000,  chance: 3,    revente: 40,  prix: 1500 },
+    { id: 'rare',        nom: 'Rare',        seuil: 12000,  chance: 8,    revente: 15,  prix: 600 },
+    { id: 'peu-commune', nom: 'Peu commune', seuil: 3000,   chance: 18,   revente: 5,   prix: 250 },
+    { id: 'commune',     nom: 'Commune',     seuil: 0,      chance: 69.8, revente: 2,   prix: 100 },
 ];
 const INDEX_RARE = RARETES.findIndex(r => r.id === 'rare');
 const INDEX_PEU_COMMUNE = RARETES.findIndex(r => r.id === 'peu-commune');
@@ -102,6 +103,10 @@ const etat = {
 
 // Tous les jeux de data/jeux.json (chargés au démarrage), et les mêmes rangés par rareté
 let tousLesJeux = [];
+let jeuxParId = new Map();
+let genresCatalogue = [];
+let groupesTags = {};       // { "Gameplay": ["Réflexion", …], …, "Contenu sensible": […] }
+const ALPHABET_CODES = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const jeuxParRarete = {};
 
 function sauvegarder() {
@@ -131,6 +136,7 @@ function creerCarte(jeu) {
         rarete: rareteDe(jeu.avis).id,
         annee: jeu.annee,
         genres: jeu.genres,
+        tags: jeu.tags,
     };
 }
 
@@ -178,7 +184,7 @@ function flipHTML(carte, { holo = false, retournee = false, nouvelle = false, ca
 }
 
 // Pastilles de rareté (progression de l'accueil et filtre de la collection)
-function pucesRaretesHTML({ boutons = false, actif = '' } = {}) {
+function pucesRaretesHTML({ boutons = false, actif = '', totaux = !boutons } = {}) {
     const entrees = Object.values(etat.collection);
     const puce = (id, nom, possedees, total) => {
         const contenu = `<i></i>${nom} <b>${nombre(possedees)}${total ? ` / ${nombre(total)}` : ''}</b>`;
@@ -187,33 +193,51 @@ function pucesRaretesHTML({ boutons = false, actif = '' } = {}) {
             ? `<button class="${classe}" data-rarete="${id}" aria-pressed="${actif === id}">${contenu}</button>`
             : `<span class="${classe}">${contenu}</span>`;
     };
-    return (boutons ? puce('', 'Toutes', entrees.length) : '')
+    return (boutons ? puce('', 'Toutes', entrees.length, totaux ? totalJeux() : 0) : '')
         + RARETES.map(r => puce(r.id, r.nom,
             entrees.filter(e => e.rarete === r.id).length,
-            boutons ? 0 : jeuxParRarete[r.id]?.length || 0)).join('');
+            totaux ? jeuxParRarete[r.id]?.length || 0 : 0)).join('');
 }
+
+// Options du filtre genre / thème, groupées. `presents` (Set) ne garde que les valeurs rencontrées.
+function optionsGenresHTML(choisi, presents = null) {
+    const groupe = (titre, liste) => {
+        const valeurs = liste.filter(v => !presents || presents.has(v));
+        return valeurs.length
+            ? `<optgroup label="${titre}">${valeurs.map(v =>
+                `<option value="${echapper(v)}"${v === choisi ? ' selected' : ''}>${echapper(v)}</option>`).join('')}</optgroup>`
+            : '';
+    };
+    return '<option value="">Tous les genres et thèmes</option>'
+        + groupe('Genres', genresCatalogue)
+        + Object.entries(groupesTags).map(([titre, liste]) => groupe(titre, liste)).join('');
+}
+
+const aLeGenre = (carte, valeur) => carte.genres.includes(valeur) || (carte.tags || []).includes(valeur);
 
 // ---------- Données ----------
 
 async function chargerJeux() {
-    const reponse = await fetch('data/jeux.json?v=2');
+    const reponse = await fetch('data/jeux.json?v=3');
     if (!reponse.ok) throw new Error(`data/jeux.json introuvable (${reponse.status})`);
-    // Format compact (voir outils/convertir-csv.js) : un tableau par jeu, genres en chiffres
-    const { genres, jeux } = await reponse.json();
+    // Format compact (voir outils/convertir-csv.js) : un tableau par jeu, genres et thèmes codés en caractères
+    const { genres, tags, jeux, groupesTags: groupes } = await reponse.json();
+    const decoder = (codes, liste) => [...codes].map(c => liste[ALPHABET_CODES.indexOf(c)]);
     for (const r of RARETES) jeuxParRarete[r.id] = [];
-    tousLesJeux = jeux.map(([id, nom, annee, avis, note, metacritic, chiffresGenres, image]) =>
-        ({ id, nom, annee, avis, note, metacritic, genres: [...chiffresGenres].map(i => genres[i]), image }));
+    tousLesJeux = jeux.map(([id, nom, annee, avis, note, metacritic, codesGenres, codesTags, image]) =>
+        ({ id, nom, annee, avis, note, metacritic, genres: decoder(codesGenres, genres), tags: decoder(codesTags, tags), image }));
+    groupesTags = groupes;
     for (const jeu of tousLesJeux) jeuxParRarete[rareteDe(jeu.avis).id].push(jeu);
+    jeuxParId = new Map(tousLesJeux.map(jeu => [jeu.id, jeu]));
+    genresCatalogue = genres;
     majCollectionDepuisDonnees();
 }
 
 // Les cartes déjà obtenues gardent une copie de leurs stats : on les recalcule
 // pour qu'elles suivent les règles actuelles (exemplaires, holos et date sont conservés)
 function majCollectionDepuisDonnees() {
-    const parId = new Map();
-    for (const jeu of tousLesJeux) parId.set(jeu.id, jeu);
     for (const entree of Object.values(etat.collection)) {
-        const jeu = parId.get(entree.id);
+        const jeu = jeuxParId.get(entree.id);
         if (jeu) Object.assign(entree, creerCarte(jeu));
     }
     sauvegarder();
@@ -525,16 +549,14 @@ function afficherCollection() {
     // Le menu des genres se construit à partir de la collection
     const selGenre = $('#filtre-genre');
     const genreChoisi = selGenre.value;
-    const genres = [...new Set(entrees.flatMap(e => e.genres))].sort((a, b) => a.localeCompare(b, 'fr'));
-    selGenre.innerHTML = '<option value="">Tous les genres</option>'
-        + genres.map(g => `<option value="${echapper(g)}"${g === genreChoisi ? ' selected' : ''}>${echapper(g)}</option>`).join('');
+    selGenre.innerHTML = optionsGenresHTML(genreChoisi, new Set(entrees.flatMap(e => [...e.genres, ...(e.tags || [])])));
 
     const recherche = $('#filtre-nom').value.trim().toLowerCase();
     const doublons = $('#filtre-doublons').checked;
     const visibles = entrees
         .filter(e => !recherche || e.nom.toLowerCase().includes(recherche))
         .filter(e => !filtreRarete || e.rarete === filtreRarete)
-        .filter(e => !genreChoisi || e.genres.includes(genreChoisi))
+        .filter(e => !genreChoisi || aLeGenre(e, genreChoisi))
         .filter(e => !doublons || e.exemplaires > 1)
         .sort(TRIS[$('#tri').value]);
 
@@ -597,31 +619,124 @@ function vendreTousLesDoublons() {
 
 function afficherFiche(id) {
     const e = etat.collection[id];
-    if (!e) return;
-    const rarete = RARETES[indexRarete(e.rarete)];
+    const jeu = jeuxParId.get(id);
+    const carte = e || (jeu && creerCarte(jeu));
+    if (!carte) return;
+    const rarete = RARETES[indexRarete(carte.rarete)];
+    const manque = rarete.prix - etat.pieces;
     $('#modale-contenu').innerHTML = `
-        <div class="fiche-visuel" data-incline>${carteHTML(e, { holo: e.holos > 0 })}</div>
+        <div class="fiche-visuel" data-incline>${carteHTML(carte, { holo: e?.holos > 0 })}</div>
         <div class="fiche-infos rarete-${rarete.id}">
-            <span class="fiche-rarete">${rarete.nom}${e.holos ? ' · ✨ Holo' : ''}</span>
-            <h2>${echapper(e.nom)}</h2>
-            <p class="fiche-meta">${[e.annee, ...e.genres].filter(Boolean).map(echapper).join(' · ')}</p>
+            <span class="fiche-rarete">${rarete.nom}${e?.holos ? ' · ✨ Holo' : ''}</span>
+            <h2>${echapper(carte.nom)}</h2>
+            <p class="fiche-meta">${[carte.annee, ...carte.genres].filter(Boolean).map(echapper).join(' · ')}</p>
+            ${carte.tags?.length ? `<p class="fiche-tags">${carte.tags.map(t => `<span${(groupesTags['Contenu sensible'] || []).includes(t)
+                ? ' class="tag-sensible"' : ''}>${echapper(t)}</span>`).join('')}</p>` : ''}
             <dl class="fiche-stats">
-                <div><dt>👍 Note public</dt><dd>${e.attaque} %</dd></div>
-                <div><dt>📰 Metacritic</dt><dd>${e.metacritic ?? '<span class="gris">aucune · 0</span>'}</dd></div>
-                <div><dt>★ Popularité</dt><dd>${e.popularite} / 100</dd></div>
+                <div><dt>👍 Note public</dt><dd>${carte.attaque} %</dd></div>
+                <div><dt>📰 Metacritic</dt><dd>${carte.metacritic ?? '<span class="gris">aucune · 0</span>'}</dd></div>
+                <div><dt>★ Popularité</dt><dd>${carte.popularite} / 100</dd></div>
             </dl>
             <p class="fiche-exemplaires">
-                ${e.exemplaires} exemplaire${e.exemplaires > 1 ? 's' : ''}${e.holos ? ` dont ${e.holos} holo` : ''}
-                · obtenue le ${new Date(e.obtenue).toLocaleDateString('fr-FR')}
+                ${e
+                    ? `${e.exemplaires} exemplaire${e.exemplaires > 1 ? 's' : ''}${e.holos ? ` dont ${e.holos} holo` : ''}
+                       · obtenue le ${new Date(e.obtenue).toLocaleDateString('fr-FR')}`
+                    : 'Pas encore dans ta collection.'}
             </p>
             <div class="fiche-actions">
-                ${e.exemplaires > 1
+                ${e && e.exemplaires > 1
                     ? `<button class="btn btn-or" data-vendre="${e.id}">Revendre un doublon · +${prixRevente(e)} ${PIECE}</button>`
                     : ''}
-                <a class="btn" href="https://store.steampowered.com/app/${e.id}" target="_blank" rel="noopener">Voir sur Steam ↗</a>
+                ${!e
+                    ? `<button class="btn btn-principal" data-acheter="${carte.id}"${manque > 0 ? ` disabled title="Il te manque ${nombre(manque)} pièces"` : ''}>
+                           Acheter · ${nombre(rarete.prix)} ${PIECE}</button>`
+                    : ''}
+                <a class="btn" href="https://store.steampowered.com/app/${carte.id}" target="_blank" rel="noopener">Voir sur Steam ↗</a>
             </div>
+            ${!e && manque > 0 ? `<p class="fiche-note">Il te manque ${nombre(manque)} pièces.</p>` : ''}
         </div>`;
     if (!$('#modale').open) $('#modale').showModal();
+}
+
+// ---------- Écran catalogue ----------
+
+const TRIS_CATALOGUE = {
+    popularite: null, // data/jeux.json est déjà trié du plus au moins populaire
+    note: (a, b) => notePublic(b.note, b.avis) - notePublic(a.note, a.avis),
+    metacritic: (a, b) => (b.metacritic ?? -1) - (a.metacritic ?? -1),
+    recent: (a, b) => (b.annee || 0) - (a.annee || 0),
+    ancien: (a, b) => (a.annee || 9999) - (b.annee || 9999),
+    nom: (a, b) => a.nom.localeCompare(b.nom, 'fr'),
+};
+
+let filtreRareteCatalogue = '';
+let limiteCatalogue = CARTES_PAR_PAGE;
+
+function caseCatalogueHTML(jeu) {
+    const carte = creerCarte(jeu);
+    const entree = etat.collection[jeu.id];
+    const prix = RARETES[indexRarete(carte.rarete)].prix;
+    return `
+        <div class="case">
+            <button class="case-carte${entree ? '' : ' non-possedee'}" data-fiche="${jeu.id}" aria-label="Voir ${echapper(jeu.nom)}">
+                ${carteHTML(carte, { holo: entree?.holos > 0, compteur: entree?.exemplaires || 0 })}
+            </button>
+            ${entree
+                ? `<span class="etiquette-possedee">✓ Dans ta collection</span>`
+                : `<button class="btn-acheter" data-acheter="${jeu.id}"${etat.pieces < prix ? ' disabled' : ''}>Acheter · ${nombre(prix)} ${PIECE}</button>`}
+        </div>`;
+}
+
+function afficherCatalogue() {
+    if (!donneesPretes()) {
+        $('#grille-catalogue').innerHTML = '<p class="vide">Chargement des jeux…</p>';
+        return;
+    }
+    $('#catalogue-raretes').innerHTML = pucesRaretesHTML({ boutons: true, actif: filtreRareteCatalogue, totaux: true });
+
+    const selGenre = $('#catalogue-genre');
+    if (selGenre.options.length <= 1) selGenre.innerHTML = optionsGenresHTML(selGenre.value);
+
+    const recherche = $('#catalogue-nom').value.trim().toLowerCase();
+    const genre = selGenre.value;
+    const manquantes = $('#catalogue-manquantes').checked;
+    const bac = filtreRareteCatalogue ? jeuxParRarete[filtreRareteCatalogue] : tousLesJeux;
+    const visibles = bac.filter(j =>
+        (!recherche || j.nom.toLowerCase().includes(recherche))
+        && (!genre || aLeGenre(j, genre))
+        && (!manquantes || !etat.collection[j.id]));
+    const tri = TRIS_CATALOGUE[$('#catalogue-tri').value];
+    if (tri) visibles.sort(tri);
+
+    $('#grille-catalogue').innerHTML = visibles.length
+        ? visibles.slice(0, limiteCatalogue).map(caseCatalogueHTML).join('')
+        : '<p class="vide">Aucun jeu ne correspond à ces filtres.</p>';
+    const restantes = visibles.length - limiteCatalogue;
+    $('#btn-catalogue-plus').hidden = restantes <= 0;
+    $('#btn-catalogue-plus').textContent = `Afficher plus (${nombre(restantes)} restants)`;
+    $('#resume-catalogue').textContent = `${nombre(totalJeux())} jeux · tu en possèdes ${nombre(Object.keys(etat.collection).length)}`
+        + (visibles.length !== totalJeux() ? ` · ${nombre(visibles.length)} avec ces filtres` : '');
+}
+
+function filtrerCatalogue() {
+    limiteCatalogue = CARTES_PAR_PAGE;
+    afficherCatalogue();
+}
+
+function acheterCarte(id) {
+    const jeu = jeuxParId.get(id);
+    if (!jeu || etat.collection[id]) return;
+    const carte = creerCarte(jeu);
+    const prix = RARETES[indexRarete(carte.rarete)].prix;
+    if (etat.pieces < prix) return toast(`Il te manque ${nombre(prix - etat.pieces)} pièces pour acheter ${carte.nom}`);
+    if (!confirm(`Acheter ${carte.nom} pour ${nombre(prix)} pièces ?`)) return;
+    etat.pieces -= prix;
+    ajouterACollection(carte, false);
+    sauvegarder();
+    majEntete();
+    toast(`${carte.nom} rejoint ta collection !`, 'gain');
+    if (!$('#ecran-catalogue').hidden) afficherCatalogue();
+    if ($('#modale').open) afficherFiche(id);
 }
 
 // ---------- Écran règles ----------
@@ -636,6 +751,7 @@ function afficherRegles() {
             <td>${r.seuil ? `≥ ${nombre(r.seuil)}` : `< ${nombre(RARETES[i - 1].seuil)}`}</td>
             <td>${chanceRarete(r)}</td>
             <td>${r.revente} ${PIECE}</td>
+            <td>${nombre(r.prix)} ${PIECE}</td>
             <td>${entrees.filter(e => e.rarete === r.id).length} / ${nombre(jeuxParRarete[r.id]?.length || 0)}</td>
         </tr>`).join('');
 }
@@ -803,6 +919,7 @@ function afficherEcran(nom) {
     if (nom === 'accueil') afficherAccueil();
     if (nom === 'collection') afficherCollection();
     if (nom === 'regles') afficherRegles();
+    if (nom === 'catalogue') afficherCatalogue();
     window.scrollTo(0, 0);
 }
 
@@ -839,8 +956,28 @@ function init() {
     });
     $('#btn-vendre-tout').addEventListener('click', vendreTousLesDoublons);
 
-    // Clics partagés : ouvrir une fiche, revendre un doublon
+    // Catalogue
+    $('#catalogue-raretes').addEventListener('click', e => {
+        const puce = e.target.closest('[data-rarete]');
+        if (!puce) return;
+        filtreRareteCatalogue = puce.dataset.rarete;
+        filtrerCatalogue();
+    });
+    for (const id of ['#catalogue-genre', '#catalogue-tri', '#catalogue-manquantes']) $(id).addEventListener('change', filtrerCatalogue);
+    let attenteRecherche;
+    $('#catalogue-nom').addEventListener('input', () => {
+        clearTimeout(attenteRecherche);
+        attenteRecherche = setTimeout(filtrerCatalogue, 150); // 81 000 jeux : on attend la fin de la frappe
+    });
+    $('#btn-catalogue-plus').addEventListener('click', () => {
+        limiteCatalogue += CARTES_PAR_PAGE;
+        afficherCatalogue();
+    });
+
+    // Clics partagés : ouvrir une fiche, acheter une carte, revendre un doublon
     document.addEventListener('click', e => {
+        const acheter = e.target.closest('[data-acheter]');
+        if (acheter) return acheterCarte(Number(acheter.dataset.acheter));
         const vendre = e.target.closest('[data-vendre]');
         if (vendre) {
             const id = Number(vendre.dataset.vendre);
@@ -896,6 +1033,8 @@ function init() {
             const ecran = location.hash.slice(1) || 'accueil';
             if (ecran === 'accueil') afficherAccueil();
             if (ecran === 'regles') afficherRegles();
+            if (ecran === 'catalogue') afficherCatalogue();
+            if (ecran === 'collection') afficherCollection();
         })
         .catch(e => {
             console.error(e);

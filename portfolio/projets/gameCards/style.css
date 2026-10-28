@@ -831,6 +831,29 @@ main {
     line-height: 2.6;
 }
 
+/* ── Catalogue ── */
+.intro-catalogue { color: var(--texte-doux); margin: -0.6rem 0 1.2rem; max-width: 720px; }
+.case-carte.non-possedee .carte { filter: saturate(0.75) brightness(0.92); }
+.case-carte.non-possedee:hover .carte { filter: none; }
+.btn-acheter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.45rem;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 184, 0, 0.35);
+    background: rgba(255, 184, 0, 0.08);
+    color: var(--accent);
+    font-size: 0.85rem;
+    font-weight: 700;
+    transition: background 0.2s, opacity 0.2s;
+}
+.btn-acheter:hover:not(:disabled) { background: rgba(255, 184, 0, 0.18); }
+.btn-acheter:disabled { opacity: 0.4; }
+.etiquette-possedee { padding: 0.45rem; text-align: center; color: var(--vert); font-size: 0.85rem; font-weight: 700; }
+.fiche-note { margin-top: 0.6rem; color: var(--texte-doux); font-size: 0.88rem; }
+
 /* ── Fiche détaillée ── */
 .modale {
     margin: auto;
@@ -868,6 +891,17 @@ main {
 .fiche-rarete { font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.85rem; color: var(--rar); }
 .fiche-infos h2 { font-size: clamp(1.4rem, 3.5vw, 1.9rem); line-height: 1.15; margin: 0.2rem 0 0.4rem; }
 .fiche-meta { color: var(--texte-doux); }
+.fiche-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.7rem; }
+.fiche-tags span {
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid var(--bord-fort);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--texte-doux);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+.fiche-tags .tag-sensible { border-color: rgba(255, 90, 90, 0.5); color: #ffb0b0; background: rgba(255, 90, 90, 0.08); }
 .fiche-stats { display: grid; gap: 0.5rem; margin: 1.3rem 0 1rem; }
 .fiche-stats div {
     display: flex;
