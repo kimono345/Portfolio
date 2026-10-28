@@ -47,6 +47,7 @@ export const RARETES = {
     rare:       { nom: 'Rare',       texte: 'text-sky-300' },
     epique:     { nom: 'Épique',     texte: 'text-purple-300' },
     legendaire: { nom: 'Légendaire', texte: 'text-amber-300' },
+    mythique:   { nom: 'Mythique',   texte: 'text-pink-300' },
 };
 
 const s = n => (n > 1 ? 's' : '');
@@ -587,6 +588,53 @@ export const ROBOTS = {
         allieSoigne: c => c.bouclier(c.cible, c.valeur),
     },
 
+    // ---------- Palier 7 : mythiques (récompense du boss du tour 10, rares en boutique au palier 6) ----------
+    vaisseaumere: {
+        nom: 'Vaisseau-mère', famille: 'drone', palier: 7, atk: 7, hp: 12, rarete: 'mythique',
+        desc: L => `Après chaque échange : chaque Drone allié tire ${L} dégât${s(L)} sur un ennemi au hasard.`,
+        apresEchange: c => c.allies.filter(u => u.hp > 0 && aFamille(u, 'drone')).forEach(() => {
+            const cible = c.auHasard(c.ennemis, 1)[0];
+            if (cible) c.degats(cible, c.L);
+        }),
+    },
+    colosse: {
+        nom: 'Colosse Oméga', famille: 'mecha', palier: 7, atk: 8, hp: 12, rarete: 'mythique', plafondDegats: 8,
+        desc: L => `Ne perd jamais plus de 8 PV par coup. Destruction : bouclier de ${4 * L} à toute l’équipe.`,
+        mort: c => [...c.allies].forEach(u => c.bouclier(u, 4 * c.L)),
+    },
+    essaimprimordial: {
+        nom: 'Essaim primordial', famille: 'nano', palier: 7, atk: 6, hp: 10, rarete: 'mythique',
+        desc: L => `Ton équipe peut compter jusqu’à 7 robots grâce aux invocations. Chaque nano invoqué lui donne +${L}/+${L}.`,
+        allieInvoque: c => { if (c.cible.id === 'nano') c.buff(c.moi, c.L, c.L); },
+    },
+    oraclequantique: {
+        nom: 'Oracle quantique', famille: 'ia', palier: 7, atk: 6, hp: 12, rarete: 'mythique',
+        desc: () => 'Chaque fois que ton robot de tête utilise une capacité, l’Oracle la relance et gagne +1/+1.',
+    },
+    angegardien: {
+        nom: 'Ange gardien', famille: 'medic', palier: 7, atk: 5, hp: 14, rarete: 'mythique',
+        desc: L => `Les ${L + 1} premiers alliés détruits reviennent avec tous leurs PV.`,
+        allieMort: c => {
+            if ((c.moi.anges ?? 0) > c.L || c.cible.ranime) return;
+            c.moi.anges = (c.moi.anges ?? 0) + 1;
+            c.ranimer(c.cible, c.cible.pvMax);
+        },
+    },
+    cheftriple: {
+        nom: 'Chef triplement étoilé', famille: 'cuisine', palier: 7, atk: 6, hp: 12, rarete: 'mythique',
+        desc: L => `Fin du tour : cuisine ${L === 1 ? 'une Batterie 🔋' : `${L} Batteries 🔋`} pour chaque allié. Le Festin de victoire donne +2/+2 au lieu de +1/+1.`,
+        finTour: c => c.autres().forEach(u => { for (let i = 0; i < c.L; i++) c.cuisiner('batterie', u); }),
+    },
+    prototypezero: {
+        nom: 'Prototype Zéro', famille: [], palier: 7, atk: 8, hp: 8, rarete: 'mythique',
+        desc: L => `Neutre. Début du combat : copie les capacités de début de combat des deux alliés à côté de lui. Sinon, gagne +${3 * L}/+${3 * L}.`,
+        debutCombat: c => {
+            let copie = false;
+            for (const voisin of [c.allies[c.index - 1], c.allies[c.index + 1]]) if (c.imiter(voisin)) copie = true;
+            if (!copie) c.buff(c.moi, 3 * c.L, 3 * c.L);
+        },
+    },
+
     // ---------- Invocations (jamais en boutique) ----------
     minidrone: {
         nom: 'Mini-drone', famille: 'drone', palier: null, atk: 1, hp: 1,
@@ -637,15 +685,14 @@ export const COMMANDANTS = {
     mecano:          { nom: 'Mécano',          icone: '🔧', desc: 'Vendre un robot rapporte +1 🪙.', effet: { venteBonus: 1 } },
     hackeuse:        { nom: 'Hackeuse',        icone: '💻', desc: 'La première relance de chaque tour est gratuite.', effet: { relancesGratuites: 1 } },
     general:         { nom: 'Général',         icone: '🎖️', desc: 'En combat, ton robot de tête a +1/+1.', combat: { teteA: 1, teteH: 1 } },
-    banquiere:       { nom: 'Banquière',       icone: '💰', desc: '+1 🪙 un tour sur deux.', effet: { creditsTour: 0.5 } },
+    banquiere:       { nom: 'Banquière',       icone: '💰', desc: 'Les intérêts rapportent 2 🪙 par tranche de 5 gardés au lieu de 1.', effet: { interetBonus: 1 } },
     docteure:        { nom: 'Docteure',        icone: '🩺', desc: 'Tous tes soins font +1.', combat: { soin: 1 } },
     gardienne:       { nom: 'Gardienne',       icone: '🛡️', desc: 'Pendant les 3 premiers échanges, les attaques ennemies font 1 dégât de moins (minimum 1).', combat: { reducDegats: 1 } },
     ingenieure:      { nom: 'Ingénieure',      icone: '🔩', desc: 'Début du combat : bouclier de 2 à tes 2 premiers robots.', combat: { bouclierAvant: 2 } },
-    survivante:      { nom: 'Survivante',      icone: '🫀', desc: 'Le premier de tes robots détruit à chaque combat survit avec 1 PV.', combat: { survie: 1 } },
     collectionneuse: { nom: 'Collectionneuse', icone: '🎁', desc: 'Les robots rares, épiques et légendaires coûtent 1 🪙 de moins.', effet: { reducRare: 1 } },
-    dresseur:        { nom: 'Dresseur',        icone: '🐝', desc: 'Tes invocations ont +3 attaque.', combat: { invoc: 3 } },
+    dresseur:        { nom: 'Dresseur',        icone: '🐝', desc: 'Tes invocations ont +2 attaque.', combat: { invoc: 2 } },
     marionnettiste:  { nom: 'Marionnettiste',  icone: '🎭', desc: 'Ton premier robot détruit laisse un mini-drone 1/1 à sa place.', combat: { relaisMort: 1 } },
-    tacticienne:     { nom: 'Tacticienne',     icone: '🧭', desc: 'Un robot qui atteint le niveau 3 gagne +1/+1 de plus.', effet: { bonusFusion: 1 } },
+    tacticienne:     { nom: 'Tacticienne',     icone: '🧭', desc: 'Il faut un exemplaire de moins pour atteindre le niveau 3 (5 au lieu de 6).', effet: { copieEnMoins: 1 } },
     duelliste:       { nom: 'Duelliste',       icone: '⚔️', desc: 'La première attaque de ton robot de tête fait +50 % de dégâts.', combat: { premierCoup: 1 } },
 };
 

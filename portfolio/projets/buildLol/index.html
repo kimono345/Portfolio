@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoL Build Maker</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <header>
+        <h1>LoL Build Maker</h1>
+        <span id="version">Chargement...</span>
+    </header>
+
+    <main>
+        <!-- colonne 1 : choix du champion -->
+        <section id="colonne-champions">
+            <h2>Champions</h2>
+            <input type="text" id="recherche-champion" placeholder="Rechercher un champion...">
+            <div id="liste-champions"></div>
+        </section>
+
+        <!-- colonne 2 : champion choisi, build et stats -->
+        <section id="colonne-build">
+            <div id="champion-choisi">
+                <p class="vide">Choisis un champion à gauche</p>
+            </div>
+
+            <div id="zone-niveau">
+                <label for="niveau">Niveau : <strong id="valeur-niveau">1</strong></label>
+                <input type="range" id="niveau" min="1" max="18" value="1">
+            </div>
+
+            <h2>Build <span id="prix-build">0 po</span></h2>
+            <div id="slots-build"></div>
+            <p class="aide">Clique sur un objet à droite pour l'ajouter, clique sur un slot pour le retirer.</p>
+
+            <h2>Statistiques</h2>
+            <table id="tableau-stats"></table>
+        </section>
+
+        <!-- colonne 3 : choix des objets -->
+        <section id="colonne-objets">
+            <h2>Objets</h2>
+            <input type="text" id="recherche-objet" placeholder="Rechercher un objet...">
+            <label class="case">
+                <input type="checkbox" id="afficher-composants"> Afficher aussi les composants
+            </label>
+            <div id="liste-objets"></div>
+        </section>
+    </main>
+
+    <footer>
+        LoL Build Maker n'est pas approuvé par Riot Games et ne reflète pas les opinions de Riot Games.
+        League of Legends et Riot Games sont des marques déposées de Riot Games, Inc.
+    </footer>
+
+    <script src="./script.js"></script>
+</body>
+</html>

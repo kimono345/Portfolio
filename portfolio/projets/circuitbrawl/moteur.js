@@ -18,10 +18,14 @@ export function creerUnite(id, extra = {}) {
 }
 
 // Expérience : chaque exemplaire fusionné donne 1 point. Niveau 2 à 2 points (3 exemplaires), niveau 3 à 5 (6 exemplaires).
-export const XP_NIVEAU = [0, 2, 5];
-export const XP_MAX = XP_NIVEAU[2];
-export const xpDe = u => u.xp ?? XP_NIVEAU[u.niveau - 1];
-export const niveauDeXp = xp => (xp >= XP_NIVEAU[2] ? 3 : xp >= XP_NIVEAU[1] ? 2 : 1);
+// La Tacticienne retire un exemplaire au niveau 3 : les seuils dépendent du run en cours (reglerExperience).
+const XP_BASE = [0, 2, 5];
+let xpNiveaux = XP_BASE;
+export const seuilsXp = () => xpNiveaux;
+export const xpMax = () => xpNiveaux[2];
+export function reglerExperience(eff = {}) { xpNiveaux = [0, 2, XP_BASE[2] - (eff.copieEnMoins ?? 0)]; }
+export const xpDe = u => u.xp ?? xpNiveaux[u.niveau - 1];
+export const niveauDeXp = xp => (xp >= xpNiveaux[2] ? 3 : xp >= xpNiveaux[1] ? 2 : 1);
 
 export const palierDuTour = tour => Math.min(6, Math.ceil(tour / 2));
 export const viesPerdues = tour => (tour <= 2 ? 1 : tour <= 4 ? 2 : 3);
@@ -47,29 +51,31 @@ export const niveauSynergie = n => SEUILS_SYNERGIE.filter(s => n >= s).length;
 
 // ---------- Boutique ----------
 
+// Au palier 6, chaque case a une petite chance de proposer un mythique (palier 7)
+export const CHANCE_MYTHIQUE = 0.06;
+export const idsMythiques = () => Object.keys(ROBOTS).filter(id => ROBOTS[id].palier === 7);
+
 export function tirerBoutique(palier, rng = Math.random, pool = null, n = tailleBoutique(palier)) {
     const ids = idsDisponibles(palier, pool);
-    return Array.from({ length: n }, () => creerUnite(ids[Math.floor(rng() * ids.length)]));
+    const mythiques = palier >= 6 ? idsMythiques() : [];
+    return Array.from({ length: n }, () => creerUnite(mythiques.length && rng() < CHANCE_MYTHIQUE
+        ? mythiques[Math.floor(rng() * mythiques.length)]
+        : ids[Math.floor(rng() * ids.length)]));
 }
 
 // ---------- Prix, épargne, commandant et modules ----------
 
-export const PRIX_RARETE = { commun: 3, rare: 4, epique: 5, legendaire: 6 };
+export const PRIX_RARETE = { commun: 3, rare: 4, epique: 5, legendaire: 6, mythique: 8 };
 export const EPARGNE_MAX = 10;
 
 // eff : effets cumulés du commandant et des modules (voir effetsRun)
-export const prixRobot = (u, eff = {}) =>
+// Un mythique offert par le boss du tour 10 est gratuit
+export const prixRobot = (u, eff = {}) => u.offert ? 0 :
     Math.max(1, PRIX_RARETE[ROBOTS[u.id].rarete] - (ROBOTS[u.id].rarete !== 'commun' ? eff.reducRare ?? 0 : 0));
 export const prixObjet = (eff = {}) => Math.max(1, PRIX_ACHAT - (eff.reducObjet ?? 0));
 
-// Crédits bonus du tour : un bonus fractionnaire (0.5) tombe un tour sur deux
-export const creditsBonus = (tour, eff = {}) => {
-    const c = eff.creditsTour ?? 0;
-    return Math.floor(tour * c) - Math.floor((tour - 1) * c);
-};
-
-// Intérêts : +1 crédit par tranche de 5 crédits gardés, plafonné
-export const interets = (epargne, eff = {}) => Math.min(2 + (eff.interetMax ?? 0), Math.floor(epargne / 5));
+// Intérêts : +1 crédit par tranche de 5 crédits gardés (+2 avec la Banquière), tranches plafonnées
+export const interets = (epargne, eff = {}) => Math.min(2 + (eff.interetMax ?? 0), Math.floor(epargne / 5)) * (1 + (eff.interetBonus ?? 0));
 
 // Additionne les effets du commandant et des modules ; les bonus de combat sont regroupés dans eff.combat
 export function effetsRun(commandant, modules = []) {
@@ -137,7 +143,7 @@ export function utiliserObjet(objet, equipe, index, rng = Math.random) {
             buff(u, a, h);
             u.temp = { a: (u.temp?.a ?? 0) + a, h: (u.temp?.h ?? 0) + h };
         },
-        niveauPlus: u => { u.xp = XP_NIVEAU[Math.min(2, u.niveau)]; u.niveau = niveauDeXp(u.xp); buff(u, 1, 1); monte = true; },
+        niveauPlus: u => { u.xp = xpNiveaux[Math.min(2, u.niveau)]; u.niveau = niveauDeXp(u.xp); buff(u, 1, 1); monte = true; },
     };
     const refus = def.condition?.(c);
     if (refus) return { ok: false, message: refus };
@@ -156,20 +162,15 @@ export function retirerTemporaires(equipe) {
     }
 }
 
-export const peutFusionner = (a, b) => a && b && a.id === b.id && xpDe(a) < XP_MAX;
+export const peutFusionner = (a, b) => a && b && a.id === b.id && xpDe(a) < xpMax();
 
 // Fusionne b dans a : stats max +1/+1, b apporte 1 point d'expérience (plus la sienne). Renvoie true si a monte de niveau.
-// bonus : stats en plus quand il atteint le niveau 3 (Tacticienne)
-export function fusionner(a, b, bonus = 0) {
+export function fusionner(a, b) {
     const avant = a.niveau;
     a.atk = Math.min(STAT_MAX, Math.max(a.atk, b.atk) + 1);
     a.hp = Math.min(STAT_MAX, Math.max(a.hp, b.hp) + 1);
-    a.xp = Math.min(XP_MAX, xpDe(a) + xpDe(b) + 1);
+    a.xp = Math.min(xpMax(), xpDe(a) + xpDe(b) + 1);
     a.niveau = niveauDeXp(a.xp);
-    if (a.niveau === 3 && avant < 3 && bonus) {
-        a.atk = Math.min(STAT_MAX, a.atk + bonus);
-        a.hp = Math.min(STAT_MAX, a.hp + bonus);
-    }
     return a.niveau > avant;
 }
 
@@ -260,7 +261,6 @@ export function simulerCombat(equipeJoueur, equipeAdverse, rng = Math.random, bo
     const tete = [null, null];            // dernier robot de tête qui a reçu ce bouclier
     const reanimation = [0, 0];           // synergie Médicaux : niveau de réanimation du premier allié détruit (0 = déjà utilisée)
     let relais = bonus.relaisMort ?? 0;   // Marionnettiste : robots détruits remplacés par un mini-drone
-    let survie = bonus.survie ?? 0;       // Survivante : le premier robot détruit tient à 1 PV
     let echange = 0;                      // numéro de l’échange en cours (Gardienne)
     const etapes = [];
     let fx = [];
@@ -294,6 +294,8 @@ export function simulerCombat(equipeJoueur, equipeAdverse, rng = Math.random, bo
                 for (const allie of [...eq[cible.camp]]) if (allie.hp > 0) declencher(allie, 'allieBouclierBrise', { cible });
             }
         }
+        // Colosse Oméga : jamais plus de N PV perdus en un coup
+        if (ROBOTS[cible.id].plafondDegats) reste = Math.min(reste, ROBOTS[cible.id].plafondDegats);
         if (reste > 0) {
             cible.hp -= reste;
             fx.push({ type: 'degat', uid: cible.uid, valeur: reste, src: src?.uid, ...opts });
@@ -348,7 +350,9 @@ export function simulerCombat(equipeJoueur, equipeAdverse, rng = Math.random, bo
     // sansBonus : une réanimation ne profite pas du bonus d'invocation des Nanobots
     function invoquer(camp, id, atk, hp, index, sansBonus = false) {
         const t = eq[camp];
-        if (t.length >= TAILLE_EQUIPE) return null;
+        // Essaim primordial : jusqu'à 7 robots grâce aux invocations
+        const limite = t.some(u => u.id === 'essaimprimordial' && u.hp > 0) ? 7 : TAILLE_EQUIPE;
+        if (t.length >= limite) return null;
         const b = sansBonus ? 0 : bonusInvoc[camp];
         // Les bonus d'invocation (synergie Nanobots, Dresseur) ne renforcent que l'attaque
         const u = nouveau({ id, atk: atk + b, hp, niveau: 1 }, camp);
@@ -379,11 +383,14 @@ export function simulerCombat(equipeJoueur, equipeAdverse, rng = Math.random, bo
                 return true;
             },
             vacciner: c => { if (c && c.hp > 0) { c.immunise = true; fx.push({ type: 'vaccine', uid: c.uid }); } },
-            // Joue la capacité de début de combat d'un allié comme si c'était la sienne
+            // Joue la capacité de début de combat d'un allié comme si c'était la sienne.
+            // Une copie n'en déclenche pas d'autre (Drone-miroir et Prototype Zéro se copieraient sans fin)
             imiter: autre => {
-                const f = autre && autre.id !== u.id && ROBOTS[autre.id].debutCombat;
+                const f = !imitation && autre && autre.id !== u.id && ROBOTS[autre.id].debutCombat;
                 if (!f) return false;
+                imitation = true;
                 f(contexte(u, extra));
+                imitation = false;
                 return true;
             },
             auHasard: (l, n) => auHasard(l.filter(x => x.hp > 0), n, rng),
@@ -391,11 +398,22 @@ export function simulerCombat(equipeJoueur, equipeAdverse, rng = Math.random, bo
         };
     }
 
+    let relance = false;   // Oracle quantique : une relance ne se relance pas
+    let imitation = false; // Drone-miroir, Prototype Zéro : copie en cours
     function declencher(u, nom, extra = {}) {
         const f = ROBOTS[u.id][nom];
         if (!f) return false;
         fx.push({ type: 'capacite', uid: u.uid });
         f(contexte(u, extra));
+        // Oracle quantique : la capacité du robot de tête est relancée, et l'Oracle grandit
+        const oracle = !relance && eq[u.camp][0] === u && eq[u.camp].find(o => o.id === 'oraclequantique' && o.hp > 0 && o !== u);
+        if (oracle) {
+            relance = true;
+            fx.push({ type: 'capacite', uid: oracle.uid });
+            f(contexte(u, extra));
+            buff(oracle, 1, 1, oracle);
+            relance = false;
+        }
         return true;
     }
 
@@ -412,8 +430,6 @@ export function simulerCombat(equipeJoueur, equipeAdverse, rng = Math.random, bo
                 // Avec 2 Médicaux il revient à 1 PV, avec 4 à la moitié de ses PV de départ
                 if (tombe) { tombe.hp = reanimation[camp] === 2 ? Math.ceil(tombe.pvMax / 2) : 1; reanimation[camp] = 0; fx.push({ type: 'ranime', uid: tombe.uid }); }
             }
-            const survivant = survie > 0 && eq[0].find(u => u.hp <= 0);
-            if (survivant) { survivant.hp = 1; survie--; fx.push({ type: 'ranime', uid: survivant.uid }); }
             if (fx.length) snap(450);
 
             const morts = [];
@@ -548,11 +564,12 @@ export function simulerCombat(equipeJoueur, equipeAdverse, rng = Math.random, bo
 // Synergie Cuisiniers : après une victoire, +1/+1 permanent à 1 ou 2 alliés au hasard. Renvoie les effets.
 export function festin(equipe, rng = Math.random) {
     const niv = niveauSynergie(compterFamilles(equipe).cuisine);
+    const gain = equipe.some(u => u?.id === 'cheftriple') ? 2 : 1;   // Chef triplement étoilé
     const effets = [];
     for (const u of auHasard(equipe, niv, rng)) {
-        u.atk = Math.min(STAT_MAX, u.atk + 1);
-        u.hp = Math.min(STAT_MAX, u.hp + 1);
-        effets.push({ uid: u.uid, a: 1, h: 1, festin: true });
+        u.atk = Math.min(STAT_MAX, u.atk + gain);
+        u.hp = Math.min(STAT_MAX, u.hp + gain);
+        effets.push({ uid: u.uid, a: gain, h: gain, festin: true });
     }
     return effets;
 }

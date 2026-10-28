@@ -1,10 +1,10 @@
 import { ROBOTS, FAMILLES, SEUILS_SYNERGIE, OBJETS, STATUTS, COMMANDANTS, MODULES, RARETES, familles, famille } from './data.js';
 import {
     TAILLE_EQUIPE, CREDITS_PAR_TOUR, PRIX_RELANCE, VIES, VICTOIRES_BUT, EPARGNE_MAX, PRIX_RARETE, TOURS_MODULE,
-    XP_NIVEAU, xpDe, palierDuTour, viesPerdues, tirerBoutique, tailleBoutique, uniteBonus, peutFusionner, fusionner,
+    seuilsXp, reglerExperience, xpDe, palierDuTour, viesPerdues, tirerBoutique, tailleBoutique, uniteBonus, peutFusionner, fusionner,
     declencherBoutique, compterFamilles, niveauSynergie, simulerCombat, genererAdversaire, genererBoss, estTourBoss,
     tirerObjets, tailleObjets, utiliserObjet, retirerTemporaires, declencherAllieObjet,
-    prixRobot, prixObjet, interets, creditsBonus, effetsRun, proposer, festin,
+    prixRobot, prixObjet, interets, effetsRun, proposer, festin, creerUnite, idsMythiques,
 } from './moteur.js';
 import { robotSVG, villeSVG, ICONE_ATK, ICONE_PV } from './svg.js';
 
@@ -30,6 +30,7 @@ function nouvellePartie() {
         equipe: Array(TAILLE_EQUIPE).fill(null), boutique: [], objets: [], sel: null, phase: 'choix',
         commandant: null, modules: [], choixModules: 0, eff: effetsRun(null),
     };
+    majEffets();
     fermerModal();
     basculerVue(false);
     rendre();
@@ -45,6 +46,7 @@ function nouvellePartie() {
 // Recalcule les effets du commandant et des modules
 function majEffets() {
     S.eff = effetsRun(S.commandant, S.modules);
+    reglerExperience(S.eff);
 }
 
 // Carte de choix (commandant ou module) dans une fenêtre
@@ -89,7 +91,40 @@ function prendreModule(id) {
     }
     rendre();
     message(`${MODULES[id].icone} Module installé : ${MODULES[id].nom}`, true);
-    if (S.choixModules > 0) setTimeout(afficherChoixModule, 400);
+    setTimeout(choixSuivant, 400);
+}
+
+// Choix en attente après un retour en boutique : modules d'abord, puis le mythique offert par le boss du tour 10
+function choixSuivant() {
+    if (S.choixModules > 0) afficherChoixModule();
+    else if (S.choixMythique) afficherChoixMythique();
+}
+
+function afficherChoixMythique() {
+    S.phase = 'choix';
+    const cartes = proposer(idsMythiques(), 3).map(id => {
+        const def = ROBOTS[id];
+        return `<button data-action="mythique" data-id="${id}" class="bloc flex flex-1 basis-40 flex-col items-center gap-1 p-3 text-center transition hover:-translate-y-1">
+            <span class="h-20 w-20">${robotSVG(id)}</span>
+            <span class="titre text-lg leading-tight">${def.nom}</span>
+            <span class="titre text-sm">${def.atk} ⚔️ · ${def.hp} ❤️</span>
+            <span class="text-xs font-medium leading-snug opacity-80">${def.desc(1)}</span>
+        </button>`;
+    }).join('');
+    ouvrirModal(`
+        <p class="titre text-sm uppercase tracking-widest opacity-60">Boss vaincu</p>
+        <h2 class="titre contour text-3xl" style="color:#f9a8d4">Choisis un mythique</h2>
+        <p class="mt-1 font-medium opacity-80">Un robot de palier VII, offert : il t’attend gelé sur le tapis.</p>
+        <div class="mt-4 flex flex-wrap gap-3">${cartes}</div>`);
+}
+
+function prendreMythique(id) {
+    S.choixMythique = false;
+    S.boutique.unshift(creerUnite(id, { offert: true, gele: true }));
+    fermerModal();
+    S.phase = 'boutique';
+    rendre();
+    message(`🌟 ${ROBOTS[id].nom} t’attend sur le tapis !`, true);
 }
 
 function basculerVue(combat) {
@@ -133,8 +168,7 @@ function debutTour() {
     S.tour++;
     // Crédits du tour + épargne du tour précédent + intérêts
     const interet = interets(S.epargne, S.eff);
-    const bonus = creditsBonus(S.tour, S.eff);
-    S.credits = CREDITS_PAR_TOUR + bonus + S.epargne + interet;
+    S.credits = CREDITS_PAR_TOUR + S.epargne + interet;
     const epargne = S.epargne;
     S.epargne = 0;
     S.relances = S.eff.relancesGratuites ?? 0;
@@ -173,11 +207,11 @@ function debutTour() {
             etincelles(c.x, c.y, ['#ffd23f', '#fff'], 8);
         });
         if (apres.length && S.phase === 'boutique') rendre(apres);
-        if (epargne || interet || bonus) {
-            const morceaux = [epargne && `${epargne} épargnés`, interet && `+${interet} d’intérêts`, bonus && `+${bonus} de la Banquière`].filter(Boolean);
+        if (epargne || interet) {
+            const morceaux = [epargne && `${epargne} épargnés`, interet && `+${interet} d’intérêts`].filter(Boolean);
             message(`🪙 ${morceaux.join(' · ')}`, true);
         }
-        if (S.choixModules > 0) afficherChoixModule();
+        choixSuivant();
     }, 450);
     // Les nouveaux robots arrivent sur le tapis (les gelés restent en place)
     document.querySelectorAll('.article:not(.gele)').forEach((el, i) => el.animate(
@@ -239,9 +273,10 @@ function acheter(bi, j) {
     S.credits -= prix;
     S.boutique.splice(bi, 1);
     delete u.gele;
+    delete u.offert;
     S.sel = null;
     let monte = false;
-    if (cible) monte = fusionner(cible, u, S.eff.bonusFusion ?? 0);
+    if (cible) monte = fusionner(cible, u);
     else S.equipe[j] = u;
     const effets = declencherBoutique('achat', S.equipe, j);
     if (monte) monteeDeNiveau(S.equipe[j]);
@@ -254,7 +289,7 @@ function deplacer(k, j) {
     const a = S.equipe[k], b = S.equipe[j];
     if (b && peutFusionner(b, a)) {
         S.equipe[k] = null;
-        const monte = fusionner(b, a, S.eff.bonusFusion ?? 0);
+        const monte = fusionner(b, a);
         if (monte) monteeDeNiveau(b);
         return rendre([], { uid: b.uid, fusion: true, niveau: monte ? b.niveau : 0 });
     }
@@ -359,8 +394,9 @@ function statHTML(type, valeur) {
 // Tailles relatives au robot (équipe, combat) ou en pixels (ligne palier · niveau · prix de la boutique)
 const TAILLES_NIVEAU = { cqw: { rond: '15cqw', texte: '10cqw', pastille: '10cqw' }, px: { rond: '15px', texte: '10px', pastille: '7px' } };
 function niveauHTML(u, t = TAILLES_NIVEAU.cqw) {
-    const total = u.niveau === 1 ? 2 : u.niveau === 2 ? 3 : 0;
-    const fait = xpDe(u) - XP_NIVEAU[u.niveau - 1];
+    const s = seuilsXp();
+    const total = u.niveau < 3 ? s[u.niveau] - s[u.niveau - 1] : 0;
+    const fait = xpDe(u) - s[u.niveau - 1];
     const chiffre = `<span title="Niveau ${u.niveau}" class="titre grid shrink-0 place-items-center rounded-full leading-none ${u.niveau === 3 ? 'bg-[#ffd23f]' : 'bg-white'}" style="width:${t.rond};height:${t.rond};font-size:${t.texte};border:2px solid ${ENCRE}">${u.niveau}</span>`;
     return chiffre + (total
         ? Array.from({ length: total }, (_, n) => `<span class="shrink-0 rounded-full ${n < fait ? 'bg-[#4be08a]' : 'bg-white/80'}" style="width:${t.pastille};height:${t.pastille};border:2px solid ${ENCRE}"></span>`).join('')
@@ -541,8 +577,8 @@ function rendreBoutique() {
 }
 
 // Palier d'un article : un écusson en chiffres romains, d'une couleur par palier
-const COULEURS_PALIER = ['#f1f5f9', '#bbf7d0', '#bae6fd', '#e9d5ff', '#fecaca', '#fde68a'];
-const ROMAINS = ['I', 'II', 'III', 'IV', 'V', 'VI'];
+const COULEURS_PALIER = ['#f1f5f9', '#bbf7d0', '#bae6fd', '#e9d5ff', '#fecaca', '#fde68a', '#f9a8d4'];
+const ROMAINS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
 const tourDuPalier = palier => 2 * palier - 1;
 function ecussonPalier(palier, classes = 'relative') {
     const chiffre = ROMAINS[palier - 1];
@@ -555,7 +591,7 @@ function ecussonPalier(palier, classes = 'relative') {
 }
 
 // Prix d'un article ; la couleur donne la rareté
-const COULEURS_RARETE = { commun: '#ffffff', rare: '#7dd3fc', epique: '#d8b4fe', legendaire: '#ffd23f' };
+const COULEURS_RARETE = { commun: '#ffffff', rare: '#7dd3fc', epique: '#d8b4fe', legendaire: '#ffd23f', mythique: 'linear-gradient(135deg, #f9a8d4, #ffd23f)' };
 function etiquettePrix(prix, fond, titre) {
     return `<div title="${titre} · ${prix} 🪙" class="prix titre pointer-events-none relative flex items-center gap-0.5 rounded-full px-1.5 text-sm leading-tight"
         style="background:${fond};border:2.5px solid ${ENCRE};box-shadow:0 2px 0 ${ENCRE}">${prix}<span class="text-xs">🪙</span></div>`;
@@ -612,7 +648,7 @@ function rendreDetail() {
         <div class="min-w-0">
             <div class="flex flex-wrap items-center gap-x-2">
                 <b class="titre text-lg leading-tight">${def.nom}</b>${puces}
-                ${ecussonPalier(def.palier, 'relative')}<span class="text-xs font-medium opacity-60">Niv ${u.niveau}${u.niveau < 3 ? ` · ${xpDe(u) - XP_NIVEAU[u.niveau - 1]}/${u.niveau === 1 ? 2 : 3} vers le niv ${u.niveau + 1}` : ' · max'}${u.gele ? ' · ❄ gelé' : ''}${def.evolution ? ` · évolution ${u.compteur ?? 0}/${def.evolution}` : ''}</span>
+                ${ecussonPalier(def.palier, 'relative')}<span class="text-xs font-medium opacity-60">Niv ${u.niveau}${u.niveau < 3 ? ` · ${xpDe(u) - seuilsXp()[u.niveau - 1]}/${seuilsXp()[u.niveau] - seuilsXp()[u.niveau - 1]} vers le niv ${u.niveau + 1}` : ' · max'}${u.gele ? ' · ❄ gelé' : ''}${def.evolution ? ` · évolution ${u.compteur ?? 0}/${def.evolution}` : ''}</span>
             </div>
             <p class="font-medium leading-snug">${def.desc(u.niveau)}</p>
             ${u.objet ? `<p class="text-xs font-medium opacity-70">${OBJETS[u.objet].icone} ${OBJETS[u.objet].desc}</p>` : ''}
@@ -761,10 +797,11 @@ let passer = false;
 let etapesCourantes = [];
 const D = ms => ms / vitesse;
 
+let placesParCamp = TAILLE_EQUIPE;   // plus de 5 robots possible avec l'Essaim primordial
 function dimensions() {
     const W = arene.clientWidth;
     // Les robots prennent toute la place disponible, en largeur comme en hauteur
-    const largeur = Math.min(190, (W - 16) / 10.4, arene.clientHeight * 0.55);
+    const largeur = Math.min(190, (W - 16) / (2 * placesParCamp + 0.4), arene.clientHeight * 0.55);
     return { W, largeur, ecart: largeur * 0.45 };
 }
 
@@ -1169,6 +1206,7 @@ async function combattre() {
     const boss = estTourBoss(S.tour);
     const adversaire = boss ? genererBoss(S.tour) : genererAdversaire(S.tour);
     const { resultat, etapes } = simulerCombat(S.equipe, adversaire, Math.random, S.eff.combat);
+    placesParCamp = Math.max(TAILLE_EQUIPE, ...etapes.flatMap(e => e.eq.map(t => t.length)));
     retirerTemporaires(S.equipe);
     etapesCourantes = etapes;
 
@@ -1204,11 +1242,12 @@ function finCombat(resultat) {
     if (resultat === 'victoire') S.victoires++;
     // Boss vaincu : un module en plus au prochain tour
     if (resultat === 'victoire' && boss) S.choixModules++;
+    if (resultat === 'victoire' && boss && S.tour === 10) S.choixMythique = true;
     if (resultat === 'defaite') { perte = Math.min(S.vies, Math.max(1, viesPerdues(S.tour) - (S.eff.assurance ?? 0))); S.vies -= perte; }
     S.phase = 'resultat';
     rendreHUD();
     const textes = {
-        victoire: [boss ? 'BOSS VAINCU !' : 'VICTOIRE !', '#4be08a', `${S.victoires}/${VICTOIRES_BUT} victoires${boss ? ' · module bonus au prochain tour' : ''}`],
+        victoire: [boss ? 'BOSS VAINCU !' : 'VICTOIRE !', '#4be08a', `${S.victoires}/${VICTOIRES_BUT} victoires${boss ? ` · module bonus${S.tour === 10 ? ' et un mythique offert' : ''} au prochain tour` : ''}`],
         defaite: ['DÉFAITE', '#ff4d6d', `−${perte} ❤️ · il te reste ${S.vies} vie${S.vies > 1 ? 's' : ''}`],
         egalite: ['ÉGALITÉ', '#ffd23f', 'Aucune vie perdue'],
     };
@@ -1288,7 +1327,7 @@ function afficherAide() {
             <li>🪙 Chaque tour : <b>${CREDITS_PAR_TOUR} crédits</b>. Un robot coûte selon sa rareté (${Object.values(PRIX_RARETE).join(' / ')} 🪙, la couleur de l’étiquette), relancer le tapis ${PRIX_RELANCE}, vendre rapporte son niveau.</li>
             <li>🏦 Les crédits non dépensés sont <b>gardés</b> (max ${EPARGNE_MAX}) et rapportent des <b>intérêts</b> : +1 par tranche de 5, jusqu’à +2.</li>
             <li>🎖️ Au début du run, choisis un <b>commandant</b>. Aux tours ${TOURS_MODULE.join(', ')}, installe un <b>module</b> parmi 3 (survole les icônes en haut pour les revoir).</li>
-            <li>👑 Aux tours 5, 10 et 15, tu affrontes un <b>boss</b>. Le battre donne un module en plus.</li>
+            <li>👑 Aux tours 5, 10 et 15, tu affrontes un <b>boss</b>. Le battre donne un module en plus ; celui du tour 10 offre aussi un robot <b>mythique</b> (palier VII), qu’on croise sinon très rarement en boutique.</li>
             <li>🖱️ Clique sur un robot puis sur un socle, ou <b>glisse-le</b> (aussi au doigt) : sur un socle pour l’acheter, sur Vendre ou Geler. L’avant de l’équipe est à droite.</li>
             <li>⬆️ Pose un robot sur un <b>robot identique</b> : +1/+1 et 1 point d’expérience. Il faut <b>3 exemplaires</b> pour le niveau 2 et <b>6</b> pour le niveau 3 (les pastilles vertes montrent la progression). Chaque niveau gagné ajoute un robot du palier supérieur sur le tapis.</li>
             <li>🔋 À droite du tapis, des <b>objets</b> (${prixObjet(S?.eff)} 🪙) : donne-les à un robot. Les consommables agissent tout de suite, les équipements restent sur le robot.</li>
@@ -1513,7 +1552,7 @@ $('#modal').addEventListener('click', e => {
         fermerModal();
         // L'aide a pu être ouverte par-dessus un choix en attente : on y revient
         if (!S.commandant) choisirCommandant();
-        else if (S.choixModules > 0) afficherChoixModule();
+        else choixSuivant();
     }
     if (action === 'rejouer') nouvellePartie();
     if (action === 'commandant') {
@@ -1523,6 +1562,7 @@ $('#modal').addEventListener('click', e => {
         debutTour();
     }
     if (action === 'module') prendreModule(bouton.dataset.id);
+    if (action === 'mythique') prendreMythique(bouton.dataset.id);
 });
 
 document.addEventListener('keydown', e => {

@@ -1,0 +1,229 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #0a0e17;
+    color: #e6e1d3;
+    font-family: Arial, Helvetica, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------- haut et bas de page ---------- */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 24px;
+    background: #111827;
+    border-bottom: 2px solid #c8aa6e;
+}
+
+header h1 {
+    color: #c8aa6e;
+    font-size: 24px;
+}
+
+#version {
+    color: #8a8f99;
+    font-size: 14px;
+}
+
+footer {
+    padding: 12px 24px;
+    font-size: 11px;
+    color: #6b7280;
+    text-align: center;
+}
+
+/* ---------- les 3 colonnes ---------- */
+main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1.3fr 1fr;
+    gap: 16px;
+    padding: 16px;
+}
+
+section {
+    background: #111827;
+    border: 1px solid #1f2937;
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+}
+
+h2 {
+    color: #c8aa6e;
+    font-size: 18px;
+    display: flex;
+    justify-content: space-between;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 8px 10px;
+    background: #0a0e17;
+    border: 1px solid #374151;
+    border-radius: 4px;
+    color: #e6e1d3;
+    font-size: 14px;
+}
+
+.case {
+    font-size: 13px;
+    color: #9ca3af;
+}
+
+.aide,
+.vide {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+/* ---------- grilles de champions et d'objets ---------- */
+#liste-champions,
+#liste-objets {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+    gap: 6px;
+    overflow-y: auto;
+    max-height: 70vh;
+    padding-right: 4px;
+}
+
+.carte {
+    cursor: pointer;
+    text-align: center;
+    font-size: 10px;
+    color: #9ca3af;
+}
+
+.carte img {
+    width: 100%;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    display: block;
+}
+
+.carte:hover img {
+    border-color: #c8aa6e;
+}
+
+.carte.selection img {
+    border-color: #0bc4e3;
+}
+
+/* ---------- champion choisi ---------- */
+#champion-choisi {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+}
+
+#champion-choisi img {
+    width: 90px;
+    border: 2px solid #c8aa6e;
+    border-radius: 6px;
+}
+
+#champion-choisi h3 {
+    font-size: 22px;
+}
+
+#champion-choisi .titre {
+    color: #9ca3af;
+    font-style: italic;
+    font-size: 14px;
+}
+
+#champion-choisi .tags {
+    color: #0bc4e3;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* ---------- niveau ---------- */
+#zone-niveau input {
+    width: 100%;
+    accent-color: #c8aa6e;
+}
+
+/* ---------- slots du build ---------- */
+#prix-build {
+    color: #f0c94a;
+    font-size: 15px;
+}
+
+#slots-build {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+}
+
+.slot {
+    aspect-ratio: 1;
+    background: #0a0e17;
+    border: 2px dashed #374151;
+    border-radius: 6px;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.slot img {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.slot.rempli {
+    border: 2px solid #c8aa6e;
+}
+
+.slot.rempli:hover {
+    border-color: #e84057;
+}
+
+/* ---------- tableau des stats ---------- */
+#tableau-stats {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+#tableau-stats td {
+    padding: 6px 4px;
+    border-bottom: 1px solid #1f2937;
+}
+
+#tableau-stats td:nth-child(2) {
+    text-align: right;
+    font-weight: bold;
+}
+
+#tableau-stats .bonus {
+    color: #4ade80;
+    font-size: 12px;
+    font-weight: normal;
+    text-align: right;
+}
+
+/* ---------- petit écran : les colonnes passent les unes sous les autres ---------- */
+@media (max-width: 900px) {
+    main {
+        grid-template-columns: 1fr;
+    }
+
+    #liste-champions,
+    #liste-objets {
+        max-height: 40vh;
+    }
+}

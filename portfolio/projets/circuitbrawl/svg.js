@@ -197,15 +197,18 @@ function cuisine(f, v) {
 
 const DESSINS = { drone, mecha, nano, ia, medic, cuisine };
 
+// Robot neutre (sans famille) : argent et or
+const NEUTRE = { couleur: '#cbd5e1', sombre: '#64748b', clair: '#ffd23f' };
+
 export function robotSVG(id) {
     if (cache.has(id)) return cache.get(id);
     const def = ROBOTS[id];
     // Un hybride prend la forme de sa première famille, avec les détails à la couleur de la seconde
     const [f1, f2] = [].concat(def.famille);
-    const couleurs = f2 ? { ...FAMILLES[f1], clair: FAMILLES[f2].couleur } : FAMILLES[f1];
+    const couleurs = !f1 ? NEUTRE : f2 ? { ...FAMILLES[f1], clair: FAMILLES[f2].couleur } : FAMILLES[f1];
     const html = def.image
         ? `<img src="${def.image}" alt="${def.nom}" class="h-full w-full object-contain" draggable="false">`
-        : `<svg viewBox="0 0 100 100" class="h-full w-full overflow-visible" aria-label="${def.nom}">${DESSINS[f1](couleurs, variantes(id))}</svg>`;
+        : `<svg viewBox="0 0 100 100" class="h-full w-full overflow-visible" aria-label="${def.nom}">${DESSINS[f1 ?? 'mecha'](couleurs, variantes(id))}</svg>`;
     cache.set(id, html);
     return html;
 }
