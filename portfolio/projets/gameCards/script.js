@@ -25,6 +25,7 @@ const MULTIPLICATEUR_HOLO = 3;
 const SEUIL_CHEF_OEUVRE = 90;
 const MANCHES_GAGNANTES = 3;
 const GAIN_DUEL = 30;
+const CARTES_PAR_PAGE = 60; // collection affichée par tranches
 const URL_IMAGES = 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps';
 
 const STATS = {
@@ -40,6 +41,8 @@ const attendre = ms => new Promise(r => setTimeout(r, ms));
 const auHasard = liste => liste[Math.floor(Math.random() * liste.length)];
 const indexRarete = id => RARETES.findIndex(r => r.id === id);
 const rareteDe = avis => RARETES.find(r => (avis || 0) >= r.seuil);
+const nombre = n => n.toLocaleString('fr-FR');
+const PIECE = '<span class="piece" aria-hidden="true"></span>';
 
 function echapper(texte) {
     return String(texte ?? '').replace(/[&<>"']/g, c =>
@@ -131,7 +134,7 @@ function carteHTML(carte, { holo = false, compteur = 0, cachee = false } = {}) {
                     ${compteur > 1 ? `<span class="carte-compteur">×${compteur}</span>` : ''}
                 </header>
                 <div class="carte-image">
-                    ${carte.image ? `<img src="${echapper(carte.image)}" alt="" loading="lazy">` : ''}
+                    ${carte.image ? `<img src="${echapper(carte.image)}" alt="" loading="lazy" onerror="this.remove()">` : ''}
                     ${!cachee && carte.metacritic >= SEUIL_CHEF_OEUVRE ? '<span class="badge-chef" title="Metacritic 90 ou plus">Chef-d’œuvre</span>' : ''}
                 </div>
                 <h3 class="carte-nom">${echapper(carte.nom)}</h3>
@@ -162,6 +165,22 @@ function flipHTML(carte, { holo = false, retournee = false, nouvelle = false, ca
         </div>`;
 }
 
+// Pastilles de rareté (progression de l'accueil et filtre de la collection)
+function pucesRaretesHTML({ boutons = false, actif = '' } = {}) {
+    const entrees = Object.values(etat.collection);
+    const puce = (id, nom, possedees, total) => {
+        const contenu = `<i></i>${nom} <b>${nombre(possedees)}${total ? ` / ${nombre(total)}` : ''}</b>`;
+        const classe = `puce${id ? ` rarete-${id}` : ''}${boutons && actif === id ? ' active' : ''}`;
+        return boutons
+            ? `<button class="${classe}" data-rarete="${id}" aria-pressed="${actif === id}">${contenu}</button>`
+            : `<span class="${classe}">${contenu}</span>`;
+    };
+    return (boutons ? puce('', 'Toutes', entrees.length) : '')
+        + RARETES.map(r => puce(r.id, r.nom,
+            entrees.filter(e => e.rarete === r.id).length,
+            boutons ? 0 : jeuxParRarete[r.id]?.length || 0)).join('');
+}
+
 // ---------- Données ----------
 
 async function chargerJeux() {
@@ -172,6 +191,7 @@ async function chargerJeux() {
 }
 
 const donneesPretes = () => RARETES.some(r => jeuxParRarete[r.id]?.length);
+const totalJeux = () => RARETES.reduce((n, r) => n + (jeuxParRarete[r.id]?.length || 0), 0);
 
 // Pioche une carte de la rareté demandée (sans doublon dans `exclus`)
 function piocher(index, exclus = new Set()) {
@@ -231,34 +251,50 @@ function valeurDoublons(entree) {
     return normalesVendues * base + holosVendues * base * MULTIPLICATEUR_HOLO;
 }
 
-// ---------- En-tête et minuteur ----------
+// ---------- En-tête et paquets ----------
 
 let ouvertureEnCours = false;
 const tempsRestant = () => Math.max(0, etat.dernierBooster + DELAI_BOOSTER - Date.now());
 
 function majEntete() {
-    $('#solde').textContent = etat.pieces;
-    majBoutonsBooster();
+    $('#solde').textContent = nombre(etat.pieces);
+    majPaquets();
 }
 
-function majBoutonsBooster() {
+// Appelée chaque seconde : minuteur du booster gratuit et état des paquets
+function majPaquets() {
     const reste = tempsRestant();
-    const bloque = ouvertureEnCours || !donneesPretes();
-    $('#btn-gratuit').disabled = bloque || reste > 0;
-    $('#etat-gratuit').textContent = reste > 0 ? `Prochain dans ${formatDuree(reste)}` : 'Disponible !';
-    $('#btn-acheter').disabled = bloque || etat.pieces < PRIX_BOOSTER;
-    $('#lien-boosters').classList.toggle('pret', reste === 0);
+    const manque = PRIX_BOOSTER - etat.pieces;
+
+    const gratuit = $('#paquet-gratuit');
+    gratuit.classList.toggle('verrouille', reste > 0);
+    gratuit.setAttribute('aria-disabled', reste > 0);
+    gratuit.setAttribute('aria-label', reste > 0
+        ? `Booster gratuit, disponible dans ${formatDuree(reste)}` : 'Ouvrir le booster gratuit');
+    $('#compte-gratuit').textContent = formatDuree(reste);
+    $('#legende-gratuit').textContent = reste > 0 ? `Prochain dans ${formatDuree(reste)}` : 'Prêt ! Clique pour l’ouvrir';
+
+    const achat = $('#paquet-achat');
+    achat.classList.toggle('verrouille', manque > 0);
+    achat.setAttribute('aria-disabled', manque > 0);
+    achat.setAttribute('aria-label', manque > 0
+        ? `Booster à ${PRIX_BOOSTER} pièces, il te manque ${manque} pièces` : `Acheter un booster pour ${PRIX_BOOSTER} pièces`);
+    $('#manque-achat').textContent = `Il manque ${manque}`;
+
+    $('#lien-accueil').classList.toggle('pret', reste === 0);
 }
 
-// ---------- Boosters ----------
+// ---------- Ouverture d'un booster ----------
 
 async function ouvrirBooster(mode) {
     if (ouvertureEnCours || !donneesPretes()) return;
-    if (mode === 'gratuit' && tempsRestant() > 0) return;
-    if (mode === 'achat' && etat.pieces < PRIX_BOOSTER) return toast('Pas assez de pièces', 'erreur');
-
+    if (mode === 'gratuit' && tempsRestant() > 0) {
+        return toast(`Prochain booster gratuit dans ${formatDuree(tempsRestant())}`);
+    }
+    if (mode === 'achat' && etat.pieces < PRIX_BOOSTER) {
+        return toast(`Il te manque ${PRIX_BOOSTER - etat.pieces} pièces. Revends des doublons ou gagne un duel !`);
+    }
     ouvertureEnCours = true;
-    majBoutonsBooster();
 
     // 4 cartes au hasard + la dernière Rare ou mieux
     const indices = Array.from({ length: CARTES_PAR_BOOSTER - 1 }, () => tirerRarete());
@@ -276,51 +312,103 @@ async function ouvrirBooster(mode) {
     sauvegarder();
     majEntete();
 
-    // Le paquet tremble un instant, puis la plus rare se retourne en dernier
-    const paquet = $('#paquet');
+    // Le paquet cliqué passe au centre, tremble, puis se déchire
+    const paquet = $(mode === 'gratuit' ? '#paquet-gratuit' : '#paquet-achat').cloneNode(true);
+    paquet.removeAttribute('id');
+    paquet.removeAttribute('data-incline');
+    paquet.removeAttribute('style');
+    paquet.classList.remove('verrouille');
+    paquet.classList.add('paquet-seul');
+    paquet.tabIndex = -1;
+    paquet.querySelector('.paquet-verrou')?.remove();
+
+    $('#choix').hidden = true;
+    $('#ouverture').hidden = false;
     $('#tirage').innerHTML = '';
-    $('#tirage-actions').hidden = true;
-    paquet.hidden = false;
+    $('#ouverture-scene').replaceChildren(paquet);
+    $('#ouverture-aide').hidden = false;
+    $('#btn-tout-retourner').hidden = true;
+    for (const id of ['#bilan', '#btn-autre', '#btn-voir-collection']) $(id).hidden = true;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
     paquet.classList.add('secoue');
-    await attendre(800);
+    await attendre(750);
+    paquet.classList.replace('secoue', 'dechire');
+    await attendre(600);
+    $('#ouverture-scene').replaceChildren();
+
+    // La plus rare arrive en dernier
     tirage.sort((a, b) => indexRarete(b.carte.rarete) - indexRarete(a.carte.rarete));
-    await afficherTirage(tirage);
-
-    ouvertureEnCours = false;
-    majBoutonsBooster();
-}
-
-async function afficherTirage(tirage) {
-    const paquet = $('#paquet');
-    paquet.classList.remove('secoue');
-    paquet.classList.add('ouvre');
-    await attendre(450);
-    paquet.hidden = true;
-    paquet.classList.remove('ouvre');
-
+    dernierTirage = tirage;
     $('#tirage').innerHTML = tirage.map(t => flipHTML(t.carte, t)).join('');
     $('#tirage').querySelectorAll('.flip').forEach((flip, i) => {
         flip.tabIndex = 0;
         flip.setAttribute('role', 'button');
         flip.setAttribute('aria-label', `Retourner la carte ${i + 1}`);
-        flip.style.animationDelay = `${i * 80}ms`;
+        flip.style.animationDelay = `${i * 90}ms`;
     });
-    $('#tirage-actions').hidden = false;
+    $('#btn-tout-retourner').hidden = false;
+    ouvertureEnCours = false;
 }
+
+let dernierTirage = [];
 
 function retourner(flip) {
     if (!flip || flip.classList.contains('retournee')) return;
     flip.classList.add('retournee');
     flip.removeAttribute('role');
     flip.removeAttribute('aria-label');
-    if (!$('#tirage .flip:not(.retournee)')) $('#tirage-actions').hidden = true;
+    if (!$('#tirage .flip:not(.retournee)')) finTirage();
 }
 
 async function toutRetourner() {
+    $('#btn-tout-retourner').hidden = true;
     for (const flip of document.querySelectorAll('#tirage .flip:not(.retournee)')) {
         retourner(flip);
-        await attendre(280);
+        await attendre(260);
     }
+}
+
+function finTirage() {
+    const nouvelles = dernierTirage.filter(t => t.nouvelle).length;
+    const meilleure = RARETES[Math.min(...dernierTirage.map(t => indexRarete(t.carte.rarete)))];
+    $('#ouverture-aide').hidden = true;
+    $('#btn-tout-retourner').hidden = true;
+    $('#bilan').innerHTML = `
+        <span><b>${nouvelles}</b> nouvelle${nouvelles > 1 ? 's' : ''}</span>
+        <span class="rarete-${meilleure.id}">Meilleure : <b class="texte-rarete">${meilleure.nom}</b></span>`;
+    for (const id of ['#bilan', '#btn-autre', '#btn-voir-collection']) $(id).hidden = false;
+}
+
+function retourAuChoix() {
+    $('#ouverture').hidden = true;
+    $('#choix').hidden = false;
+    afficherAccueil();
+}
+
+// ---------- Écran accueil ----------
+
+function afficherAccueil() {
+    // Une ouverture pas encore entièrement retournée reste affichée
+    if (!$('#ouverture').hidden && (ouvertureEnCours || $('#tirage .flip:not(.retournee)'))) return;
+    $('#ouverture').hidden = true;
+    $('#choix').hidden = false;
+
+    const entrees = Object.values(etat.collection);
+    const total = totalJeux();
+    $('#progression-texte').innerHTML = total
+        ? `<b>${nombre(entrees.length)}</b> / ${nombre(total)} jeux découverts`
+        : 'Chargement des jeux…';
+    $('#progression-barre').style.width = total ? `${Math.max(0.5, (entrees.length / total) * 100)}%` : '0';
+    $('#progression-raretes').innerHTML = pucesRaretesHTML();
+
+    const recentes = entrees.sort((a, b) => b.obtenue - a.obtenue).slice(0, 8);
+    $('#bloc-recentes').hidden = !recentes.length;
+    $('#recentes').innerHTML = recentes.map(e => `
+        <button class="mini" data-fiche="${e.id}" aria-label="Voir ${echapper(e.nom)}">
+            ${carteHTML(e, { holo: e.holos > 0 })}
+        </button>`).join('');
+    majPaquets();
 }
 
 // ---------- Écran collection ----------
@@ -336,18 +424,24 @@ const TRIS = {
     exemplaires: (a, b) => b.exemplaires - a.exemplaires,
 };
 
+let filtreRarete = '';
+let limiteCollection = CARTES_PAR_PAGE;
+
 function caseCollectionHTML(entree) {
     return `
         <div class="case" data-id="${entree.id}">
-            ${carteHTML(entree, { holo: entree.holos > 0, compteur: entree.exemplaires })}
+            <button class="case-carte" data-fiche="${entree.id}" aria-label="Voir ${echapper(entree.nom)}">
+                ${carteHTML(entree, { holo: entree.holos > 0, compteur: entree.exemplaires })}
+            </button>
             ${entree.exemplaires > 1
-                ? `<button class="btn-vendre" data-vendre="${entree.id}">Revendre un doublon · +${prixRevente(entree)} 🪙</button>`
+                ? `<button class="btn-vendre" data-vendre="${entree.id}">Revendre · +${prixRevente(entree)} ${PIECE}</button>`
                 : ''}
         </div>`;
 }
 
 function afficherCollection() {
     const entrees = Object.values(etat.collection);
+    $('#filtre-raretes').innerHTML = pucesRaretesHTML({ boutons: true, actif: filtreRarete });
 
     // Le menu des genres se construit à partir de la collection
     const selGenre = $('#filtre-genre');
@@ -357,24 +451,31 @@ function afficherCollection() {
         + genres.map(g => `<option value="${echapper(g)}"${g === genreChoisi ? ' selected' : ''}>${echapper(g)}</option>`).join('');
 
     const recherche = $('#filtre-nom').value.trim().toLowerCase();
-    const rarete = $('#filtre-rarete').value;
     const doublons = $('#filtre-doublons').checked;
     const visibles = entrees
         .filter(e => !recherche || e.nom.toLowerCase().includes(recherche))
-        .filter(e => !rarete || e.rarete === rarete)
+        .filter(e => !filtreRarete || e.rarete === filtreRarete)
         .filter(e => !genreChoisi || e.genres.includes(genreChoisi))
         .filter(e => !doublons || e.exemplaires > 1)
         .sort(TRIS[$('#tri').value]);
 
     const grille = $('#grille-collection');
     if (!entrees.length) {
-        grille.innerHTML = '<p class="vide">Ta collection est vide. <a href="#boosters">Ouvre ton premier booster !</a></p>';
+        grille.innerHTML = '<p class="vide">Ta collection est vide.<br><a class="btn btn-principal" href="#accueil">Ouvre ton premier booster</a></p>';
     } else if (!visibles.length) {
         grille.innerHTML = '<p class="vide">Aucune carte ne correspond à ces filtres.</p>';
     } else {
-        grille.innerHTML = visibles.map(caseCollectionHTML).join('');
+        grille.innerHTML = visibles.slice(0, limiteCollection).map(caseCollectionHTML).join('');
     }
+    const restantes = visibles.length - limiteCollection;
+    $('#btn-plus').hidden = restantes <= 0;
+    $('#btn-plus').textContent = `Afficher plus (${nombre(restantes)} restantes)`;
     majResumeCollection();
+}
+
+function filtrerCollection() {
+    limiteCollection = CARTES_PAR_PAGE;
+    afficherCollection();
 }
 
 function majResumeCollection() {
@@ -382,10 +483,10 @@ function majResumeCollection() {
     const total = entrees.reduce((n, e) => n + e.exemplaires, 0);
     const valeur = entrees.reduce((n, e) => n + valeurDoublons(e), 0);
     $('#resume-collection').textContent =
-        `${entrees.length} jeux différents · ${total} cartes · ${total - entrees.length} doublons`;
+        `${nombre(entrees.length)} jeux différents · ${nombre(total)} cartes · ${nombre(total - entrees.length)} doublons`;
     const bouton = $('#btn-vendre-tout');
     bouton.disabled = valeur === 0;
-    bouton.textContent = valeur ? `Revendre tous les doublons · +${valeur} 🪙` : 'Aucun doublon à revendre';
+    bouton.innerHTML = valeur ? `Revendre les doublons · +${nombre(valeur)} ${PIECE}` : 'Aucun doublon';
 }
 
 function vendreDepuisCollection(id) {
@@ -394,10 +495,12 @@ function vendreDepuisCollection(id) {
     sauvegarder();
     majEntete();
     const caseCarte = document.querySelector(`.case[data-id="${id}"]`);
-    if ($('#filtre-doublons').checked && etat.collection[id].exemplaires < 2) caseCarte.remove();
-    else caseCarte.outerHTML = caseCollectionHTML(etat.collection[id]);
-    majResumeCollection();
-    toast(`+${prix} 🪙`, 'gain');
+    if (caseCarte) {
+        if ($('#filtre-doublons').checked && etat.collection[id].exemplaires < 2) caseCarte.remove();
+        else caseCarte.outerHTML = caseCollectionHTML(etat.collection[id]);
+        majResumeCollection();
+    }
+    toast(`+${prix} pièces`, 'gain');
 }
 
 function vendreTousLesDoublons() {
@@ -408,24 +511,51 @@ function vendreTousLesDoublons() {
     sauvegarder();
     majEntete();
     afficherCollection();
-    toast(`+${valeur} 🪙`, 'gain');
+    toast(`+${nombre(valeur)} pièces`, 'gain');
 }
 
-// ---------- Écran accueil ----------
+// ---------- Fiche détaillée ----------
 
-function afficherAccueil() {
+function afficherFiche(id) {
+    const e = etat.collection[id];
+    if (!e) return;
+    const rarete = RARETES[indexRarete(e.rarete)];
+    $('#modale-contenu').innerHTML = `
+        <div class="fiche-visuel" data-incline>${carteHTML(e, { holo: e.holos > 0 })}</div>
+        <div class="fiche-infos rarete-${rarete.id}">
+            <span class="fiche-rarete">${rarete.nom}${e.holos ? ' · ✨ Holo' : ''}</span>
+            <h2>${echapper(e.nom)}</h2>
+            <p class="fiche-meta">${[e.annee, ...e.genres].filter(Boolean).map(echapper).join(' · ')}</p>
+            <dl class="fiche-stats">
+                <div><dt>👍 Note public</dt><dd>${e.attaque} %</dd></div>
+                <div><dt>📰 Metacritic</dt><dd>${e.metacritic ?? '<span class="gris">aucune · 50</span>'}</dd></div>
+                <div><dt>★ Popularité</dt><dd>${e.popularite} / 100</dd></div>
+            </dl>
+            <p class="fiche-exemplaires">
+                ${e.exemplaires} exemplaire${e.exemplaires > 1 ? 's' : ''}${e.holos ? ` dont ${e.holos} holo` : ''}
+                · obtenue le ${new Date(e.obtenue).toLocaleDateString('fr-FR')}
+            </p>
+            <div class="fiche-actions">
+                ${e.exemplaires > 1
+                    ? `<button class="btn btn-or" data-vendre="${e.id}">Revendre un doublon · +${prixRevente(e)} ${PIECE}</button>`
+                    : ''}
+                <a class="btn" href="https://store.steampowered.com/app/${e.id}" target="_blank" rel="noopener">Voir sur Steam ↗</a>
+            </div>
+        </div>`;
+    if (!$('#modale').open) $('#modale').showModal();
+}
+
+// ---------- Écran règles ----------
+
+function afficherRegles() {
     const entrees = Object.values(etat.collection);
-    $('#stat-uniques').textContent = entrees.length;
-    $('#stat-total').textContent = entrees.reduce((n, e) => n + e.exemplaires, 0);
-    $('#stat-holo').textContent = entrees.reduce((n, e) => n + e.holos, 0);
-    $('#stat-pieces').textContent = etat.pieces;
     $('#legende-raretes').innerHTML = RARETES.map((r, i) => `
         <tr class="rarete-${r.id}">
             <td><span class="pastille"></span>${r.nom}</td>
-            <td>${r.seuil ? `≥ ${r.seuil.toLocaleString('fr-FR')}` : `< ${RARETES[i - 1].seuil.toLocaleString('fr-FR')}`}</td>
-            <td>${r.chance.toLocaleString('fr-FR')} %</td>
-            <td>${r.revente} 🪙</td>
-            <td>${entrees.filter(e => e.rarete === r.id).length}</td>
+            <td>${r.seuil ? `≥ ${nombre(r.seuil)}` : `< ${nombre(RARETES[i - 1].seuil)}`}</td>
+            <td>${nombre(r.chance)} %</td>
+            <td>${r.revente} ${PIECE}</td>
+            <td>${entrees.filter(e => e.rarete === r.id).length} / ${nombre(jeuxParRarete[r.id]?.length || 0)}</td>
         </tr>`).join('');
 }
 
@@ -438,8 +568,11 @@ function actionsDuel(html) {
 }
 
 function majScoreDuel() {
-    $('#score-joueur').textContent = duel.joueur;
-    $('#score-ordi').textContent = duel.ordi;
+    const pips = n => Array.from({ length: MANCHES_GAGNANTES }, (_, i) => `<i${i < n ? ' class="plein"' : ''}></i>`).join('');
+    $('#pips-joueur').innerHTML = pips(duel.joueur);
+    $('#pips-ordi').innerHTML = pips(duel.ordi);
+    $('#pips-joueur').setAttribute('aria-label', `${duel.joueur} manche(s) gagnée(s)`);
+    $('#pips-ordi').setAttribute('aria-label', `${duel.ordi} manche(s) gagnée(s)`);
 }
 
 function demarrerDuel() {
@@ -464,9 +597,11 @@ function nouvelleManche() {
     $('#duel-joueur').innerHTML = flipHTML(duel.carteJoueur, { holo: duel.carteJoueur.holos > 0, retournee: true });
     // On voit le jeu adverse, pas ses stats : à toi de deviner où il est faible
     $('#duel-ordi').innerHTML = flipHTML(duel.carteOrdi, { retournee: true, cachee: true });
-    $('#duel-message').textContent = `L’ordinateur joue ${duel.carteOrdi.nom}. Sur quelle stat penses-tu le battre ?`;
-    actionsDuel(Object.entries(STATS).map(([cle, stat]) =>
-        `<button class="btn btn-stat" data-stat="${cle}">${stat.icone} ${stat.nom} · ${duel.carteJoueur[cle]}</button>`).join(''));
+    $('#duel-message').innerHTML = `L’ordinateur joue <b>${echapper(duel.carteOrdi.nom)}</b>. Sur quelle stat penses-tu le battre ?`;
+    actionsDuel(Object.entries(STATS).map(([cle, stat]) => `
+        <button class="btn-stat" data-stat="${cle}">
+            <span>${stat.icone} ${stat.nom}</span><b>${duel.carteJoueur[cle]}</b>
+        </button>`).join(''));
     majScoreDuel();
 }
 
@@ -476,6 +611,7 @@ async function choisirStat(stat) {
     const sienne = duel.carteOrdi[stat];
 
     document.querySelectorAll(`#duel-joueur li[data-stat="${stat}"]`).forEach(li => li.classList.add('stat-choisie'));
+    $(`#duel-actions [data-stat="${stat}"]`).classList.add('choisie');
     await attendre(400);
 
     // Révélation des stats adverses
@@ -497,10 +633,10 @@ async function choisirStat(stat) {
         $('#duel-ordi').classList.add('gagne');
     }
     majScoreDuel();
-    $('#duel-message').textContent = `${STATS[stat].nom} : ${mienne} contre ${sienne}, ${resultat}`;
+    $('#duel-message').innerHTML = `${STATS[stat].nom} : <b>${mienne}</b> contre <b>${sienne}</b>, ${resultat}`;
 
     if (duel.joueur >= MANCHES_GAGNANTES || duel.ordi >= MANCHES_GAGNANTES) finDuel();
-    else actionsDuel('<button class="btn btn-principal" data-action="manche">Manche suivante</button>');
+    else actionsDuel('<button class="btn btn-principal btn-grand" data-action="manche">Manche suivante</button>');
 }
 
 function finDuel() {
@@ -509,12 +645,32 @@ function finDuel() {
         etat.pieces += GAIN_DUEL;
         sauvegarder();
         majEntete();
-        toast(`Victoire ! +${GAIN_DUEL} 🪙`, 'gain');
+        toast(`Victoire ! +${GAIN_DUEL} pièces`, 'gain');
     }
-    $('#duel-message').textContent = victoire
-        ? `Victoire ${duel.joueur} à ${duel.ordi} ! Tu gagnes ${GAIN_DUEL} pièces.`
-        : `Défaite ${duel.joueur} à ${duel.ordi}. Retente ta chance !`;
-    actionsDuel('<button class="btn btn-principal" data-action="demarrer">Rejouer</button>');
+    $('#duel-message').innerHTML = victoire
+        ? `<b class="victoire">Victoire ${duel.joueur} à ${duel.ordi} !</b> Tu gagnes ${GAIN_DUEL} pièces.`
+        : `<b class="defaite">Défaite ${duel.joueur} à ${duel.ordi}.</b> Retente ta chance !`;
+    actionsDuel('<button class="btn btn-principal btn-grand" data-action="demarrer">Rejouer</button>');
+}
+
+// ---------- Effet d'inclinaison 3D (paquets, fiche) ----------
+
+let elementIncline = null;
+
+function inclinerVers(element, e) {
+    if (elementIncline && elementIncline !== element) {
+        elementIncline.style.removeProperty('--rx');
+        elementIncline.style.removeProperty('--ry');
+    }
+    elementIncline = element;
+    if (!element) return;
+    const r = element.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width;
+    const y = (e.clientY - r.top) / r.height;
+    element.style.setProperty('--rx', `${((0.5 - y) * 16).toFixed(2)}deg`);
+    element.style.setProperty('--ry', `${((x - 0.5) * 16).toFixed(2)}deg`);
+    element.style.setProperty('--mx', `${(x * 100).toFixed(1)}%`);
+    element.style.setProperty('--my', `${(y * 100).toFixed(1)}%`);
 }
 
 // ---------- Navigation ----------
@@ -526,20 +682,21 @@ function afficherEcran(nom) {
         if (a.dataset.ecran === nom) a.setAttribute('aria-current', 'page');
         else a.removeAttribute('aria-current');
     });
+    if ($('#modale').open) $('#modale').close();
     if (nom === 'accueil') afficherAccueil();
     if (nom === 'collection') afficherCollection();
+    if (nom === 'regles') afficherRegles();
     window.scrollTo(0, 0);
 }
 
 // ---------- Démarrage ----------
 
 function init() {
-    $('#filtre-rarete').innerHTML = '<option value="">Toutes les raretés</option>'
-        + RARETES.map(r => `<option value="${r.id}">${r.nom}</option>`).join('');
-
-    $('#btn-gratuit').addEventListener('click', () => ouvrirBooster('gratuit'));
-    $('#btn-acheter').addEventListener('click', () => ouvrirBooster('achat'));
+    // Accueil : paquets et ouverture
+    $('#paquet-gratuit').addEventListener('click', () => ouvrirBooster('gratuit'));
+    $('#paquet-achat').addEventListener('click', () => ouvrirBooster('achat'));
     $('#btn-tout-retourner').addEventListener('click', toutRetourner);
+    $('#btn-autre').addEventListener('click', retourAuChoix);
     $('#tirage').addEventListener('click', e => retourner(e.target.closest('.flip')));
     $('#tirage').addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -548,16 +705,41 @@ function init() {
         }
     });
 
-    for (const id of ['#filtre-rarete', '#filtre-genre', '#tri', '#filtre-doublons']) {
-        $(id).addEventListener('change', afficherCollection);
-    }
-    $('#filtre-nom').addEventListener('input', afficherCollection);
-    $('#grille-collection').addEventListener('click', e => {
-        const bouton = e.target.closest('[data-vendre]');
-        if (bouton) vendreDepuisCollection(Number(bouton.dataset.vendre));
+    // Collection
+    $('#filtre-raretes').addEventListener('click', e => {
+        const puce = e.target.closest('[data-rarete]');
+        if (!puce) return;
+        filtreRarete = puce.dataset.rarete;
+        filtrerCollection();
+    });
+    for (const id of ['#filtre-genre', '#tri', '#filtre-doublons']) $(id).addEventListener('change', filtrerCollection);
+    $('#filtre-nom').addEventListener('input', filtrerCollection);
+    $('#btn-plus').addEventListener('click', () => {
+        limiteCollection += CARTES_PAR_PAGE;
+        afficherCollection();
     });
     $('#btn-vendre-tout').addEventListener('click', vendreTousLesDoublons);
 
+    // Clics partagés : ouvrir une fiche, revendre un doublon
+    document.addEventListener('click', e => {
+        const vendre = e.target.closest('[data-vendre]');
+        if (vendre) {
+            const id = Number(vendre.dataset.vendre);
+            vendreDepuisCollection(id);
+            if ($('#modale').open) afficherFiche(id);
+            return;
+        }
+        const fiche = e.target.closest('[data-fiche]');
+        if (fiche) afficherFiche(Number(fiche.dataset.fiche));
+    });
+
+    // Fiche : fermeture par le bouton ou en cliquant à côté
+    $('#modale-fermer').addEventListener('click', () => $('#modale').close());
+    $('#modale').addEventListener('click', e => {
+        if (e.target === $('#modale')) $('#modale').close();
+    });
+
+    // Duel
     $('#duel-actions').addEventListener('click', e => {
         const bouton = e.target.closest('button');
         if (!bouton) return;
@@ -566,13 +748,25 @@ function init() {
         else if (bouton.dataset.action === 'manche') nouvelleManche();
     });
 
+    // Inclinaison 3D à la souris uniquement
+    document.addEventListener('pointermove', e => {
+        if (e.pointerType !== 'mouse') return;
+        inclinerVers(e.target.closest('[data-incline]'), e);
+    });
+    document.addEventListener('pointerleave', () => inclinerVers(null));
+
     window.addEventListener('hashchange', () => afficherEcran(location.hash.slice(1)));
     afficherEcran(location.hash.slice(1));
+    majScoreDuel();
     majEntete();
-    setInterval(majBoutonsBooster, 1000);
+    setInterval(majPaquets, 1000);
 
     chargerJeux()
-        .then(majBoutonsBooster)
+        .then(() => {
+            const ecran = location.hash.slice(1) || 'accueil';
+            if (ecran === 'accueil') afficherAccueil();
+            if (ecran === 'regles') afficherRegles();
+        })
         .catch(e => {
             console.error(e);
             toast('Impossible de charger les jeux (lance le site via WAMP ou Live Server)', 'erreur');
