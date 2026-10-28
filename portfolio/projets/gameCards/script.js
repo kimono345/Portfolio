@@ -14,9 +14,9 @@
 //   `chanceDuel`      : les cartes tirées en duel (toi et l'ordinateur)
 // `prix` : achat direct dans le catalogue, volontairement bien plus cher que la chance en boosters.
 const RARETES = [
-    { id: 'mythique',    nom: 'Mythique',    seuil: 750000, chance: 0.1,  chanceGarantie: 0.05, chanceDuel: 3,  revente: 300, prix: 10000 },
-    { id: 'legendaire',  nom: 'Légendaire',  seuil: 200000, chance: 0.5,  chanceGarantie: 0.45, chanceDuel: 7,  revente: 100, prix: 4000 },
-    { id: 'epique',      nom: 'Épique',      seuil: 60000,  chance: 2,    chanceGarantie: 2.5,  chanceDuel: 12, revente: 40,  prix: 1500 },
+    { id: 'mythique',    nom: 'Mythique',    seuil: 750000, chance: 0.1,  chanceGarantie: 0.1, chanceDuel: 3,  revente: 300, prix: 10000 },
+    { id: 'legendaire',  nom: 'Légendaire',  seuil: 200000, chance: 0.5,  chanceGarantie: 0.5, chanceDuel: 7,  revente: 100, prix: 4000 },
+    { id: 'epique',      nom: 'Épique',      seuil: 60000,  chance: 2,    chanceGarantie: 2.4,  chanceDuel: 12, revente: 40,  prix: 1500 },
     { id: 'rare',        nom: 'Rare',        seuil: 12000,  chance: 7,    chanceGarantie: 12,   chanceDuel: 18, revente: 15,  prix: 600 },
     { id: 'peu-commune', nom: 'Peu commune', seuil: 3000,   chance: 18,   chanceGarantie: 85,   chanceDuel: 25, revente: 5,   prix: 250 },
     { id: 'commune',     nom: 'Commune',     seuil: 0,      chance: 72.4, chanceGarantie: 0,    chanceDuel: 35, revente: 2,   prix: 100 },
@@ -26,7 +26,7 @@ const INDEX_LEGENDAIRE = RARETES.findIndex(r => r.id === 'legendaire');
 const INDEX_MYTHIQUE = RARETES.findIndex(r => r.id === 'mythique');
 
 // God pack : un booster sur 2 000 ne contient que des Légendaires et Mythiques, toutes holo
-const CHANCE_GOD_PACK = 1 / 2000;
+const CHANCE_GOD_PACK = 1 / 10;
 const PART_MYTHIQUE_GOD_PACK = 0.25; // en plus de la Mythique garantie
 
 const CARTES_PAR_BOOSTER = 5;
