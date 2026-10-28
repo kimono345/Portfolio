@@ -7,15 +7,17 @@
 // ---------- Règles du jeu (valeurs de départ, à équilibrer) ----------
 
 // Du plus rare au plus commun. `seuil` porte sur le nombre d'avis Steam.
+// Les boosters tirent les jeux au hasard : la rareté ne change pas les chances,
+// elle découle juste du nombre de jeux dans chaque catégorie.
 const RARETES = [
-    { id: 'mythique',    nom: 'Mythique',    seuil: 750000, chance: 0.5, revente: 300 },
-    { id: 'legendaire',  nom: 'Légendaire',  seuil: 200000, chance: 2.5, revente: 100 },
-    { id: 'epique',      nom: 'Épique',      seuil: 60000,  chance: 7,   revente: 40 },
-    { id: 'rare',        nom: 'Rare',        seuil: 12000,  chance: 15,  revente: 15 },
-    { id: 'peu-commune', nom: 'Peu commune', seuil: 3000,   chance: 25,  revente: 5 },
-    { id: 'commune',     nom: 'Commune',     seuil: 0,      chance: 50,  revente: 2 },
+    { id: 'mythique',    nom: 'Mythique',    seuil: 750000, revente: 300 },
+    { id: 'legendaire',  nom: 'Légendaire',  seuil: 200000, revente: 100 },
+    { id: 'epique',      nom: 'Épique',      seuil: 60000,  revente: 40 },
+    { id: 'rare',        nom: 'Rare',        seuil: 12000,  revente: 15 },
+    { id: 'peu-commune', nom: 'Peu commune', seuil: 3000,   revente: 5 },
+    { id: 'commune',     nom: 'Commune',     seuil: 0,      revente: 2 },
 ];
-const INDEX_RARE = RARETES.findIndex(r => r.id === 'rare');
+const INDEX_COMMUNE = RARETES.findIndex(r => r.id === 'commune');
 
 const CARTES_PAR_BOOSTER = 5;
 const BOOSTERS_PAR_LOT = 10; // ouverture ×10
@@ -96,7 +98,8 @@ const etat = {
     dernierBooster: lire(CLES.dernierBooster, 0),
 };
 
-// Tous les jeux de data/jeux.json, rangés par rareté (chargés au démarrage)
+// Tous les jeux de data/jeux.json (chargés au démarrage), et les mêmes rangés par rareté
+let tousLesJeux = [];
 const jeuxParRarete = {};
 
 function sauvegarder() {
@@ -105,15 +108,21 @@ function sauvegarder() {
 
 // ---------- Cartes ----------
 
-// Popularité sur une échelle logarithmique : 100 avis → 0, 1 million d'avis → 100
-const popularite = avis => Math.max(0, Math.min(100, Math.round((Math.log10(avis) - 2) * 25)));
+// Popularité sur une échelle logarithmique : 1 avis → 0, 1 000 → 50, 1 million → 100
+const popularite = avis => Math.max(0, Math.min(100, Math.round(Math.log10(Math.max(1, avis)) * 100 / 6)));
+
+// Note public lissée : on fait comme si chaque jeu avait déjà 10 avis à la note moyenne (76 %).
+// 1 avis à 100 % donne 78, mais 10 000 avis à 95 % gardent 95.
+const NOTE_MOYENNE = 76;
+const POIDS_MOYENNE = 10;
+const notePublic = (note, avis) => Math.round((note * avis + NOTE_MOYENNE * POIDS_MOYENNE) / (avis + POIDS_MOYENNE));
 
 function creerCarte(jeu) {
     return {
         id: jeu.id,
         nom: jeu.nom,
         image: `${URL_IMAGES}/${jeu.id}/${jeu.image || 'header.jpg'}`,
-        attaque: jeu.note,
+        attaque: notePublic(jeu.note, jeu.avis),
         defense: jeu.metacritic ?? 50,
         popularite: popularite(jeu.avis),
         metacritic: jeu.metacritic,
@@ -185,34 +194,37 @@ function pucesRaretesHTML({ boutons = false, actif = '' } = {}) {
 // ---------- Données ----------
 
 async function chargerJeux() {
-    const reponse = await fetch('data/jeux.json?v=1');
+    const reponse = await fetch('data/jeux.json?v=2');
     if (!reponse.ok) throw new Error(`data/jeux.json introuvable (${reponse.status})`);
+    // Format compact (voir outils/convertir-csv.js) : un tableau par jeu, genres en chiffres
+    const { genres, jeux } = await reponse.json();
     for (const r of RARETES) jeuxParRarete[r.id] = [];
-    for (const jeu of await reponse.json()) jeuxParRarete[rareteDe(jeu.avis).id].push(jeu);
+    tousLesJeux = jeux.map(([id, nom, annee, avis, note, metacritic, chiffresGenres, image]) =>
+        ({ id, nom, annee, avis, note, metacritic, genres: [...chiffresGenres].map(i => genres[i]), image }));
+    for (const jeu of tousLesJeux) jeuxParRarete[rareteDe(jeu.avis).id].push(jeu);
+    majCollectionDepuisDonnees();
 }
 
-const donneesPretes = () => RARETES.some(r => jeuxParRarete[r.id]?.length);
-const totalJeux = () => RARETES.reduce((n, r) => n + (jeuxParRarete[r.id]?.length || 0), 0);
-
-// Pioche une carte de la rareté demandée (sans doublon dans `exclus`)
-function piocher(index, exclus = new Set()) {
-    const bac = jeuxParRarete[RARETES[index].id];
-    for (let essai = 0; essai < 20; essai++) {
-        const jeu = auHasard(bac);
-        if (!exclus.has(jeu.id)) return creerCarte(jeu);
+// Les cartes déjà obtenues gardent une copie de leurs stats : on les recalcule
+// pour qu'elles suivent les règles actuelles (exemplaires, holos et date sont conservés)
+function majCollectionDepuisDonnees() {
+    const parId = new Map();
+    for (const jeu of tousLesJeux) parId.set(jeu.id, jeu);
+    for (const entree of Object.values(etat.collection)) {
+        const jeu = parId.get(entree.id);
+        if (jeu) Object.assign(entree, creerCarte(jeu));
     }
-    return creerCarte(auHasard(bac));
+    sauvegarder();
 }
 
-// Tire un index de rareté selon les chances ; indexMax limite aux raretés >= celle-ci
-function tirerRarete(indexMax = RARETES.length - 1) {
-    const possibles = RARETES.slice(0, indexMax + 1);
-    let t = Math.random() * possibles.reduce((s, r) => s + r.chance, 0);
-    for (let i = 0; i < possibles.length; i++) {
-        t -= possibles[i].chance;
-        if (t < 0) return i;
-    }
-    return indexMax;
+const donneesPretes = () => tousLesJeux.length > 0;
+const totalJeux = () => tousLesJeux.length;
+
+// Pioche un jeu au hasard parmi tous, chacun avec la même chance (sans doublon dans `exclus`)
+function piocher(exclus = new Set()) {
+    let jeu = auHasard(tousLesJeux);
+    while (exclus.has(jeu.id)) jeu = auHasard(tousLesJeux);
+    return creerCarte(jeu);
 }
 
 // ---------- Collection et monnaie ----------
@@ -302,13 +314,11 @@ function majPaquets() {
 
 // ---------- Ouverture de boosters ----------
 
-// Les 5 cartes d'un booster : 4 au hasard + la dernière Rare ou mieux
+// Les 5 cartes d'un booster : 5 jeux différents tirés au hasard parmi tout le catalogue
 function tirerBooster() {
-    const indices = Array.from({ length: CARTES_PAR_BOOSTER - 1 }, () => tirerRarete());
-    indices.push(tirerRarete(INDEX_RARE));
     const exclus = new Set();
-    return indices.map(index => {
-        const carte = piocher(index, exclus);
+    return Array.from({ length: CARTES_PAR_BOOSTER }, () => {
+        const carte = piocher(exclus);
         exclus.add(carte.id);
         return { carte, holo: Math.random() < CHANCE_HOLO };
     });
@@ -345,12 +355,12 @@ async function ouvrirBooster(mode, nombreBoosters = 1) {
 
     $('#choix').hidden = true;
     $('#ouverture').hidden = false;
+    $('#ouverture').classList.toggle('multiple', nombreBoosters > 1);
     $('#tirage').innerHTML = '';
-    $('#tirage').classList.toggle('tirage-multiple', nombreBoosters > 1);
     $('#ouverture-scene').replaceChildren(paquet);
-    $('#ouverture-aide').hidden = false;
-    $('#btn-tout-retourner').hidden = true;
-    for (const id of ['#bilan', '#btn-autre', '#btn-autre-x10', '#btn-voir-collection']) $(id).hidden = true;
+    for (const id of ['#ouverture-aide', '#btn-tout-retourner', '#bilan', '#btn-autre', '#btn-autre-x10', '#btn-voir-collection']) {
+        $(id).hidden = true;
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     paquet.classList.add('secoue');
@@ -362,32 +372,64 @@ async function ouvrirBooster(mode, nombreBoosters = 1) {
     // La plus rare arrive en dernier
     tirage.sort((a, b) => indexRarete(b.carte.rarete) - indexRarete(a.carte.rarete));
     dernierTirage = tirage;
-    $('#tirage').innerHTML = tirage.map(t => flipHTML(t.carte, t)).join('');
-    const delai = nombreBoosters > 1 ? 25 : 90;
+    if (nombreBoosters > 1) {
+        // ×10 : on ne retourne que les Rares et mieux, le reste est déjà visible en petit.
+        // Les plus rares sont en haut, et se retournent en dernier (de bas en haut).
+        const parRarete = [...tirage].reverse();
+        const vedettes = parRarete.filter(t => indexRarete(t.carte.rarete) < INDEX_COMMUNE);
+        const reste = parRarete.filter(t => indexRarete(t.carte.rarete) === INDEX_COMMUNE);
+        $('#tirage').innerHTML = `
+            ${vedettes.length ? `
+                <h2 class="tirage-titre">Tes meilleures cartes <span>Peu commune et plus · ${vedettes.length}</span></h2>
+                <div class="tirage-grille tirage-vedettes">${vedettes.map(t => flipHTML(t.carte, t)).join('')}</div>` : ''}
+            ${reste.length ? `
+                <h2 class="tirage-titre">Les communes <span>${reste.length}</span></h2>
+                <div class="tirage-grille tirage-reste">${reste.map(t => flipHTML(t.carte, { ...t, retournee: true })).join('')}</div>` : ''}`;
+    } else {
+        $('#tirage').innerHTML = tirage.map(t => flipHTML(t.carte, t)).join('');
+    }
     $('#tirage').querySelectorAll('.flip').forEach((flip, i) => {
+        flip.style.animationDelay = `${Math.min(i * (nombreBoosters > 1 ? 20 : 90), 600)}ms`;
+        if (flip.classList.contains('retournee')) return;
         flip.tabIndex = 0;
         flip.setAttribute('role', 'button');
         flip.setAttribute('aria-label', `Retourner la carte ${i + 1}`);
-        flip.style.animationDelay = `${i * delai}ms`;
     });
+    $('#ouverture-aide').hidden = false;
     $('#btn-tout-retourner').hidden = false;
+    majAideTirage();
     ouvertureEnCours = false;
+    if (!$('#tirage .flip:not(.retournee)')) finTirage(); // ×10 sans aucune carte à retourner
 }
 
 let dernierTirage = [];
+
+function majAideTirage() {
+    const aRetourner = document.querySelectorAll('#tirage .flip[tabindex]').length;
+    const faites = document.querySelectorAll('#tirage .flip[tabindex].retournee').length;
+    $('#ouverture-aide').innerHTML = $('#ouverture').classList.contains('multiple')
+        ? `Retourne tes meilleures cartes <b>${faites} / ${aRetourner}</b>`
+        : 'Clique sur les cartes pour les retourner';
+}
 
 function retourner(flip) {
     if (!flip || flip.classList.contains('retournee')) return;
     flip.classList.add('retournee');
     flip.removeAttribute('role');
     flip.removeAttribute('aria-label');
+    majAideTirage();
     if (!$('#tirage .flip:not(.retournee)')) finTirage();
 }
 
 async function toutRetourner() {
     $('#btn-tout-retourner').hidden = true;
-    const delai = dernierTirage.length > CARTES_PAR_BOOSTER ? 70 : 260;
-    for (const flip of document.querySelectorAll('#tirage .flip:not(.retournee)')) {
+    // Vague rapide : quelques dixièmes de seconde, même pour un ×10
+    const multiple = $('#ouverture').classList.contains('multiple');
+    const delai = multiple ? 45 : 260;
+    const aRetourner = [...document.querySelectorAll('#tirage .flip:not(.retournee)')];
+    // ×10 : de bas en haut, pour finir sur les plus rares
+    if (multiple) aRetourner.reverse();
+    for (const flip of aRetourner) {
         retourner(flip);
         await attendre(delai);
     }
@@ -399,21 +441,10 @@ function finTirage() {
     const holos = dernierTirage.filter(t => t.holo).length;
     $('#ouverture-aide').hidden = true;
     $('#btn-tout-retourner').hidden = true;
-
-    // Pour un ×10 : le détail par rareté, des plus rares aux communes
-    const detail = dernierTirage.length > CARTES_PAR_BOOSTER
-        ? `<div class="puces-raretes">${RARETES.map(r => {
-            const n = dernierTirage.filter(t => t.carte.rarete === r.id).length;
-            return n ? `<span class="puce rarete-${r.id}"><i></i>${r.nom} <b>${n}</b></span>` : '';
-        }).join('')}</div>`
-        : '';
     $('#bilan').innerHTML = `
-        <div class="bilan-ligne">
-            <span><b>${nouvelles}</b> nouvelle${nouvelles > 1 ? 's' : ''}</span>
-            <span class="rarete-${meilleure.id}">Meilleure : <b class="texte-rarete">${meilleure.nom}</b></span>
-            ${holos ? `<span>✨ <b>${holos}</b> holo${holos > 1 ? 's' : ''}</span>` : ''}
-        </div>
-        ${detail}`;
+        <span><b>${nouvelles}</b> nouvelle${nouvelles > 1 ? 's' : ''}</span>
+        <span class="rarete-${meilleure.id}">Meilleure : <b class="texte-rarete">${meilleure.nom}</b></span>
+        ${holos ? `<span>✨ <b>${holos}</b> holo${holos > 1 ? 's' : ''}</span>` : ''}`;
     majPaquets();
     for (const id of ['#bilan', '#btn-autre', '#btn-autre-x10', '#btn-voir-collection']) $(id).hidden = false;
 }
@@ -579,13 +610,19 @@ function afficherFiche(id) {
 
 // ---------- Écran règles ----------
 
+// Chance qu'une carte soit de cette rareté : sa part dans le catalogue
+function chanceRarete(rarete) {
+    const pourcent = jeuxParRarete[rarete.id].length / totalJeux() * 100;
+    return `${pourcent.toLocaleString('fr-FR', { maximumSignificantDigits: 2 })} %`;
+}
+
 function afficherRegles() {
     const entrees = Object.values(etat.collection);
     $('#legende-raretes').innerHTML = RARETES.map((r, i) => `
         <tr class="rarete-${r.id}">
             <td><span class="pastille"></span>${r.nom}</td>
             <td>${r.seuil ? `≥ ${nombre(r.seuil)}` : `< ${nombre(RARETES[i - 1].seuil)}`}</td>
-            <td>${nombre(r.chance)} %</td>
+            <td>${totalJeux() ? chanceRarete(r) : '…'}</td>
             <td>${r.revente} ${PIECE}</td>
             <td>${entrees.filter(e => e.rarete === r.id).length} / ${nombre(jeuxParRarete[r.id]?.length || 0)}</td>
         </tr>`).join('');
@@ -621,8 +658,8 @@ function demarrerDuel() {
 function nouvelleManche() {
     const collection = Object.values(etat.collection);
     duel.carteJoueur = auHasard(collection);
-    // L'ordinateur pioche parmi tous les jeux, avec les mêmes chances qu'un booster
-    duel.carteOrdi = piocher(tirerRarete(), new Set([duel.carteJoueur.id]));
+    // L'ordinateur pioche un jeu au hasard, comme dans un booster
+    duel.carteOrdi = piocher(new Set([duel.carteJoueur.id]));
 
     $('#duel-joueur').className = 'duel-emplacement';
     $('#duel-ordi').className = 'duel-emplacement';
@@ -788,6 +825,12 @@ function init() {
         inclinerVers(e.target.closest('[data-incline]'), e);
     });
     document.addEventListener('pointerleave', () => inclinerVers(null));
+
+    // Hauteur de l'en-tête, pour coller la barre d'actions du ×10 juste en dessous
+    const majHauteurEntete = () =>
+        document.documentElement.style.setProperty('--hauteur-entete', `${$('.entete').offsetHeight}px`);
+    majHauteurEntete();
+    window.addEventListener('resize', majHauteurEntete);
 
     window.addEventListener('hashchange', () => afficherEcran(location.hash.slice(1)));
     // Un lien vers l'écran déjà affiché ne déclenche pas hashchange : "Boosters" ramène quand même aux paquets

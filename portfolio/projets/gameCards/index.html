@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=7">
+    <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 
@@ -52,7 +52,7 @@
             <div class="choix" id="choix">
                 <div class="choix-titre">
                     <h1>Ouvre un booster</h1>
-                    <p>5 vrais jeux vidéo par paquet, dont au moins une carte <b class="texte-rare">Rare</b>.</p>
+                    <p>5 jeux tirés au hasard parmi tout le catalogue Steam. À toi de trouver les <b class="texte-rare">raretés</b>.</p>
                 </div>
 
                 <div class="paquets">
@@ -112,9 +112,10 @@
             <div class="ouverture" id="ouverture" hidden>
                 <div class="ouverture-scene" id="ouverture-scene"></div>
                 <div class="tirage" id="tirage"></div>
-                <p class="ouverture-aide" id="ouverture-aide">Clique sur les cartes pour les retourner</p>
-                <div class="ouverture-actions">
-                    <button class="btn" id="btn-tout-retourner">Tout retourner</button>
+                <!-- Pour un ×10, cette barre reste collée en haut de l'écran (en bas sur mobile) -->
+                <div class="ouverture-actions" id="ouverture-actions">
+                    <p class="ouverture-aide" id="ouverture-aide">Clique sur les cartes pour les retourner</p>
+                    <button class="btn btn-principal" id="btn-tout-retourner">Tout retourner</button>
                     <div class="bilan" id="bilan" hidden></div>
                     <button class="btn btn-principal" id="btn-autre" hidden>Ouvrir un autre booster</button>
                     <button class="btn btn-or" id="btn-autre-x10" hidden>Ouvrir ×10</button>
@@ -211,7 +212,7 @@
             <div class="regles">
                 <article>
                     <h3>👍 Note public</h3>
-                    <p>Le pourcentage d’avis positifs des joueurs sur Steam.</p>
+                    <p>Le pourcentage d’avis positifs des joueurs sur Steam. Pour un jeu avec peu d’avis, elle est rapprochée de la moyenne (76 %) : 1 avis à 100 % ne vaut pas 10 000 avis à 95 %.</p>
                 </article>
                 <article>
                     <h3>📰 Note Metacritic</h3>
@@ -219,11 +220,11 @@
                 </article>
                 <article>
                     <h3>★ Popularité</h3>
-                    <p>Le nombre d’avis Steam : 100 avis donnent 0, un million donnent 100.</p>
+                    <p>Le nombre d’avis Steam : 1 avis donne 0, 1 000 avis donnent 50, un million donnent 100.</p>
                 </article>
                 <article>
                     <h3>Boosters</h3>
-                    <p>5 cartes dont une Rare ou mieux. Un gratuit toutes les 10 minutes, ou 50 pièces.</p>
+                    <p>5 jeux tirés au hasard, chacun avec la même chance. Un gratuit toutes les 10 minutes, ou 50 pièces.</p>
                 </article>
                 <article>
                     <h3>✨ Holo</h3>
@@ -260,6 +261,6 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="script.js?v=7"></script>
+    <script src="script.js?v=12"></script>
 </body>
 </html>

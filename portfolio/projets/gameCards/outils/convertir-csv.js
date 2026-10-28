@@ -1,5 +1,5 @@
 // Convertit games.csv (dataset Steam de Kaggle) en data/jeux.json, léger et prêt pour le jeu.
-// Usage : node outils/convertir-csv.js [nombre de jeux, 10000 par défaut]
+// Usage : node outils/convertir-csv.js [nombre de jeux, tous par défaut]
 'use strict';
 
 const fs = require('fs');
@@ -8,7 +8,7 @@ const path = require('path');
 const RACINE = path.join(__dirname, '..');
 const SOURCE = path.join(RACINE, 'games.csv');
 const CIBLE = path.join(RACINE, 'data', 'jeux.json');
-const NOMBRE = Number(process.argv[2]) || 15000;
+const NOMBRE = Number(process.argv[2]) || Infinity;
 
 // Genres Steam traduits ; ceux absents de la liste (Free To Play, Early Access…) sont ignorés
 const GENRES = {
@@ -81,8 +81,21 @@ for (const l of lignes) {
 jeux.sort((a, b) => b.avis - a.avis);
 const garde = jeux.slice(0, NOMBRE);
 
+// Format compact pour alléger le fichier : un tableau par jeu au lieu d'un objet,
+// et les genres sous forme de chiffres (index dans `genres`, 10 genres au plus).
+// [id, nom, année, avis, note, metacritic, "chiffres des genres", image (seulement si spéciale)]
+const listeGenres = Object.values(GENRES);
+const compact = {
+    genres: listeGenres,
+    jeux: garde.map(j => {
+        const ligne = [j.id, j.nom, j.annee, j.avis, j.note, j.metacritic, j.genres.map(g => listeGenres.indexOf(g)).join('')];
+        if (j.image) ligne.push(j.image);
+        return ligne;
+    }),
+};
+
 fs.mkdirSync(path.dirname(CIBLE), { recursive: true });
-fs.writeFileSync(CIBLE, JSON.stringify(garde));
+fs.writeFileSync(CIBLE, JSON.stringify(compact));
 
 const rang = n => garde[Math.min(n, garde.length) - 1]?.avis;
 console.log(`${jeux.length} jeux avec avis, ${garde.length} gardés → ${path.relative(RACINE, CIBLE)} (${Math.round(fs.statSync(CIBLE).size / 1024)} Ko)`);
