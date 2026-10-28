@@ -18,7 +18,8 @@ const RARETES = [
 const INDEX_RARE = RARETES.findIndex(r => r.id === 'rare');
 
 const CARTES_PAR_BOOSTER = 5;
-const PRIX_BOOSTER = 50;
+const BOOSTERS_PAR_LOT = 10; // ouverture ×10
+const PRIX_BOOSTER = 0;
 const DELAI_BOOSTER = 10 * 60 * 1000;
 const CHANCE_HOLO = 0.02;
 const MULTIPLICATEUR_HOLO = 3;
@@ -281,38 +282,57 @@ function majPaquets() {
         ? `Booster à ${PRIX_BOOSTER} pièces, il te manque ${manque} pièces` : `Acheter un booster pour ${PRIX_BOOSTER} pièces`);
     $('#manque-achat').textContent = `Il manque ${manque}`;
 
+    // Ouverture ×10 (payante uniquement : le gratuit ne revient que toutes les 10 min)
+    const prixLot = PRIX_BOOSTER * BOOSTERS_PAR_LOT;
+    for (const bouton of [$('#btn-x10'), $('#btn-autre-x10')]) {
+        bouton.disabled = etat.pieces < prixLot;
+        bouton.title = bouton.disabled ? `Il te manque ${prixLot - etat.pieces} pièces` : '';
+        bouton.innerHTML = `Ouvrir ×${BOOSTERS_PAR_LOT} · ${prixLot} ${PIECE}`;
+    }
+
+    // "Ouvrir un autre" : le gratuit s'il est prêt, sinon un booster payant
+    const autre = $('#btn-autre');
+    autre.disabled = reste > 0 && manque > 0;
+    autre.innerHTML = reste === 0 ? 'Ouvrir un autre booster · gratuit'
+        : autre.disabled ? `Booster gratuit dans ${formatDuree(reste)}`
+        : `Ouvrir un autre booster · ${PRIX_BOOSTER} ${PIECE}`;
+
     $('#lien-accueil').classList.toggle('pret', reste === 0);
 }
 
-// ---------- Ouverture d'un booster ----------
+// ---------- Ouverture de boosters ----------
 
-async function ouvrirBooster(mode) {
-    if (ouvertureEnCours || !donneesPretes()) return;
-    if (mode === 'gratuit' && tempsRestant() > 0) {
-        return toast(`Prochain booster gratuit dans ${formatDuree(tempsRestant())}`);
-    }
-    if (mode === 'achat' && etat.pieces < PRIX_BOOSTER) {
-        return toast(`Il te manque ${PRIX_BOOSTER - etat.pieces} pièces. Revends des doublons ou gagne un duel !`);
-    }
-    ouvertureEnCours = true;
-
-    // 4 cartes au hasard + la dernière Rare ou mieux
+// Les 5 cartes d'un booster : 4 au hasard + la dernière Rare ou mieux
+function tirerBooster() {
     const indices = Array.from({ length: CARTES_PAR_BOOSTER - 1 }, () => tirerRarete());
     indices.push(tirerRarete(INDEX_RARE));
     const exclus = new Set();
-    const tirage = indices.map(index => {
+    return indices.map(index => {
         const carte = piocher(index, exclus);
         exclus.add(carte.id);
         return { carte, holo: Math.random() < CHANCE_HOLO };
     });
+}
 
+async function ouvrirBooster(mode, nombreBoosters = 1) {
+    if (ouvertureEnCours || !donneesPretes()) return;
+    const prix = PRIX_BOOSTER * nombreBoosters;
+    if (mode === 'gratuit' && tempsRestant() > 0) {
+        return toast(`Prochain booster gratuit dans ${formatDuree(tempsRestant())}`);
+    }
+    if (mode === 'achat' && etat.pieces < prix) {
+        return toast(`Il te manque ${prix - etat.pieces} pièces. Revends des doublons ou gagne un duel !`);
+    }
+    ouvertureEnCours = true;
+
+    const tirage = Array.from({ length: nombreBoosters }, tirerBooster).flat();
     if (mode === 'gratuit') etat.dernierBooster = Date.now();
-    else etat.pieces -= PRIX_BOOSTER;
+    else etat.pieces -= prix;
     for (const t of tirage) t.nouvelle = ajouterACollection(t.carte, t.holo);
     sauvegarder();
     majEntete();
 
-    // Le paquet cliqué passe au centre, tremble, puis se déchire
+    // Le paquet passe au centre, tremble, puis se déchire
     const paquet = $(mode === 'gratuit' ? '#paquet-gratuit' : '#paquet-achat').cloneNode(true);
     paquet.removeAttribute('id');
     paquet.removeAttribute('data-incline');
@@ -321,14 +341,16 @@ async function ouvrirBooster(mode) {
     paquet.classList.add('paquet-seul');
     paquet.tabIndex = -1;
     paquet.querySelector('.paquet-verrou')?.remove();
+    if (nombreBoosters > 1) paquet.insertAdjacentHTML('beforeend', `<span class="paquet-multiple">×${nombreBoosters}</span>`);
 
     $('#choix').hidden = true;
     $('#ouverture').hidden = false;
     $('#tirage').innerHTML = '';
+    $('#tirage').classList.toggle('tirage-multiple', nombreBoosters > 1);
     $('#ouverture-scene').replaceChildren(paquet);
     $('#ouverture-aide').hidden = false;
     $('#btn-tout-retourner').hidden = true;
-    for (const id of ['#bilan', '#btn-autre', '#btn-voir-collection']) $(id).hidden = true;
+    for (const id of ['#bilan', '#btn-autre', '#btn-autre-x10', '#btn-voir-collection']) $(id).hidden = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     paquet.classList.add('secoue');
@@ -341,11 +363,12 @@ async function ouvrirBooster(mode) {
     tirage.sort((a, b) => indexRarete(b.carte.rarete) - indexRarete(a.carte.rarete));
     dernierTirage = tirage;
     $('#tirage').innerHTML = tirage.map(t => flipHTML(t.carte, t)).join('');
+    const delai = nombreBoosters > 1 ? 25 : 90;
     $('#tirage').querySelectorAll('.flip').forEach((flip, i) => {
         flip.tabIndex = 0;
         flip.setAttribute('role', 'button');
         flip.setAttribute('aria-label', `Retourner la carte ${i + 1}`);
-        flip.style.animationDelay = `${i * 90}ms`;
+        flip.style.animationDelay = `${i * delai}ms`;
     });
     $('#btn-tout-retourner').hidden = false;
     ouvertureEnCours = false;
@@ -363,27 +386,36 @@ function retourner(flip) {
 
 async function toutRetourner() {
     $('#btn-tout-retourner').hidden = true;
+    const delai = dernierTirage.length > CARTES_PAR_BOOSTER ? 70 : 260;
     for (const flip of document.querySelectorAll('#tirage .flip:not(.retournee)')) {
         retourner(flip);
-        await attendre(260);
+        await attendre(delai);
     }
 }
 
 function finTirage() {
     const nouvelles = dernierTirage.filter(t => t.nouvelle).length;
     const meilleure = RARETES[Math.min(...dernierTirage.map(t => indexRarete(t.carte.rarete)))];
+    const holos = dernierTirage.filter(t => t.holo).length;
     $('#ouverture-aide').hidden = true;
     $('#btn-tout-retourner').hidden = true;
-    $('#bilan').innerHTML = `
-        <span><b>${nouvelles}</b> nouvelle${nouvelles > 1 ? 's' : ''}</span>
-        <span class="rarete-${meilleure.id}">Meilleure : <b class="texte-rarete">${meilleure.nom}</b></span>`;
-    for (const id of ['#bilan', '#btn-autre', '#btn-voir-collection']) $(id).hidden = false;
-}
 
-function retourAuChoix() {
-    $('#ouverture').hidden = true;
-    $('#choix').hidden = false;
-    afficherAccueil();
+    // Pour un ×10 : le détail par rareté, des plus rares aux communes
+    const detail = dernierTirage.length > CARTES_PAR_BOOSTER
+        ? `<div class="puces-raretes">${RARETES.map(r => {
+            const n = dernierTirage.filter(t => t.carte.rarete === r.id).length;
+            return n ? `<span class="puce rarete-${r.id}"><i></i>${r.nom} <b>${n}</b></span>` : '';
+        }).join('')}</div>`
+        : '';
+    $('#bilan').innerHTML = `
+        <div class="bilan-ligne">
+            <span><b>${nouvelles}</b> nouvelle${nouvelles > 1 ? 's' : ''}</span>
+            <span class="rarete-${meilleure.id}">Meilleure : <b class="texte-rarete">${meilleure.nom}</b></span>
+            ${holos ? `<span>✨ <b>${holos}</b> holo${holos > 1 ? 's' : ''}</span>` : ''}
+        </div>
+        ${detail}`;
+    majPaquets();
+    for (const id of ['#bilan', '#btn-autre', '#btn-autre-x10', '#btn-voir-collection']) $(id).hidden = false;
 }
 
 // ---------- Écran accueil ----------
@@ -696,7 +728,9 @@ function init() {
     $('#paquet-gratuit').addEventListener('click', () => ouvrirBooster('gratuit'));
     $('#paquet-achat').addEventListener('click', () => ouvrirBooster('achat'));
     $('#btn-tout-retourner').addEventListener('click', toutRetourner);
-    $('#btn-autre').addEventListener('click', retourAuChoix);
+    $('#btn-autre').addEventListener('click', () => ouvrirBooster(tempsRestant() === 0 ? 'gratuit' : 'achat'));
+    $('#btn-x10').addEventListener('click', () => ouvrirBooster('achat', BOOSTERS_PAR_LOT));
+    $('#btn-autre-x10').addEventListener('click', () => ouvrirBooster('achat', BOOSTERS_PAR_LOT));
     $('#tirage').addEventListener('click', e => retourner(e.target.closest('.flip')));
     $('#tirage').addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -756,6 +790,11 @@ function init() {
     document.addEventListener('pointerleave', () => inclinerVers(null));
 
     window.addEventListener('hashchange', () => afficherEcran(location.hash.slice(1)));
+    // Un lien vers l'écran déjà affiché ne déclenche pas hashchange : "Boosters" ramène quand même aux paquets
+    document.addEventListener('click', e => {
+        const lien = e.target.closest('a[href^="#"]');
+        if (lien && lien.hash === (location.hash || '#accueil')) afficherEcran(lien.hash.slice(1));
+    });
     afficherEcran(location.hash.slice(1));
     majScoreDuel();
     majEntete();

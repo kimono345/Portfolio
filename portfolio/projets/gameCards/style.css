@@ -455,12 +455,31 @@ main {
 .bilan {
     flex-basis: 100%;
     display: flex;
-    justify-content: center;
-    gap: 1.4rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
     margin-bottom: 0.4rem;
     color: var(--texte-doux);
     animation: arrivee 0.4s backwards;
 }
+.bilan-ligne { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem 1.4rem; }
+.bilan .puces-raretes { justify-content: center; }
+
+/* Ouverture ×10 : 50 cartes en grille serrée */
+.tirage.tirage-multiple { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1.4rem 0.9rem; padding-top: 0.6rem; }
+.paquet-multiple {
+    position: absolute;
+    top: -14px;
+    right: -14px;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    background: var(--accent-2);
+    color: #fff;
+    font-weight: 900;
+    font-size: 1.2rem;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+.btn-x10 { padding: 0.5rem 1rem; font-size: 0.9rem; }
 .bilan b { color: var(--texte); }
 .bilan .texte-rarete { color: var(--rar); }
 
@@ -1053,6 +1072,8 @@ main {
     .tirage .flip { grid-column: span 2; }
     .tirage .flip:nth-child(4) { grid-column: 2 / span 2; }
     .badge-nouvelle { top: -8px; font-size: 0.62rem; padding: 0.1rem 0.45rem; }
+    .tirage.tirage-multiple { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: none; gap: 1rem 0.5rem; }
+    .tirage.tirage-multiple .flip, .tirage.tirage-multiple .flip:nth-child(4) { grid-column: auto; }
 
     .grille { grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 1rem 0.8rem; }
     .filtres select { flex: 1 1 140px; }
