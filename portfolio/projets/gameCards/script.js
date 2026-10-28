@@ -56,8 +56,6 @@ const GOTY = {
 const gotyDe = id => GOTY[id] && { annee: GOTY[id][0], ceremonie: GOTY[id][1] };
 const MANCHES_GAGNANTES = 3;
 const GAIN_DUEL = 30;
-const BONUS_HOLO = 5;         // duel : +5 sur toutes les stats d'une holo
-const BONUS_CHEF_OEUVRE = 5;  // duel : +5 en Note public pour un chef-d'œuvre (Metacritic 90+)
 const CARTES_PAR_PAGE = 60; // collection affichée par tranches
 const URL_IMAGES = 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps';
 
@@ -898,15 +896,6 @@ function reinitialiser() {
 
 // ---------- Duel ----------
 
-// Valeur d'une stat en duel, bonus compris
-function bonusDuel(carte, stat) {
-    let bonus = 0;
-    if (carte.holos > 0) bonus += BONUS_HOLO;
-    if (stat === 'attaque' && carte.metacritic >= SEUIL_CHEF_OEUVRE) bonus += BONUS_CHEF_OEUVRE;
-    return bonus;
-}
-const valeurDuel = (carte, stat) => carte[stat] + bonusDuel(carte, stat);
-
 // Tirage d'une carte de duel : une rareté au hasard (même chance pour chacune), puis une carte dedans.
 // Une Mythique sort donc aussi souvent qu'une Commune.
 function tirerCarteJoueur() {
@@ -955,14 +944,10 @@ function nouvelleManche() {
     $('#duel-ordi').innerHTML = flipHTML(duel.carteOrdi, { retournee: true, cachee: true });
     $('#duel-manche').textContent = `Manche ${duel.manche}`;
     $('#duel-message').innerHTML = `L’ordinateur joue <b>${echapper(duel.carteOrdi.nom)}</b>. Sur quelle stat penses-tu le battre ?`;
-    actionsDuel(Object.entries(STATS).map(([cle, stat]) => {
-        const bonus = bonusDuel(duel.carteJoueur, cle);
-        return `
-            <button class="btn-stat" data-stat="${cle}">
-                <span>${stat.icone} ${stat.nom}</span><b>${valeurDuel(duel.carteJoueur, cle)}</b>
-                ${bonus ? `<small>dont +${bonus} de bonus</small>` : ''}
-            </button>`;
-    }).join(''));
+    actionsDuel(Object.entries(STATS).map(([cle, stat]) => `
+        <button class="btn-stat" data-stat="${cle}">
+            <span>${stat.icone} ${stat.nom}</span><b>${duel.carteJoueur[cle]}</b>
+        </button>`).join(''));
     majScoreDuel();
 }
 
@@ -981,13 +966,13 @@ async function choisirStat(stat) {
     await attendre(700);
 
     // En cas d'égalité, la Popularité départage
-    const mienne = valeurDuel(duel.carteJoueur, stat);
-    const sienne = valeurDuel(duel.carteOrdi, stat);
+    const mienne = duel.carteJoueur[stat];
+    const sienne = duel.carteOrdi[stat];
     let ecart = mienne - sienne;
     let departage = '';
     if (!ecart && stat !== 'popularite') {
-        const pm = valeurDuel(duel.carteJoueur, 'popularite');
-        const ps = valeurDuel(duel.carteOrdi, 'popularite');
+        const pm = duel.carteJoueur.popularite;
+        const ps = duel.carteOrdi.popularite;
         ecart = pm - ps;
         if (ecart) departage = ` Égalité, départagée par la Popularité (${pm} contre ${ps}).`;
     }
