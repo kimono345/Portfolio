@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=9">
+    <link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
 
@@ -166,30 +166,56 @@
         <section class="ecran" id="ecran-duel" hidden>
             <div class="titre-ecran titre-centre">
                 <h1>Duel</h1>
-                <p>Premier à 3 manches. Tu vois le jeu adverse mais pas ses stats : devine sur quelle stat tu peux le battre.</p>
+                <p>Compose un deck de 5 cartes et gagne 3 manches. Tu attaques aux manches impaires, l’ordinateur aux manches paires. Chaque carte ne sert qu’une fois.</p>
             </div>
 
-            <div class="duel-score">
-                <div class="duel-joueur-score">
-                    <span>Toi</span>
-                    <div class="pips" id="pips-joueur"></div>
+            <!-- Préparation : adversaire et deck -->
+            <div class="duel-preparation" id="duel-preparation">
+                <h2 class="sous-titre">1. Choisis ton adversaire</h2>
+                <div class="niveaux" id="niveaux"></div>
+
+                <h2 class="sous-titre">2. Compose ton deck <span id="deck-compte">0 / 5</span></h2>
+                <div class="deck-slots" id="deck-slots"></div>
+
+                <div class="deck-outils">
+                    <label class="recherche">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                        <input type="search" id="deck-recherche" placeholder="Chercher une carte…" aria-label="Chercher une carte pour le deck">
+                    </label>
+                    <button class="btn" id="btn-deck-auto">Deck auto</button>
+                    <button class="btn btn-principal" id="btn-lancer-duel" disabled>Lancer le duel</button>
                 </div>
-                <div class="duel-vs">VS</div>
-                <div class="duel-joueur-score">
-                    <span>Ordi</span>
-                    <div class="pips" id="pips-ordi"></div>
+                <p class="deck-aide">Tes cartes, des plus fortes aux plus faibles. Clique pour les ajouter ou les retirer du deck.</p>
+                <div class="grille deck-choix" id="deck-choix"></div>
+            </div>
+
+            <!-- Combat -->
+            <div class="duel-combat" id="duel-combat" hidden>
+                <div class="duel-score">
+                    <div class="duel-joueur-score">
+                        <span>Toi</span>
+                        <div class="pips" id="pips-joueur"></div>
+                    </div>
+                    <div class="duel-infos">
+                        <div class="duel-vs">VS</div>
+                        <span id="duel-manche">Manche 1</span>
+                    </div>
+                    <div class="duel-joueur-score">
+                        <span>Ordi</span>
+                        <div class="pips" id="pips-ordi"></div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="duel-plateau">
-                <div class="duel-emplacement" id="duel-joueur" data-titre="Ta carte"></div>
-                <div class="duel-emplacement" id="duel-ordi" data-titre="Ordinateur"></div>
-            </div>
+                <div class="duel-plateau">
+                    <div class="duel-emplacement" id="duel-joueur" data-titre="Ta carte"></div>
+                    <div class="duel-emplacement" id="duel-ordi" data-titre="Ordinateur"></div>
+                </div>
 
-            <p class="duel-message" id="duel-message">Lance un duel : chacun tire une carte au hasard.</p>
+                <p class="duel-message" id="duel-message"></p>
+                <div class="duel-actions" id="duel-actions"></div>
 
-            <div class="duel-actions" id="duel-actions">
-                <button class="btn btn-principal btn-grand" data-action="demarrer">Lancer un duel</button>
+                <h2 class="sous-titre main-titre">Ta main</h2>
+                <div class="main" id="duel-main"></div>
             </div>
         </section>
 
@@ -216,7 +242,7 @@
                 </article>
                 <article>
                     <h3>📰 Note Metacritic</h3>
-                    <p>La note de la presse. Quand un jeu n’en a pas, elle vaut 50 et s’affiche en gris.</p>
+                    <p>La note de la presse. Quand un jeu n’en a pas, elle s’affiche « — » et vaut 0.</p>
                 </article>
                 <article>
                     <h3>★ Popularité</h3>
@@ -228,15 +254,19 @@
                 </article>
                 <article>
                     <h3>✨ Holo</h3>
-                    <p>2 % de chance par carte. Une holo se revend 3 fois plus cher.</p>
+                    <p>2 % de chance par carte. Une holo se revend 3 fois plus cher et gagne +5 sur toutes ses stats en duel.</p>
                 </article>
                 <article>
                     <h3>🏆 Chef-d’œuvre</h3>
-                    <p>Badge des jeux notés 90 ou plus sur Metacritic.</p>
+                    <p>Badge des jeux notés 90 ou plus sur Metacritic. En duel, +5 en Note Metacritic.</p>
                 </article>
                 <article>
                     <h3>⚔ Duel</h3>
-                    <p>Tu vois le jeu adverse mais pas ses stats. Choisis la tienne : la plus haute gagne. 3 manches = 30 pièces.</p>
+                    <p>Deck de 5 cartes, premier à 3 manches. Tu attaques aux manches impaires en choisissant carte et stat, l’ordinateur aux manches paires : il annonce sa stat, tu choisis qui défend. Chaque carte ne sert qu’une fois.</p>
+                </article>
+                <article>
+                    <h3>🎯 Adversaires</h3>
+                    <p>Facile (15 pièces), Normal (35), Difficile (70), Légendaire (150). Gagne 3 duels à un niveau pour débloquer le suivant. En cas d’égalité, la Popularité départage.</p>
                 </article>
                 <article>
                     <h3>💰 Revente</h3>
@@ -261,6 +291,6 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="script.js?v=13"></script>
+    <script src="script.js?v=15"></script>
 </body>
 </html>

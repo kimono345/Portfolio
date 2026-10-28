@@ -961,6 +961,93 @@ main {
 .btn-stat:disabled { opacity: 0.4; }
 .btn-stat.choisie { opacity: 1; border-color: var(--accent); background: rgba(255, 184, 0, 0.12); }
 
+/* ── Duel : préparation ── */
+.sous-titre { display: flex; align-items: baseline; gap: 0.7rem; font-size: 1.1rem; margin: 2.2rem 0 0.9rem; }
+.sous-titre span { color: var(--texte-doux); font-family: 'Space Mono', monospace; font-size: 0.9rem; }
+.duel-preparation .sous-titre:first-child { margin-top: 0.4rem; }
+
+.niveaux { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0.8rem; }
+.niveau {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    padding: 0.9rem 1.1rem;
+    border-radius: 14px;
+    border: 1px solid var(--bord);
+    background: var(--fond-2);
+    text-align: left;
+    transition: border-color 0.2s, transform 0.15s, background 0.2s;
+}
+.niveau:hover { transform: translateY(-2px); border-color: var(--bord-fort); }
+.niveau.actif { border-color: var(--accent); background: rgba(255, 184, 0, 0.07); box-shadow: 0 0 0 1px var(--accent) inset; }
+.niveau.verrouille { opacity: 0.5; }
+.niveau-nom { font-weight: 800; font-size: 1.05rem; }
+.niveau-raretes { display: flex; gap: 0.3rem; }
+.niveau-raretes i { width: 14px; height: 14px; border-radius: 4px; background: var(--rar-fond, var(--rar)); }
+.niveau-gain { display: flex; align-items: center; gap: 0.3rem; font-family: 'Space Mono', monospace; font-weight: 700; color: var(--accent); }
+.niveau-etat { color: var(--texte-doux); font-size: 0.85rem; }
+
+.deck-slots { display: grid; grid-template-columns: repeat(5, minmax(0, 150px)); gap: 0.8rem; }
+.deck-slot { border-radius: 14px; transition: transform 0.2s; }
+button.deck-slot:hover { transform: translateY(-4px) rotate(-1deg); }
+.deck-slot-vide {
+    aspect-ratio: 5 / 7;
+    display: grid;
+    place-items: center;
+    border: 2px dashed var(--bord-fort);
+    color: var(--texte-doux);
+    font-family: 'Space Mono', monospace;
+    font-size: 1.6rem;
+}
+.deck-outils { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 1.4rem 0 0.6rem; }
+.deck-aide { color: var(--texte-doux); font-size: 0.9rem; margin-bottom: 1rem; }
+.grille.deck-choix { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.deck-carte { position: relative; }
+.deck-carte.choisie .carte { outline: 3px solid var(--accent); outline-offset: 3px; }
+.deck-carte.choisie::after {
+    content: '✓';
+    position: absolute;
+    top: -9px;
+    right: -9px;
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #1a1200;
+    font-weight: 900;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Duel : combat ── */
+.duel-infos { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; }
+.duel-infos span { color: var(--texte-doux); font-size: 0.85rem; font-weight: 600; }
+.emplacement-vide { height: 100%; display: grid; place-items: center; padding: 1rem; text-align: center; color: var(--texte-doux); font-size: 0.9rem; }
+.duel-message .tag-attaque, .duel-message .tag-defense {
+    display: inline-block;
+    margin-right: 0.4rem;
+    padding: 0.1rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.duel-message .tag-attaque { background: rgba(255, 77, 141, 0.15); color: var(--accent-2); }
+.duel-message .tag-defense { background: rgba(59, 139, 255, 0.15); color: var(--rare); }
+.btn-stat small { color: var(--accent); font-size: 0.72rem; font-weight: 600; }
+.btn-defendre { min-width: 240px; }
+
+.main-titre { justify-content: center; margin-top: 2.4rem; }
+.main { display: grid; grid-template-columns: repeat(5, minmax(0, 150px)); justify-content: center; gap: 0.8rem; padding-top: 14px; }
+.main-carte { border-radius: 14px; transition: transform 0.2s, opacity 0.2s, filter 0.2s; }
+.main-carte:hover:not(:disabled) { transform: translateY(-8px); }
+.main-carte.selectionnee { transform: translateY(-12px); }
+.main-carte.selectionnee .carte { outline: 3px solid var(--accent); outline-offset: 3px; }
+.main-carte.utilisee { opacity: 0.28; filter: grayscale(1); }
+.main-carte:disabled { cursor: default; }
+
 /* =========================================================
    RÈGLES
    ========================================================= */
@@ -1140,4 +1227,17 @@ main {
     .btn-stat { min-width: 0; flex: 1 1 30%; padding: 0.6rem 0.4rem; }
     .btn-stat span { font-size: 0.75rem; }
     .btn-stat b { font-size: 1.2rem; }
+
+    .niveaux { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+    .niveau { padding: 0.75rem 0.85rem; }
+    .deck-slots { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.4rem; }
+    .deck-slot-vide { font-size: 1.1rem; }
+    .grille.deck-choix { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+    .main { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 118px; justify-content: start; overflow-x: auto; padding: 14px 4px 8px; }
+    .btn-defendre { min-width: 0; flex-basis: 100%; }
+    /* Sur mobile, la main passe juste avant les boutons : on choisit la carte, puis la stat */
+    .duel-combat { display: flex; flex-direction: column; }
+    .duel-combat .main-titre { order: 1; margin-top: 0.6rem; }
+    .duel-combat .main { order: 2; }
+    .duel-combat .duel-actions { order: 3; margin-top: 0.8rem; }
 }
