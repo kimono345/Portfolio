@@ -8,10 +8,22 @@
     <meta name="theme-color" content="#0b0d17">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=17">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=34">
 </head>
 <body>
+
+    <!-- Dégradé doré des couronnes de laurier (utilisé par toutes les feuilles) -->
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
+        <defs>
+            <linearGradient id="degrade-laurier" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#fff0b8"/>
+                <stop offset="0.35" stop-color="#f0c75e"/>
+                <stop offset="0.7" stop-color="#c8922a"/>
+                <stop offset="1" stop-color="#7a5212"/>
+            </linearGradient>
+        </defs>
+    </svg>
 
     <header class="entete">
         <a class="logo" href="#accueil" aria-label="GameCards, accueil">
@@ -277,11 +289,15 @@
                 </article>
                 <article>
                     <h3>🏆 Chef-d’œuvre</h3>
-                    <p>Badge des jeux notés 90 ou plus sur Metacritic. En duel, +5 en Note public.</p>
+                    <p>Les jeux notés 90 ou plus sur Metacritic reçoivent une présentation de musée : plaque dorée, double filet champagne, nom en lettres classiques. En duel, +5 en Note public.</p>
                 </article>
                 <article>
                     <h3>⚔ Duel</h3>
                     <p>Premier à 3 manches, 30 pièces à la clé. Chaque carte est tirée en donnant la même chance à chaque rareté, puis une carte au hasard dedans. Tu vois le jeu adverse mais pas ses stats. En cas d’égalité, la Popularité départage.</p>
+                </article>
+                <article>
+                    <h3>🏅 GOTY</h3>
+                    <p>Les jeux élus jeu de l’année aux The Game Awards (depuis 2014) ou aux Spike Video Game Awards (avant) portent un bandeau doré « GOTY » avec l’année en coin de carte, et une couronne de laurier en filigrane.</p>
                 </article>
                 <article>
                     <h3>🛒 Catalogue</h3>
@@ -318,6 +334,6 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="script.js?v=21"></script>
+    <script src="script.js?v=31"></script>
 </body>
 </html>

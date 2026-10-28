@@ -27,6 +27,19 @@
     --legendaire: #ffb800;
     --mythique: #ff6b9a;
     --arc-en-ciel: linear-gradient(135deg, #ff4d6d, #ffb800, #3fbf6f, #3b8bff, #a352ff, #ff4d6d);
+    --prisme: linear-gradient(90deg, #ff4d8d, #ffb84d, #7dffb0, #45d4ff, #8b5cff, #ff4d8d);
+    --or: linear-gradient(135deg,
+        #6e4a0c 0%, #b8862b 10%, #f6dc8a 22%, #c99a2e 34%, #fff4c4 46%,
+        #d4a437 56%, #8f6419 68%, #f1cf6f 82%, #a67a20 92%, #6e4a0c 100%);
+    /* Fines rayures claires et sombres : effet métal brossé */
+    --or-brosse: repeating-linear-gradient(90deg,
+        rgba(255, 255, 255, 0.09) 0 1px, rgba(0, 0, 0, 0.05) 1px 2px, transparent 2px 4px);
+}
+
+@property --angle-prisme {
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 0deg;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -56,6 +69,9 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 [hidden] { display: none !important; }
 /* Icônes Bootstrap : pleines, à la taille du texte (les icônes du menu restent en trait) */
 svg.bi { width: 1em; height: 1em; fill: currentColor; stroke: none; vertical-align: -0.125em; }
+/* Laurier et brins : feuilles pleines (la tige garde son propre trait) */
+svg.laurier { fill: url(#degrade-laurier); stroke: none; }
+svg.brin { fill: currentColor; stroke: none; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
 
 h1 { font-size: clamp(1.9rem, 5vw, 2.8rem); font-weight: 900; line-height: 1.05; letter-spacing: -0.02em; }
@@ -66,7 +82,7 @@ h2 { font-size: 1.15rem; font-weight: 800; }
 .rarete-peu-commune { --rar: var(--peu-commune); }
 .rarete-rare        { --rar: var(--rare); }
 .rarete-epique      { --rar: var(--epique); }
-.rarete-legendaire  { --rar: var(--legendaire); }
+.rarete-legendaire  { --rar: var(--legendaire); --rar-fond: var(--or); }
 .rarete-mythique    { --rar: var(--mythique); --rar-fond: var(--arc-en-ciel); }
 .texte-rare { color: var(--rare); }
 .texte-peu-commune { color: var(--peu-commune); }
@@ -537,12 +553,110 @@ main {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     text-align: left;
 }
+/* ── Mythique : prisme cosmique ── */
 .carte.rarete-mythique {
-    background-size: 300% 300%;
-    animation: arc-en-ciel 6s linear infinite;
-    box-shadow: 0 0 24px rgba(255, 107, 154, 0.45);
+    padding: 6px;
+    background: conic-gradient(from var(--angle-prisme),
+        #ff4d8d, #ffb84d, #fff6c8, #7dffb0, #45d4ff, #8b5cff, #ff7ae0, #ff4d8d);
+    animation: tourne-prisme 6s linear infinite, aura-mythique 4s ease-in-out infinite alternate;
 }
-.carte.rarete-legendaire { box-shadow: 0 0 20px rgba(255, 184, 0, 0.35); }
+.carte.rarete-mythique .carte-corps {
+    isolation: isolate; /* les étoiles passent derrière le contenu */
+    background:
+        radial-gradient(85% 50% at 10% 0%, rgba(139, 92, 255, 0.42), transparent 70%),
+        radial-gradient(70% 45% at 100% 100%, rgba(255, 77, 141, 0.32), transparent 70%),
+        radial-gradient(60% 40% at 90% 30%, rgba(69, 212, 255, 0.16), transparent 70%),
+        linear-gradient(180deg, #1c1340, #0c0a1d);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+/* Champ d'étoiles qui scintille */
+.carte.rarete-mythique .carte-corps::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(1.6px 1.6px at 12% 14%, #fff 60%, transparent),
+        radial-gradient(1.2px 1.2px at 74% 9%, #fff 60%, transparent),
+        radial-gradient(1.4px 1.4px at 91% 47%, #ffe9a8 60%, transparent),
+        radial-gradient(1px 1px at 33% 58%, #cfe8ff 60%, transparent),
+        radial-gradient(1.5px 1.5px at 63% 71%, #fff 60%, transparent),
+        radial-gradient(1.1px 1.1px at 7% 86%, #ffd1ec 60%, transparent),
+        radial-gradient(1.3px 1.3px at 47% 93%, #fff 60%, transparent),
+        radial-gradient(1px 1px at 86% 82%, #d9ccff 60%, transparent);
+    animation: scintille 2.6s ease-in-out infinite alternate;
+}
+.carte.rarete-mythique .carte-rarete {
+    background: var(--prisme);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: prisme-texte 4s linear infinite;
+}
+.carte.rarete-mythique .carte-nom { text-shadow: 0 0 12px rgba(190, 150, 255, 0.55); }
+.carte.rarete-mythique .carte-image {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3), 0 0 16px rgba(139, 92, 255, 0.45);
+}
+.carte.rarete-mythique .carte-compteur { background: var(--prisme); color: #1a0f2e; }
+.carte.rarete-mythique .carte-stats i {
+    background: var(--prisme) 0 0 / var(--v) 100% no-repeat, rgba(255, 255, 255, 0.08);
+}
+.carte.rarete-mythique .carte-stats li.stat-choisie { outline-color: #d9b8ff; }
+
+/* Le nom de la rareté en prisme partout ailleurs */
+.fiche-infos.rarete-mythique .fiche-rarete,
+.legende tr.rarete-mythique td:first-child,
+.bilan .rarete-mythique .texte-rarete {
+    background: var(--prisme);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: prisme-texte 4s linear infinite;
+}
+/* ── Légendaire : or massif ── */
+.carte.rarete-legendaire {
+    padding: 6px;
+    /* 3 couches : reflet qui balaie le cadre, métal brossé, dégradé d'or */
+    background:
+        linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.9) 50%, transparent 60%),
+        var(--or-brosse),
+        var(--or);
+    background-size: 300% 100%, 100% 100%, 250% 250%;
+    background-repeat: no-repeat;
+    animation: or-ondule 6s ease-in-out infinite;
+    box-shadow: 0 0 0 1px rgba(110, 74, 12, 0.6), 0 0 22px rgba(230, 170, 50, 0.45), 0 10px 26px rgba(0, 0, 0, 0.5);
+}
+.carte.rarete-legendaire .carte-corps {
+    background:
+        radial-gradient(120% 55% at 50% 0%, rgba(255, 205, 90, 0.16), transparent 65%),
+        linear-gradient(180deg, #221d2c, #15131f);
+    box-shadow: inset 0 0 0 1px rgba(255, 220, 130, 0.25);
+}
+.carte.rarete-legendaire .carte-rarete {
+    background: linear-gradient(90deg, #e9b949, #fff1b8 45%, #f0c75e 60%, #c8922a);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.carte.rarete-legendaire .carte-compteur { background: var(--or); color: #2a1a00; }
+.carte.rarete-legendaire .carte-stats i {
+    background: var(--or) 0 0 / var(--v) 100% no-repeat, rgba(255, 255, 255, 0.08);
+}
+.carte.rarete-legendaire .carte-stats li.stat-choisie { outline-color: #f1cf6f; }
+.carte.rarete-legendaire .carte-image { box-shadow: inset 0 0 0 1px rgba(255, 220, 130, 0.35); }
+
+/* Le nom de la rareté en or partout ailleurs (fiche, tableau des règles, bilan) */
+.fiche-infos.rarete-legendaire .fiche-rarete,
+.legende tr.rarete-legendaire td:first-child,
+.bilan .rarete-legendaire .texte-rarete {
+    background: linear-gradient(90deg, #e9b949, #fff1b8 45%, #f0c75e 60%, #c8922a);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
 
 .carte-corps {
     position: relative;
@@ -583,18 +697,126 @@ main {
 }
 .carte-image img { width: 100%; height: 100%; object-fit: cover; }
 
-.badge-chef {
+/* ── GOTY : bandeau doré en diagonale sur le coin haut droit (coupé par l'arrondi de la carte) ── */
+.ruban-goty {
     position: absolute;
-    bottom: 2cqi;
-    left: 2cqi;
-    padding: 0.5cqi 2.5cqi;
-    border-radius: 999px;
-    font-size: 5cqi;
-    font-weight: 800;
-    background: rgba(0, 0, 0, 0.75);
-    color: var(--legendaire);
-    border: 1px solid var(--legendaire);
+    top: 0;
+    right: 0;
+    z-index: 3;
+    width: 40cqi;
+    height: 40cqi;
+    overflow: hidden;
+    border-top-right-radius: 10px;
 }
+.ruban-goty span {
+    position: absolute;
+    top: 9.6cqi;
+    left: -3.5cqi;
+    width: 60cqi;
+    padding: 1.5cqi 0;
+    transform: rotate(45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8cqi;
+    font-size: 3.6cqi;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    color: #3b2a0e;
+    background: linear-gradient(90deg, #b8862b, #f6dc8a 30%, #fff4c4 50%, #f1cf6f 70%, #b8862b);
+    /* Double filet sombre et clair en haut et en bas, comme un galon */
+    box-shadow:
+        0 2px 5px rgba(0, 0, 0, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6), inset 0 2px 0 rgba(110, 74, 12, 0.55),
+        inset 0 -1px 0 rgba(110, 74, 12, 0.7), inset 0 -2px 0 rgba(255, 244, 196, 0.5);
+}
+.ruban-goty .brin { width: 6.5cqi; height: 3.2cqi; flex-shrink: 0; color: #5a3d0c; }
+/* Le second brin, après le texte, est retourné pour pointer vers l'autre bout */
+.ruban-goty .brin:last-child { transform: scaleX(-1); }
+/* Reflet qui traverse le bandeau toutes les 4 secondes */
+.ruban-goty span::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 30%, rgba(255, 255, 255, 0.85) 50%, transparent 70%);
+    background-size: 250% 100%;
+    background-position: 150% 0;
+    mix-blend-mode: overlay;
+    animation: reflet-ruban 4s ease-in-out infinite;
+}
+/* Grande couronne de laurier en filigrane, derrière le nom et les stats */
+.carte.goty .carte-corps { isolation: isolate; }
+.filigrane-goty {
+    position: absolute;
+    left: 50%;
+    bottom: -1cqi;
+    z-index: -1;
+    width: 96cqi;
+    transform: translateX(-50%);
+    color: #f6dc8a;
+    opacity: 0.28;
+    pointer-events: none;
+}
+.filigrane-goty .laurier { display: block; width: 100%; height: auto; }
+/* Le badge ×N du compteur ne passe pas sous le bandeau */
+.carte.goty .carte-haut { padding-right: 21cqi; }
+
+/* Pastilles GOTY et Chef-d'œuvre sur la fiche */
+.fiche-distinctions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
+.fiche-distinction {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.9rem 0.35rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid rgba(246, 220, 138, 0.45);
+    background: rgba(246, 220, 138, 0.08);
+    color: #f6dc8a;
+    font-weight: 800;
+}
+.fiche-distinction .laurier { width: 26px; height: 26px; }
+.fiche-distinction .bi { width: 18px; height: 18px; margin: 0 4px; color: #e0a3a3; }
+.fiche-distinction span { color: var(--texte-doux); font-weight: 500; font-size: 0.85rem; }
+
+/* ── Chef-d'œuvre (Metacritic 90+) : présentation « pièce de musée », quelle que soit la rareté ── */
+.carte.chef-oeuvre { --champagne: #f3e3b5; }
+/* Double filet champagne à l'intérieur du cadre de rareté */
+.carte.chef-oeuvre .carte-corps {
+    box-shadow:
+        inset 0 0 0 1px rgba(243, 227, 181, 0.7),
+        inset 0 0 0 3.5px rgba(10, 8, 20, 0.55),
+        inset 0 0 0 4.5px rgba(243, 227, 181, 0.35);
+}
+.carte.chef-oeuvre .carte-image { box-shadow: inset 0 0 0 1px rgba(243, 227, 181, 0.5); }
+.carte.chef-oeuvre .carte-nom {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 6.6cqi;
+    letter-spacing: 0.01em;
+    color: #fbf3dc;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5), 0 0 10px rgba(243, 227, 181, 0.25);
+}
+/* Plaque dorée en ruban, posée en bas de l'image */
+.plaque-chef {
+    position: absolute;
+    left: 50%;
+    bottom: 2.4cqi;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 1.4cqi;
+    padding: 0.9cqi 4.2cqi;
+    font-size: 4.4cqi;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: #3b2a0e;
+    background: linear-gradient(135deg, #a8854a, #f3e3b5 28%, #d2b273 52%, #fff6dc 72%, #b8955a);
+    clip-path: polygon(0 0, 100% 0, calc(100% - 2.4cqi) 50%, 100% 100%, 0 100%, 2.4cqi 50%);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.55));
+}
+.plaque-chef .bi { width: 4.6cqi; height: 4.6cqi; color: #7a1f1f; }
 
 .carte-nom {
     font-size: 7.5cqi;
@@ -699,8 +921,8 @@ main {
 
 /* Éclat quand une carte rare se retourne */
 .flip.retournee[data-rarete="epique"] .carte     { animation: eclat-epique 1s ease-out; }
-.flip.retournee[data-rarete="legendaire"] .carte { animation: eclat-legendaire 1.2s ease-out; }
-.flip.retournee[data-rarete="mythique"] .carte   { animation: eclat-mythique 1.5s ease-out, arc-en-ciel 6s linear infinite; }
+.flip.retournee[data-rarete="legendaire"] .carte { animation: eclat-legendaire 1.2s ease-out, or-ondule 8s ease-in-out infinite; }
+.flip.retournee[data-rarete="mythique"] .carte   { animation: tourne-prisme 6s linear infinite, aura-mythique 4s ease-in-out infinite alternate, eclat-mythique 1.5s ease-out; }
 
 .badge-nouvelle {
     position: absolute;
@@ -1093,6 +1315,27 @@ main {
    ========================================================= */
 
 @keyframes arc-en-ciel { to { background-position: 300% 0; } }
+@keyframes reflet-ruban {
+    0%, 60% { background-position: 150% 0; }
+    100% { background-position: -50% 0; }
+}
+@keyframes tourne-prisme { to { --angle-prisme: 360deg; } }
+@keyframes aura-mythique {
+    from { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25), 0 0 26px rgba(139, 92, 255, 0.6), 0 0 60px rgba(255, 77, 141, 0.2), 0 10px 26px rgba(0, 0, 0, 0.5); }
+    to   { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25), 0 0 30px rgba(255, 77, 141, 0.6), 0 0 64px rgba(69, 212, 255, 0.25), 0 10px 26px rgba(0, 0, 0, 0.5); }
+}
+@keyframes scintille {
+    from { opacity: 0.35; }
+    to   { opacity: 1; }
+}
+@keyframes prisme-texte { to { background-position: 200% 0; } }
+/* Le dégradé d'or ondule lentement, et un reflet traverse le cadre en fin de cycle */
+@keyframes or-ondule {
+    0% { background-position: 150% 0, 0 0, 0% 50%; }
+    50% { background-position: 150% 0, 0 0, 100% 50%; }
+    75% { background-position: 150% 0, 0 0, 50% 50%; }
+    100% { background-position: -50% 0, 0 0, 0% 50%; }
+}
 @keyframes holo { from { background-position: 0% 0%; } to { background-position: 250% 250%; } }
 @keyframes pulse { 50% { transform: scale(1.4); opacity: 0.6; } }
 @keyframes flotte { 50% { translate: 0 -10px; } }

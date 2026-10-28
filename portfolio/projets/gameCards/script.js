@@ -27,6 +27,33 @@ const DELAI_BOOSTER = 10 * 60 * 1000;
 const CHANCE_HOLO = 0.02;
 const MULTIPLICATEUR_HOLO = 3;
 const SEUIL_CHEF_OEUVRE = 90;
+
+// Jeux de l'année : le dataset Steam ne le dit pas, la liste est faite à la main (identifiant Steam → année, cérémonie).
+// The Game Awards depuis 2014, Spike Video Game Awards avant. Les rééditions d'un même jeu sur Steam comptent aussi.
+// Lauréats absents de Steam : Madden NFL 2004 (2003), Uncharted 2 (2009), Overwatch (2016), Zelda BOTW (2017), Astro Bot (2024).
+const VGA = 'Spike Video Game Awards';
+const TGA = 'The Game Awards';
+const GOTY = {
+    1547000: [2004, VGA],                                   // GTA San Andreas (Definitive Edition)
+    254700: [2005, VGA],                                    // Resident Evil 4 (2005)
+    22330: [2006, VGA], 900883: [2006, VGA], 2623190: [2006, VGA], // Oblivion (éditions GOTY, Remastered)
+    7670: [2007, VGA],                                      // BioShock
+    12210: [2008, VGA],                                     // GTA IV
+    2668510: [2010, VGA],                                   // Red Dead Redemption
+    72850: [2011, VGA], 489830: [2011, VGA], 611670: [2011, VGA], // Skyrim (original, Special Edition, VR)
+    207610: [2012, VGA],                                    // The Walking Dead
+    271590: [2013, VGA], 3240220: [2013, VGA],              // GTA V (Legacy, Enhanced)
+    1222690: [2014, TGA],                                   // Dragon Age: Inquisition
+    292030: [2015, TGA],                                    // The Witcher 3
+    1593500: [2018, TGA],                                   // God of War
+    814380: [2019, TGA],                                    // Sekiro
+    2531310: [2020, TGA],                                   // The Last of Us Part II
+    1426210: [2021, TGA],                                   // It Takes Two
+    1245620: [2022, TGA],                                   // Elden Ring
+    1086940: [2023, TGA],                                   // Baldur's Gate 3
+    1903340: [2025, TGA],                                   // Clair Obscur: Expedition 33
+};
+const gotyDe = id => GOTY[id] && { annee: GOTY[id][0], ceremonie: GOTY[id][1] };
 const MANCHES_GAGNANTES = 3;
 const GAIN_DUEL = 30;
 const BONUS_HOLO = 5;         // duel : +5 sur toutes les stats d'une holo
@@ -37,8 +64,55 @@ const URL_IMAGES = 'https://shared.akamai.steamstatic.com/store_item_assets/stea
 // Icônes Bootstrap Icons (licence MIT) en SVG : rendu identique sur tous les appareils, contrairement aux emoji
 const ICONES = {
     pouce: '<svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.956 1.745C7.021.81 7.908.087 8.864.325l.261.066c.463.116.874.456 1.012.965.22.816.533 2.511.062 4.51a10 10 0 0 1 .443-.051c.713-.065 1.669-.072 2.516.21.518.173.994.681 1.2 1.273.184.532.16 1.162-.234 1.733q.086.18.138.363c.077.27.113.567.113.856s-.036.586-.113.856c-.039.135-.09.273-.16.404.169.387.107.819-.003 1.148a3.2 3.2 0 0 1-.488.901c.054.152.076.312.076.465 0 .305-.089.625-.253.912C13.1 15.522 12.437 16 11.5 16H8c-.605 0-1.07-.081-1.466-.218a4.8 4.8 0 0 1-.97-.484l-.048-.03c-.504-.307-.999-.609-2.068-.722C2.682 14.464 2 13.846 2 13V9c0-.85.685-1.432 1.357-1.615.849-.232 1.574-.787 2.132-1.41.56-.627.914-1.28 1.039-1.639.199-.575.356-1.539.428-2.59z"/></svg>',
+    medaille: '<svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="m8 0 1.669.864 1.858.282.842 1.68 1.337 1.32L13.4 6l.306 1.854-1.337 1.32-.842 1.68-1.858.282L8 12l-1.669-.864-1.858-.282-.842-1.68-1.337-1.32L2.6 6l-.306-1.854 1.337-1.32.842-1.68L6.331.864z"/><path d="M4 11.794V16l4-1 4 1v-4.206l-2.018.306L8 13.126 6.018 12.1z"/></svg>',
     sablier: '<svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 15a.5.5 0 1 1 0-1h1v-1a4.5 4.5 0 0 1 2.557-4.06c.29-.139.443-.377.443-.59v-.7c0-.213-.154-.451-.443-.59A4.5 4.5 0 0 1 3.5 3V2h-1a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-1v1a4.5 4.5 0 0 1-2.557 4.06c-.29.139-.443.377-.443.59v.7c0 .213.154.451.443.59A4.5 4.5 0 0 1 12.5 13v1h1a.5.5 0 0 1 0 1zm2-13v1c0 .537.12 1.045.337 1.5h6.326c.216-.455.337-.963.337-1.5V2zm3 6.35c0 .701-.478 1.236-1.011 1.492A3.5 3.5 0 0 0 4.5 13s.866-1.299 3-1.48zm1 0v3.17c2.134.181 3 1.48 3 1.48a3.5 3.5 0 0 0-1.989-3.158C8.978 9.586 8.5 9.052 8.5 8.351z"/></svg>',
 };
+
+// Couronne de laurier dorée : deux branches qui se croisent en bas, des paires de feuilles en amande
+// le long d'une courbe de Bézier. Le dégradé doré (#degrade-laurier) est défini une fois dans index.html.
+function laurierSVG() {
+    // Tige de la branche gauche : part du bas, à droite du centre, remonte le long du bord gauche
+    const [p0, p1, p2, p3] = [[62, 92], [14, 84], [2, 44], [33, 11]];
+    const bezier = t => [0, 1].map(k => (1 - t) ** 3 * p0[k] + 3 * (1 - t) ** 2 * t * p1[k] + 3 * (1 - t) * t ** 2 * p2[k] + t ** 3 * p3[k]);
+    const tangente = t => {
+        const d = [0, 1].map(k => 3 * (1 - t) ** 2 * (p1[k] - p0[k]) + 6 * (1 - t) * t * (p2[k] - p1[k]) + 3 * t ** 2 * (p3[k] - p2[k]));
+        const n = Math.hypot(...d);
+        return [d[0] / n, d[1] / n];
+    };
+    // Feuille en amande, base en (0, 0), pointe vers le haut, puis tournée dans la direction voulue
+    const feuille = ([x, y], [dx, dy], longueur) => {
+        const l = longueur, w = longueur * 0.24;
+        const rotation = Math.atan2(dx, -dy) * 180 / Math.PI;
+        return `<path transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rotation.toFixed(0)})" d="M0 0C${w.toFixed(1)} ${(-l * 0.28).toFixed(1)} ${(w * 0.85).toFixed(1)} ${(-l * 0.75).toFixed(1)} 0 ${-l}C${(-w * 0.85).toFixed(1)} ${(-l * 0.75).toFixed(1)} ${(-w).toFixed(1)} ${(-l * 0.28).toFixed(1)} 0 0Z"/>`;
+    };
+    const inclinaison = 38 * Math.PI / 180;
+    let feuilles = '';
+    for (let i = 0; i < 10; i++) {
+        const t = 0.13 + i * 0.085;
+        const point = bezier(t);
+        const [ux, uy] = tangente(t);
+        const [nx, ny] = [uy, -ux]; // normale vers l'extérieur de la couronne
+        const longueur = 13 - i * 0.35;
+        const vers = signe => [ux * Math.cos(inclinaison) + signe * nx * Math.sin(inclinaison), uy * Math.cos(inclinaison) + signe * ny * Math.sin(inclinaison)];
+        feuilles += feuille(point, vers(1), longueur) + feuille(point, vers(-1), longueur * 0.85);
+    }
+    feuilles += feuille(bezier(1), tangente(1), 10); // feuille au bout de la branche
+    const tige = `<path d="M${p0.join(' ')}C${p1.join(' ')} ${p2.join(' ')} ${p3.join(' ')}" fill="none" stroke="url(#degrade-laurier)" stroke-width="1.8" stroke-linecap="round"/>`;
+    const branche = tige + feuilles;
+    return `<svg class="laurier" viewBox="0 0 100 100" aria-hidden="true">${branche}<g transform="translate(100 0) scale(-1 1)">${branche}</g></svg>`;
+}
+const LAURIER = laurierSVG();
+
+function brinLaurierSVG() {
+    let feuilles = '';
+    [[5, 1], [9, -1], [13, 1], [17, -1]].forEach(([x, cote]) => {
+        feuilles += `<ellipse cx="${x}" cy="${6 - cote * 2.4}" rx="2.6" ry="1.2" transform="rotate(${-cote * 32} ${x} ${6 - cote * 2.4})"/>`;
+    });
+    return `<svg class="brin" viewBox="0 0 24 12" aria-hidden="true" fill="currentColor">
+        <path d="M22 6 Q12 5.2 2 6" fill="none" stroke="currentColor" stroke-width="0.9"/>${feuilles}
+        <ellipse cx="2.4" cy="6" rx="2.4" ry="1.1"/></svg>`;
+}
+const BRIN_LAURIER = brinLaurierSVG();
 
 const STATS = {
     attaque:    { nom: 'Note public',     icone: ICONES.pouce },
@@ -169,21 +243,25 @@ function creerCarte(jeu) {
     };
 }
 
-// `cachee` masque les stats (et le badge qui trahirait la défense) : carte adverse en duel
+// `cachee` masque les stats, et ce qui les trahirait (année, chef-d'œuvre) : carte adverse en duel
 function carteHTML(carte, { holo = false, compteur = 0, cachee = false } = {}) {
     const rarete = RARETES[indexRarete(carte.rarete)];
     // Sur la carte adverse du duel, l'année trahirait l'Ancienneté : on la cache aussi
     const infos = [cachee ? null : carte.annee, carte.genres[0]].filter(Boolean).join(' · ');
+    const chef = !cachee && carte.metacritic >= SEUIL_CHEF_OEUVRE;
+    const goty = gotyDe(carte.id);
     return `
-        <article class="carte rarete-${rarete.id}${holo ? ' holo' : ''}${cachee ? ' stats-cachees' : ''}">
+        <article class="carte rarete-${rarete.id}${holo ? ' holo' : ''}${cachee ? ' stats-cachees' : ''}${chef ? ' chef-oeuvre' : ''}${goty ? ' goty' : ''}">
             <div class="carte-corps">
+                ${goty ? `<span class="ruban-goty" title="Jeu de l’année ${goty.annee} · ${goty.ceremonie}"><span>${BRIN_LAURIER}GOTY ${goty.annee}${BRIN_LAURIER}</span></span>` : ''}
+                ${goty ? `<span class="filigrane-goty" aria-hidden="true">${LAURIER}</span>` : ''}
                 <header class="carte-haut">
                     <span class="carte-rarete">${rarete.nom}${holo ? ' · Holo' : ''}</span>
                     ${compteur > 1 ? `<span class="carte-compteur">×${compteur}</span>` : ''}
                 </header>
                 <div class="carte-image">
                     ${carte.image ? `<img src="${echapper(carte.image)}" alt="" loading="lazy" onerror="this.remove()">` : ''}
-                    ${!cachee && carte.metacritic >= SEUIL_CHEF_OEUVRE ? '<span class="badge-chef" title="Metacritic 90 ou plus">Chef-d’œuvre</span>' : ''}
+                    ${chef ? `<span class="plaque-chef" title="Metacritic : ${carte.metacritic} / 100">${ICONES.medaille}<span>Chef-d’œuvre</span></span>` : ''}
                 </div>
                 <h3 class="carte-nom">${echapper(carte.nom)}</h3>
                 <p class="carte-infos">${echapper(infos) || '&nbsp;'}</p>
@@ -238,11 +316,21 @@ function optionsGenresHTML(choisi, presents = null) {
             : '';
     };
     return '<option value="">Tous les genres et thèmes</option>'
+        + groupe('Distinctions', Object.keys(DISTINCTIONS))
         + groupe('Genres', genresCatalogue)
         + Object.entries(groupesTags).map(([titre, liste]) => groupe(titre, liste)).join('');
 }
 
-const aLeGenre = (carte, valeur) => carte.genres.includes(valeur) || (carte.tags || []).includes(valeur);
+// Distinctions : valeurs spéciales du filtre, calculées plutôt que stockées
+const DISTINCTIONS = {
+    'GOTY (jeu de l’année)': carte => Boolean(GOTY[carte.id]),
+    'Chef-d’œuvre (Metacritic 90+)': carte => carte.metacritic >= SEUIL_CHEF_OEUVRE,
+};
+const distinctionsDe = carte => Object.keys(DISTINCTIONS).filter(nom => DISTINCTIONS[nom](carte));
+
+const aLeGenre = (carte, valeur) => DISTINCTIONS[valeur]
+    ? DISTINCTIONS[valeur](carte)
+    : carte.genres.includes(valeur) || (carte.tags || []).includes(valeur);
 
 // ---------- Données ----------
 
@@ -581,7 +669,7 @@ function afficherCollection() {
     // Le menu des genres se construit à partir de la collection
     const selGenre = $('#filtre-genre');
     const genreChoisi = selGenre.value;
-    selGenre.innerHTML = optionsGenresHTML(genreChoisi, new Set(entrees.flatMap(e => [...e.genres, ...(e.tags || [])])));
+    selGenre.innerHTML = optionsGenresHTML(genreChoisi, new Set(entrees.flatMap(e => [...e.genres, ...(e.tags || []), ...distinctionsDe(e)])));
 
     const recherche = $('#filtre-nom').value.trim().toLowerCase();
     const doublons = $('#filtre-doublons').checked;
@@ -662,6 +750,10 @@ function afficherFiche(id) {
             <span class="fiche-rarete">${rarete.nom}${e?.holos ? ' · ✨ Holo' : ''}</span>
             <h2>${echapper(carte.nom)}</h2>
             <p class="fiche-meta">${[carte.annee, ...carte.genres].filter(Boolean).map(echapper).join(' · ')}</p>
+            ${gotyDe(carte.id) || carte.metacritic >= SEUIL_CHEF_OEUVRE ? `<div class="fiche-distinctions">
+                ${gotyDe(carte.id) ? `<p class="fiche-distinction">${LAURIER}Jeu de l’année ${gotyDe(carte.id).annee}<span>${gotyDe(carte.id).ceremonie}</span></p>` : ''}
+                ${carte.metacritic >= SEUIL_CHEF_OEUVRE ? `<p class="fiche-distinction">${ICONES.medaille}Chef-d’œuvre<span>noté ${carte.metacritic}/100 par la presse (Metacritic)</span></p>` : ''}
+            </div>` : ''}
             ${carte.tags?.length ? `<p class="fiche-tags">${carte.tags.map(t => `<span${(groupesTags['Contenu sensible'] || []).includes(t)
                 ? ' class="tag-sensible"' : ''}>${echapper(t)}</span>`).join('')}</p>` : ''}
             <dl class="fiche-stats">
