@@ -15,10 +15,10 @@
 // `prix` : achat direct dans le catalogue, volontairement bien plus cher que la chance en boosters.
 const RARETES = [
     { id: 'mythique',    nom: 'Mythique',    seuil: 750000, chance: 0.1,  chanceGarantie: 0.1, chanceDuel: 3,  revente: 300, prix: 10000 },
-    { id: 'legendaire',  nom: 'Légendaire',  seuil: 200000, chance: 0.5,  chanceGarantie: 0.5, chanceDuel: 7,  revente: 100, prix: 4000 },
-    { id: 'epique',      nom: 'Épique',      seuil: 60000,  chance: 2,    chanceGarantie: 2.4,  chanceDuel: 12, revente: 40,  prix: 1500 },
-    { id: 'rare',        nom: 'Rare',        seuil: 12000,  chance: 7,    chanceGarantie: 12,   chanceDuel: 18, revente: 15,  prix: 600 },
-    { id: 'peu-commune', nom: 'Peu commune', seuil: 3000,   chance: 18,   chanceGarantie: 85,   chanceDuel: 25, revente: 5,   prix: 250 },
+    { id: 'legendaire',  nom: 'Légendaire',  seuil: 200000, chance: 0.5,  chanceGarantie: 0.9, chanceDuel: 7,  revente: 100, prix: 4000 },
+    { id: 'epique',      nom: 'Épique',      seuil: 60000,  chance: 3,    chanceGarantie: 19,  chanceDuel: 12, revente: 40,  prix: 1500 },
+    { id: 'rare',        nom: 'Rare',        seuil: 12000,  chance: 6,    chanceGarantie: 30,   chanceDuel: 18, revente: 15,  prix: 600 },
+    { id: 'peu-commune', nom: 'Peu commune', seuil: 3000,   chance: 18,   chanceGarantie: 50,   chanceDuel: 25, revente: 5,   prix: 250 },
     { id: 'commune',     nom: 'Commune',     seuil: 0,      chance: 72.4, chanceGarantie: 0,    chanceDuel: 35, revente: 2,   prix: 100 },
 ];
 const INDEX_RARE = RARETES.findIndex(r => r.id === 'rare');
