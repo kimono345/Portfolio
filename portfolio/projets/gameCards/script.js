@@ -7,17 +7,17 @@
 // ---------- Règles du jeu (valeurs de départ, à équilibrer) ----------
 
 // Du plus rare au plus commun. `seuil` porte sur le nombre d'avis Steam.
-// Les boosters tirent les jeux au hasard : la rareté ne change pas les chances,
-// elle découle juste du nombre de jeux dans chaque catégorie.
+// Chaque carte tire d'abord sa rareté selon `chance` (en %), puis un jeu au hasard dans cette rareté.
 const RARETES = [
-    { id: 'mythique',    nom: 'Mythique',    seuil: 750000, revente: 300 },
-    { id: 'legendaire',  nom: 'Légendaire',  seuil: 200000, revente: 100 },
-    { id: 'epique',      nom: 'Épique',      seuil: 60000,  revente: 40 },
-    { id: 'rare',        nom: 'Rare',        seuil: 12000,  revente: 15 },
-    { id: 'peu-commune', nom: 'Peu commune', seuil: 3000,   revente: 5 },
-    { id: 'commune',     nom: 'Commune',     seuil: 0,      revente: 2 },
+    { id: 'mythique',    nom: 'Mythique',    seuil: 750000, chance: 0.2,  revente: 300 },
+    { id: 'legendaire',  nom: 'Légendaire',  seuil: 200000, chance: 1,    revente: 100 },
+    { id: 'epique',      nom: 'Épique',      seuil: 60000,  chance: 3,    revente: 40 },
+    { id: 'rare',        nom: 'Rare',        seuil: 12000,  chance: 8,    revente: 15 },
+    { id: 'peu-commune', nom: 'Peu commune', seuil: 3000,   chance: 18,   revente: 5 },
+    { id: 'commune',     nom: 'Commune',     seuil: 0,      chance: 69.8, revente: 2 },
 ];
-const INDEX_COMMUNE = RARETES.findIndex(r => r.id === 'commune');
+const INDEX_RARE = RARETES.findIndex(r => r.id === 'rare');
+const INDEX_PEU_COMMUNE = RARETES.findIndex(r => r.id === 'peu-commune');
 
 const CARTES_PAR_BOOSTER = 5;
 const BOOSTERS_PAR_LOT = 10; // ouverture ×10
@@ -220,10 +220,22 @@ function majCollectionDepuisDonnees() {
 const donneesPretes = () => tousLesJeux.length > 0;
 const totalJeux = () => tousLesJeux.length;
 
-// Pioche un jeu au hasard parmi tous, chacun avec la même chance (sans doublon dans `exclus`)
-function piocher(exclus = new Set()) {
-    let jeu = auHasard(tousLesJeux);
-    while (exclus.has(jeu.id)) jeu = auHasard(tousLesJeux);
+// Tire un index de rareté selon les chances ; indexMax limite aux raretés >= celle-ci
+function tirerRarete(indexMax = RARETES.length - 1) {
+    const possibles = RARETES.slice(0, indexMax + 1);
+    let t = Math.random() * possibles.reduce((s, r) => s + r.chance, 0);
+    for (let i = 0; i < possibles.length; i++) {
+        t -= possibles[i].chance;
+        if (t < 0) return i;
+    }
+    return indexMax;
+}
+
+// Pioche un jeu au hasard dans la rareté demandée, tous avec la même chance (sans doublon dans `exclus`)
+function piocher(index, exclus = new Set()) {
+    const bac = jeuxParRarete[RARETES[index].id];
+    let jeu = auHasard(bac);
+    for (let essai = 0; essai < 20 && exclus.has(jeu.id); essai++) jeu = auHasard(bac);
     return creerCarte(jeu);
 }
 
@@ -314,11 +326,13 @@ function majPaquets() {
 
 // ---------- Ouverture de boosters ----------
 
-// Les 5 cartes d'un booster : 5 jeux différents tirés au hasard parmi tout le catalogue
+// Les 5 cartes d'un booster : 4 au hasard + la dernière Peu commune ou mieux
 function tirerBooster() {
+    const indices = Array.from({ length: CARTES_PAR_BOOSTER - 1 }, () => tirerRarete());
+    indices.push(tirerRarete(INDEX_PEU_COMMUNE));
     const exclus = new Set();
-    return Array.from({ length: CARTES_PAR_BOOSTER }, () => {
-        const carte = piocher(exclus);
+    return indices.map(index => {
+        const carte = piocher(index, exclus);
         exclus.add(carte.id);
         return { carte, holo: Math.random() < CHANCE_HOLO };
     });
@@ -376,14 +390,14 @@ async function ouvrirBooster(mode, nombreBoosters = 1) {
         // ×10 : on ne retourne que les Rares et mieux, le reste est déjà visible en petit.
         // Les plus rares sont en haut, et se retournent en dernier (de bas en haut).
         const parRarete = [...tirage].reverse();
-        const vedettes = parRarete.filter(t => indexRarete(t.carte.rarete) < INDEX_COMMUNE);
-        const reste = parRarete.filter(t => indexRarete(t.carte.rarete) === INDEX_COMMUNE);
+        const vedettes = parRarete.filter(t => indexRarete(t.carte.rarete) <= INDEX_RARE);
+        const reste = parRarete.filter(t => indexRarete(t.carte.rarete) > INDEX_RARE);
         $('#tirage').innerHTML = `
             ${vedettes.length ? `
-                <h2 class="tirage-titre">Tes meilleures cartes <span>Peu commune et plus · ${vedettes.length}</span></h2>
+                <h2 class="tirage-titre">Tes meilleures cartes <span>Rare et plus · ${vedettes.length}</span></h2>
                 <div class="tirage-grille tirage-vedettes">${vedettes.map(t => flipHTML(t.carte, t)).join('')}</div>` : ''}
             ${reste.length ? `
-                <h2 class="tirage-titre">Les communes <span>${reste.length}</span></h2>
+                <h2 class="tirage-titre">Le reste <span>Communes et peu communes · ${reste.length}</span></h2>
                 <div class="tirage-grille tirage-reste">${reste.map(t => flipHTML(t.carte, { ...t, retournee: true })).join('')}</div>` : ''}`;
     } else {
         $('#tirage').innerHTML = tirage.map(t => flipHTML(t.carte, t)).join('');
@@ -610,11 +624,7 @@ function afficherFiche(id) {
 
 // ---------- Écran règles ----------
 
-// Chance qu'une carte soit de cette rareté : sa part dans le catalogue
-function chanceRarete(rarete) {
-    const pourcent = jeuxParRarete[rarete.id].length / totalJeux() * 100;
-    return `${pourcent.toLocaleString('fr-FR', { maximumSignificantDigits: 2 })} %`;
-}
+const chanceRarete = rarete => `${nombre(rarete.chance)} %`;
 
 function afficherRegles() {
     const entrees = Object.values(etat.collection);
@@ -622,7 +632,7 @@ function afficherRegles() {
         <tr class="rarete-${r.id}">
             <td><span class="pastille"></span>${r.nom}</td>
             <td>${r.seuil ? `≥ ${nombre(r.seuil)}` : `< ${nombre(RARETES[i - 1].seuil)}`}</td>
-            <td>${totalJeux() ? chanceRarete(r) : '…'}</td>
+            <td>${chanceRarete(r)}</td>
             <td>${r.revente} ${PIECE}</td>
             <td>${entrees.filter(e => e.rarete === r.id).length} / ${nombre(jeuxParRarete[r.id]?.length || 0)}</td>
         </tr>`).join('');
@@ -658,8 +668,8 @@ function demarrerDuel() {
 function nouvelleManche() {
     const collection = Object.values(etat.collection);
     duel.carteJoueur = auHasard(collection);
-    // L'ordinateur pioche un jeu au hasard, comme dans un booster
-    duel.carteOrdi = piocher(new Set([duel.carteJoueur.id]));
+    // L'ordinateur pioche avec les mêmes chances qu'un booster
+    duel.carteOrdi = piocher(tirerRarete(), new Set([duel.carteJoueur.id]));
 
     $('#duel-joueur').className = 'duel-emplacement';
     $('#duel-ordi').className = 'duel-emplacement';

@@ -67,6 +67,7 @@ h2 { font-size: 1.15rem; font-weight: 800; }
 .rarete-legendaire  { --rar: var(--legendaire); }
 .rarete-mythique    { --rar: var(--mythique); --rar-fond: var(--arc-en-ciel); }
 .texte-rare { color: var(--rare); }
+.texte-peu-commune { color: var(--peu-commune); }
 .texte-rarete { color: var(--rar); }
 
 /* Pièce dessinée en CSS */
