@@ -263,19 +263,25 @@ main {
     --ombre-paquet: rgba(255, 160, 0, 0.4);
 }
 
-/* Bandeau du haut (celui qui se déchire), dents de sertissage en haut */
+/* Bandeau du haut (celui qui se déchire), dents de sertissage en haut.
+   Fond « feuille d'aluminium » : grain léger, rayures diagonales discrètes, couleur du paquet */
 .paquet-haut, .paquet-corps {
     position: absolute;
     left: 0;
     right: 0;
     background:
-        repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.07) 0 10px, transparent 10px 20px),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.55 0 0 0 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)'/%3E%3C/svg%3E"),
+        repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.05) 0 10px, transparent 10px 20px),
         var(--fond-paquet);
-    background-size: 100% 100%;
+    background-size: 140px 140px, 100% 100%, 100% 100%;
 }
 .paquet-haut {
     top: 0;
-    height: 13%;
+    height: 9%;
+    background:
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.22) 0 1.5px, rgba(0, 0, 0, 0.16) 1.5px 3.5px),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 45%, rgba(0, 0, 0, 0.2)),
+        var(--fond-paquet);
     border-radius: 10px 10px 3px 3px;
     border-bottom: 2px dashed rgba(255, 255, 255, 0.45);
     -webkit-mask: linear-gradient(#000 0 0) bottom / 100% calc(100% - 7px) no-repeat,
@@ -285,52 +291,108 @@ main {
     filter: brightness(0.9);
 }
 .paquet-corps {
-    top: 13%;
+    top: 9%;
     bottom: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-between;
-    padding: 12% 10% 14%;
+    padding: 12% 10% 13%;
     border-radius: 3px 3px 10px 10px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
     -webkit-mask: linear-gradient(#000 0 0) top / 100% calc(100% - 7px) no-repeat,
                   conic-gradient(from -45deg at 50% 100%, #000 90deg, transparent 0) bottom / 10px 7px repeat-x;
             mask: linear-gradient(#000 0 0) top / 100% calc(100% - 7px) no-repeat,
                   conic-gradient(from -45deg at 50% 100%, #000 90deg, transparent 0) bottom / 10px 7px repeat-x;
 }
+/* Relief du sachet : bords plus sombres (il est bombé au centre) et reflets brillants de la feuille */
+.paquet-corps::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(90deg, rgba(0, 0, 0, 0.3), transparent 6%, transparent 94%, rgba(0, 0, 0, 0.3)),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 16%, transparent 80%, rgba(0, 0, 0, 0.32)),
+        linear-gradient(100deg, transparent 16%, rgba(255, 255, 255, 0.3) 22%, transparent 29%,
+            transparent 63%, rgba(255, 255, 255, 0.14) 69%, transparent 75%);
+}
+/* Soudure du bas : bande striée au-dessus des dents */
+.paquet-corps::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 6%;
+    pointer-events: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.25);
+    background:
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0 1.5px, rgba(0, 0, 0, 0.16) 1.5px 3.5px),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.18));
+}
+/* Logo en relief métallique, dans la couleur du paquet */
 .paquet-marque {
     font-size: clamp(1.6rem, 2.6vw, 2.1rem);
     font-weight: 900;
     line-height: 0.95;
     letter-spacing: -0.03em;
     text-align: center;
-    text-shadow: 0 3px 0 rgba(0, 0, 0, 0.18);
+    /* Relief embossé : arête claire au-dessus, épaisseur sombre en dessous, léger halo */
+    text-shadow:
+        0 -1px 0 rgba(255, 255, 255, 0.55),
+        0 2px 0 color-mix(in srgb, currentColor 55%, #000),
+        0 4px 6px rgba(0, 0, 0, 0.35),
+        0 0 14px rgba(255, 255, 255, 0.25);
 }
-/* Deux cartes stylisées au centre du paquet */
+/* Éventail de cartes au centre du paquet, avec une étoile sur celle de devant */
 .paquet-embleme {
     position: relative;
-    width: 38%;
+    width: 40%;
     aspect-ratio: 5 / 7;
+    filter: drop-shadow(0 0 16px rgba(255, 255, 255, 0.3));
 }
 .paquet-embleme::before, .paquet-embleme::after {
     content: '';
     position: absolute;
     inset: 0;
-    border-radius: 6px;
+    border-radius: 7px;
     border: 2.5px solid currentColor;
-    opacity: 0.85;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3), inset 0 0 0 3px rgba(255, 255, 255, 0.1);
 }
-.paquet-embleme::before { transform: rotate(-12deg) translateX(-14%); opacity: 0.45; }
-.paquet-embleme::after { transform: rotate(8deg) translateX(10%); background: rgba(255, 255, 255, 0.14); }
+.paquet-embleme::before {
+    transform: rotate(-14deg) translateX(-18%);
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04));
+    opacity: 0.6;
+}
+.paquet-embleme::after {
+    content: '★';
+    display: grid;
+    place-items: center;
+    font-size: 2.2rem;
+    transform: rotate(8deg) translateX(12%);
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.08) 60%, rgba(255, 255, 255, 0.18));
+}
 .paquet-type {
     padding: 0.3rem 0.85rem;
     border-radius: 999px;
-    background: rgba(0, 0, 0, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: rgba(0, 0, 0, 0.24);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
     font-size: 0.85rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     white-space: nowrap;
+}
+/* Mention imprimée en petit, comme sur un vrai sachet */
+.paquet-mention {
+    margin-top: -0.4rem;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    opacity: 0.75;
 }
 .paquet-premium .paquet-type { background: rgba(255, 255, 255, 0.35); }
 
@@ -341,7 +403,10 @@ main {
     inset: 0;
     border-radius: 10px;
     pointer-events: none;
-    background: radial-gradient(circle at var(--mx, 50%) var(--my, 30%), rgba(255, 255, 255, 0.45), transparent 45%);
+    background:
+        radial-gradient(circle at var(--mx, 50%) var(--my, 30%), rgba(255, 255, 255, 0.5), transparent 42%),
+        linear-gradient(115deg, transparent 30%, rgba(255, 110, 210, 0.35) 42%, rgba(110, 230, 255, 0.35) 50%,
+            rgba(255, 240, 130, 0.35) 58%, transparent 70%) var(--mx, 50%) 0 / 250% 100% no-repeat;
     mix-blend-mode: overlay;
     opacity: 0;
     transition: opacity 0.3s;
@@ -506,7 +571,7 @@ main {
 /* Indication du geste : un point lumineux glisse le long de la ligne de découpe */
 .geste-dechirer {
     position: absolute;
-    top: 13%;
+    top: 9%;
     left: 6%;
     right: 6%;
     height: 0;

@@ -83,6 +83,7 @@ const EN = {
     'Ancienneté': 'Age',
     'Normale': 'Regular',
     'booster': 'booster',
+    '5 cartes': '5 cards',
 
     // Menu, en-tête, pied de page
     'Jeu de cartes à collectionner où chaque carte est un vrai jeu vidéo.': 'A collectible card game where every card is a real video game.',
