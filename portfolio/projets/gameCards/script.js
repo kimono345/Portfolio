@@ -175,6 +175,8 @@ const PLAFONNES_EPIQUE = [
     251570,  // 7 Days to Die
     990080,  // Hogwarts Legacy
     1063730, // New World: Aeternum
+    2669320, // EA SPORTS FC 25
+    3405690, // EA SPORTS FC 26
     960090,  // Bloons TD 6
     322330,  // Don't Starve Together
     700330,  // SCP: Secret Laboratory
