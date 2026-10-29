@@ -57,7 +57,7 @@ const PRIX_BOOSTER = 0;
 // quand il n'en reste plus, on peut en acheter (`prix` pièces). `paquet` : le paquet de l'accueil.
 const TYPES_BOOSTER = {
     standard: { id: 'standard', nom: 'booster', prix: PRIX_BOOSTER, recharge: 10 * 60 * 1000, stockMax: 10, paquet: '#paquet-gratuit' },
-    prestige: { id: 'prestige', nom: 'Prestige', prix: 250, recharge: 24 * 60 * 60 * 1000, stockMax: 1, prestige: true, paquet: '#paquet-prestige' },
+    prestige: { id: 'prestige', nom: 'Prestige', prix: 0, recharge: 24 * 60 * 60 * 1000, stockMax: 1, prestige: true, paquet: '#paquet-prestige' },
 };
 const CHANCE_HOLO = 0.02;
 const MULTIPLICATEUR_HOLO = 3;
