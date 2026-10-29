@@ -385,6 +385,31 @@ main {
 .paquet.verrouille .paquet-corps > * { opacity: 0.15; }
 .paquet.verrouille .paquet-verrou { display: flex; }
 
+/* ── Boosters spéciaux ── */
+.speciaux { margin: 0 0 clamp(2.5rem, 6vw, 4rem); }
+.speciaux-tete { text-align: center; margin-bottom: 1.8rem; }
+.speciaux-tete p { color: var(--texte-doux); margin-top: 0.3rem; }
+.speciaux-liste {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1.8rem 1rem;
+    justify-items: center;
+}
+.emplacement-special { gap: 0.7rem; }
+.paquet-mini { width: 128px; }
+.paquet-mini .paquet-corps { padding: 12% 8% 14%; }
+.paquet-mini .paquet-marque { font-size: 1.05rem; line-height: 1.05; overflow-wrap: anywhere; }
+.paquet-mini .paquet-type { font-size: 0.68rem; padding: 0.2rem 0.55rem; }
+.paquet-mini .paquet-verrou b { font-size: 0.85rem; padding: 0.1rem 0.45rem; }
+.paquet-mini .paquet-verrou .piece { font-size: 1.3rem; }
+.emplacement-special .legende-paquet { font-size: 0.8rem; text-align: center; max-width: 150px; line-height: 1.35; }
+.emplacement-special .legende-paquet span { color: var(--texte); font-family: 'Space Mono', monospace; font-size: 0.75rem; }
+/* Prestige : liseré doré et lueur plus forte */
+.paquet-prestige .paquet-corps, .paquet-prestige .paquet-haut { box-shadow: inset 0 0 0 1.5px rgba(246, 220, 138, 0.55); }
+.paquet-prestige .paquet-type { background: rgba(246, 220, 138, 0.18); }
+/* Un paquet ouvert reprend la taille normale */
+.paquet.paquet-seul { width: clamp(200px, 50vw, 260px); }
+
 /* ── Progression ── */
 .progression {
     padding: 1.3rem 1.4rem;
@@ -444,9 +469,82 @@ main {
    ========================================================= */
 
 .ouverture { display: flex; flex-direction: column; align-items: center; }
-.ouverture-scene { display: grid; place-items: center; min-height: 440px; }
+.ouverture-scene { display: grid; place-items: center; min-height: 500px; padding: 1rem 0; }
 .ouverture-scene:empty { display: none; }
-.paquet-seul { width: clamp(200px, 50vw, 260px); cursor: default; }
+.paquet-seul { width: clamp(200px, 50vw, 260px); cursor: grab; touch-action: none; }
+.paquet-seul:active { cursor: grabbing; }
+
+/* Indication du geste : un point lumineux glisse le long de la ligne de découpe */
+.geste-dechirer {
+    position: absolute;
+    top: 13%;
+    left: 6%;
+    right: 6%;
+    height: 0;
+    pointer-events: none;
+}
+.geste-dechirer i {
+    position: absolute;
+    top: -9px;
+    left: 0;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 12px 4px rgba(255, 255, 255, 0.8);
+    animation: geste-dechirer 1.6s ease-in-out infinite;
+}
+.paquet-seul.secoue .geste-dechirer, .paquet-seul.dechire .geste-dechirer { display: none; }
+
+/* ── Pile de cartes ── */
+.pile {
+    position: relative;
+    isolation: isolate;
+    width: clamp(230px, 72vw, 310px);
+    aspect-ratio: 5 / 7;
+    margin-bottom: 30px;
+}
+.pile-carte {
+    position: absolute;
+    inset: 0;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    /* Les cartes du dessous dépassent un peu, de plus en plus petites */
+    transform: translateY(calc(var(--rang, 0) * 7px)) scale(calc(1 - var(--rang, 0) * 0.035));
+    transition: transform 0.3s ease, translate 0.25s ease, rotate 0.25s ease, opacity 0.3s;
+}
+.pile-carte .carte { pointer-events: none; }
+.pile-carte.saisie { transition: none; cursor: grabbing; }
+.pile-carte.envolee {
+    translate: calc(var(--sens, 1) * 110vw) -8vh;
+    rotate: calc(var(--sens, 1) * 32deg);
+    opacity: 0;
+    transition: translate 0.3s ease-in, rotate 0.3s ease-in, opacity 0.3s ease-in;
+}
+.pile-carte .badge-nouvelle { z-index: 4; }
+.pile-carte.apparition-rare { animation: apparition-rare 0.7s cubic-bezier(0.2, 0.8, 0.3, 1.2); }
+
+/* Suspense : la pile brille de la couleur de la carte rare qui arrive */
+.pile.annonce::before {
+    content: '';
+    position: absolute;
+    inset: -18px;
+    z-index: -1;
+    border-radius: 28px;
+    background: var(--rar-fond, var(--rar));
+    filter: blur(22px);
+    animation: annonce 0.9s ease-in-out infinite alternate;
+}
+.pile.pile-divine::after {
+    content: '';
+    position: absolute;
+    inset: -12px;
+    z-index: -2;
+    border-radius: 26px;
+    background: radial-gradient(circle, rgba(255, 220, 130, 0.55), transparent 70%);
+    filter: blur(14px);
+}
 .paquet-seul.secoue { animation: secoue 0.25s ease-in-out infinite; }
 .paquet-seul.dechire .paquet-haut { animation: haut-arrache 0.55s cubic-bezier(0.3, 0, 0.7, 1) forwards; }
 .paquet-seul.dechire .paquet-corps { animation: corps-tombe 0.55s 0.1s ease-in forwards; }
@@ -1445,7 +1543,21 @@ main {
     25% { rotate: -3deg; translate: -3px -2px; }
     75% { rotate: 3deg; translate: 3px -2px; }
 }
-@keyframes haut-arrache { to { transform: translate(60px, -140px) rotate(28deg); opacity: 0; } }
+@keyframes haut-arrache { to { transform: translate(calc(var(--sens, 1) * 60px), -140px) rotate(calc(var(--sens, 1) * 28deg)); opacity: 0; } }
+@keyframes geste-dechirer {
+    0% { left: 0; opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: 1; }
+    100% { left: calc(100% - 18px); opacity: 0; }
+}
+@keyframes apparition-rare {
+    0% { scale: 0.85; filter: brightness(2.4) drop-shadow(0 0 40px #fff); }
+    100% { scale: 1; filter: none; }
+}
+@keyframes annonce {
+    from { opacity: 0.45; transform: scale(0.97); }
+    to { opacity: 1; transform: scale(1.04); }
+}
 @keyframes corps-tombe { to { transform: translateY(80px) scale(0.92); opacity: 0; } }
 @keyframes arrivee { from { transform: translateY(50px) scale(0.8); opacity: 0; } }
 @keyframes eclat-epique { from { box-shadow: 0 0 0 0 rgba(163, 82, 255, 0.9), 0 0 60px rgba(163, 82, 255, 0.8); } }
@@ -1458,6 +1570,9 @@ main {
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+    /* Sans animation, le titre du god pack reste affiché tel quel, sans pluie d’étincelles */
+    .titre-godpack { animation: none !important; transform: translate(-50%, -50%); }
+    .etincelles { display: none; }
     html { scroll-behavior: auto; }
 }
 
@@ -1506,7 +1621,10 @@ main {
     .paquet-verrou b { font-size: 1.05rem; }
     .legende-paquet { font-size: 0.8rem; text-align: center; max-width: 40vw; }
 
-    .ouverture-scene { min-height: 360px; }
+    .ouverture-scene { min-height: 440px; }
+    .speciaux-liste { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 1.4rem 0.6rem; }
+    .paquet-mini { width: 108px; }
+    .paquet-mini .paquet-marque { font-size: 0.9rem; }
     .tirage { grid-template-columns: repeat(6, minmax(0, 1fr)); max-width: 440px; margin-left: auto; margin-right: auto; }
     .tirage .flip { grid-column: span 2; }
     .tirage .flip:nth-child(4) { grid-column: 2 / span 2; }

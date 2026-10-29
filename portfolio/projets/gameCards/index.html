@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=37">
+    <link rel="stylesheet" href="style.css?v=40">
 </head>
 <body>
 
@@ -106,6 +106,14 @@
                     </div>
                 </div>
 
+                <div class="speciaux">
+                    <div class="speciaux-tete">
+                        <h2>Boosters spéciaux</h2>
+                        <p>Le Prestige pour de meilleures chances, ou un thème pour viser tes jeux préférés.</p>
+                    </div>
+                    <div class="speciaux-liste" id="boosters-speciaux"></div>
+                </div>
+
                 <div class="progression">
                     <div class="progression-tete">
                         <h2>Ta progression</h2>
@@ -131,8 +139,8 @@
                 <div class="tirage" id="tirage"></div>
                 <!-- Pour un ×10, cette barre reste collée en haut de l'écran (en bas sur mobile) -->
                 <div class="ouverture-actions" id="ouverture-actions">
-                    <p class="ouverture-aide" id="ouverture-aide">Clique sur les cartes pour les retourner</p>
-                    <button class="btn btn-principal" id="btn-tout-retourner">Tout retourner</button>
+                    <p class="ouverture-aide" id="ouverture-aide" aria-live="polite">Glisse sur le haut du paquet pour l’ouvrir</p>
+                    <button class="btn" id="btn-passer">Passer</button>
                     <div class="bilan" id="bilan" hidden></div>
                     <button class="btn btn-principal" id="btn-autre" hidden>Ouvrir un autre booster</button>
                     <button class="btn btn-or" id="btn-autre-x10" hidden>Ouvrir ×10</button>
@@ -285,6 +293,10 @@
                     <p>5 cartes. Les 4 premières suivent la colonne « Chance », la 5ᵉ est garantie Peu commune ou mieux et suit la colonne « 5ᵉ carte ». La rareté est tirée d’abord, puis le jeu au hasard dans cette rareté. Un gratuit toutes les 10 minutes, ou 50 pièces.</p>
                 </article>
                 <article>
+                    <h3>🎁 Boosters spéciaux</h3>
+                    <p>Prestige (250 pièces) : 4 premières cartes à 0,5 % Mythique, 3 % Légendaire, 10 % Épique, 25 % Rare, et la 5ᵉ Rare ou mieux ; 8 % de holos. Thématiques (60 pièces) : RPG, Horreur, Course & Sport, Anime, Indé, Multijoueur, Science-fiction, Adulte 18+ (contenu sexuel ou nudité), avec les chances normales mais seulement parmi les jeux du thème.</p>
+                </article>
+                <article>
                     <h3>✨ Holo</h3>
                     <p>2 % de chance par carte. Une holo se revend 3 fois plus cher.</p>
                 </article>
@@ -298,7 +310,7 @@
                 </article>
                 <article>
                     <h3>✨ God pack</h3>
-                    <p>Un booster sur 2 000 est un god pack : 5 Légendaires ou Mythiques (dont au moins une Mythique), toutes holo. Le paquet devient doré à l’ouverture, impossible de le rater.</p>
+                    <p>Un booster sur 2 000 est un god pack : 5 Légendaires ou Mythiques (dont au moins une Mythique), avec 25 % de chance par carte d’être holo au lieu de 2 %. Le paquet devient doré à l’ouverture, impossible de le rater.</p>
                 </article>
                 <article>
                     <h3>🏅 GOTY</h3>
@@ -339,6 +351,6 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="script.js?v=36"></script>
+    <script src="script.js?v=41"></script>
 </body>
 </html>
