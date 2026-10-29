@@ -1108,7 +1108,7 @@ main {
 .carte.rarete-mythique::before, .carte.rarete-legendaire::before { z-index: 0; }
 .carte.rarete-mythique .carte-corps, .carte.rarete-legendaire .carte-corps { position: relative; z-index: 1; }
 
-/* ── Full Art : illustration sur toute la carte, voile irisé pastel, texte sur un dégradé sombre ── */
+/* ── Full Art : illustration sur toute la carte, sans voile, texte sur un dégradé sombre ── */
 .full-art-fond { position: absolute; inset: 0; z-index: 0; overflow: hidden; border-radius: inherit; }
 .full-art-fond img { width: 100%; height: 100%; object-fit: cover; }
 /* Image horizontale de secours : agrandie et un peu floutée pour remplir la carte */
@@ -1118,14 +1118,6 @@ main {
     position: absolute;
     inset: 0;
     background: linear-gradient(180deg, rgba(8, 6, 20, 0.55) 0%, transparent 18%, transparent 42%, rgba(8, 6, 20, 0.88) 72%);
-}
-.full-art-fond::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(125deg,
-        rgba(255, 160, 210, 0.38), rgba(170, 215, 255, 0.3) 30%, rgba(190, 255, 220, 0.28) 55%,
-        rgba(255, 225, 160, 0.32) 80%, rgba(255, 170, 220, 0.35));
 }
 .carte.full-art .carte-corps { background: #0b0d17; }
 .carte.full-art .carte-corps > :not(.full-art-fond):not(.ruban-goty):not(.filigrane-goty) { position: relative; z-index: 1; }
@@ -1549,22 +1541,22 @@ main {
 }
 .pom-choix:hover:not(:disabled) { transform: translateY(-6px); }
 .pom-choix:disabled { cursor: default; }
-/* La rareté donnerait la réponse (elle vient des avis) : cartes neutres, sans cadre ni distinction */
-.pom-choix .carte {
+/* Carte aux stats cachées (adversaire du duel, Plus ou moins) : la rareté donnerait un indice, on la neutralise */
+.carte.stats-cachees {
     --rar: var(--texte-doux);
     background: var(--fond-4);
     padding: 4px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     animation: none;
 }
-.pom-choix .carte::before,
-.pom-choix .carte-rarete,
-.pom-choix .ruban-goty,
-.pom-choix .filigrane-goty,
-.pom-choix .carte .carte-corps::before { display: none; }
-.pom-choix .carte .carte-image { box-shadow: none; }
-.pom-choix .carte .carte-corps { background: linear-gradient(180deg, var(--fond-3), var(--fond-2)); box-shadow: none; }
-.pom-choix .carte .carte-nom { font-family: inherit; color: var(--texte); text-shadow: none; }
+.carte.stats-cachees::before,
+.carte.stats-cachees .carte-rarete,
+.carte.stats-cachees .ruban-goty,
+.carte.stats-cachees .filigrane-goty,
+.carte.stats-cachees .carte-corps::before { display: none; }
+.carte.stats-cachees .carte-image { box-shadow: none; }
+.carte.stats-cachees .carte-corps { background: linear-gradient(180deg, var(--fond-3), var(--fond-2)); box-shadow: none; }
+.carte.stats-cachees .carte-nom { font-family: inherit; color: var(--texte); text-shadow: none; }
 .pom-choix.bonne .carte { box-shadow: 0 0 0 3px var(--vert), 0 0 30px rgba(63, 191, 111, 0.55); }
 .pom-choix.mauvaise { opacity: 0.55; }
 .pom-valeur {

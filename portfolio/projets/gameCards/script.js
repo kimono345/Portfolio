@@ -380,6 +380,8 @@ function sauvegarder() {
 
 // Popularité sur une échelle logarithmique : 1 avis → 0, 1 000 → 50, 1 million → 100
 const popularite = avis => Math.max(0, Math.min(100, Math.round(Math.log10(Math.max(1, avis)) * 100 / 6)));
+// Stat Popularité d'une carte, gardée en mémoire sur le jeu (le tri du catalogue la demande pour 115 000 jeux)
+const statPopularite = jeu => (jeu.statPopularite ??= statDeJeu(popularite(jeu.avis), jeu.rarete));
 
 // Note public lissée : on fait comme si chaque jeu avait déjà 10 avis à la note moyenne (76 %).
 // 1 avis à 100 % donne 78, mais 10 000 avis à 95 % gardent 95.
@@ -511,7 +513,7 @@ function creerCarte(jeu) {
         attaque: statDeJeu(notePublic(jeu.note, jeu.avis), jeu.rarete, 50),
         // Stat « joker » : la vraie ancienneté, sans lien avec la rareté (une vieille Commune peut battre une Mythique récente)
         anciennete: anciennete(jeu.annee),
-        popularite: statDeJeu(popularite(jeu.avis), jeu.rarete),
+        popularite: statPopularite(jeu),
         // Vraies données, affichées sur la fiche à côté des stats de jeu
         noteReelle: jeu.note,
         avis: jeu.avis,
@@ -1381,7 +1383,8 @@ function afficherFiche(id) {
 const TRIS_CATALOGUE = {
     // Par défaut : de la plus rare à la plus commune, puis par score de prestige dans chaque rareté
     rarete: (a, b) => indexRarete(a.rarete) - indexRarete(b.rarete) || b.prestige - a.prestige,
-    popularite: null, // data/jeux.json est déjà trié du plus au moins populaire
+    // Stat Popularité de la carte (dans la fourchette de sa rareté), pas le nombre d'avis brut
+    popularite: (a, b) => statPopularite(b) - statPopularite(a) || b.avis - a.avis,
     note: (a, b) => notePublic(b.note, b.avis) - notePublic(a.note, a.avis),
     metacritic: (a, b) => (b.metacritic ?? -1) - (a.metacritic ?? -1),
     recent: (a, b) => (b.annee || 0) - (a.annee || 0),
