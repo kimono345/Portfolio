@@ -128,6 +128,24 @@ const CORRECTIONS = {
     1002300: { avis: 23064, note: 94 },       // Fear & Hunger
     3314790: { avis: 26523, note: 90 },       // CloverPit
     1941540: { avis: 31017, note: 73 },       // Mafia: The Old Country
+    3350200: { avis: 50543, note: 80 },       // Revenge on gold diggers
+    3101040: { avis: 35225, note: 96 },       // Magical Girl Witch Trials
+    1034140: { avis: 15813, note: 67 },       // Subverse
+    3716600: { avis: 20485, note: 91 },       // Mage Arena
+    2062430: { avis: 27718, note: 95 },       // BALL x PIT
+    2661300: { avis: 25276, note: 82 },       // Grounded 2
+    3551340: { avis: 36551, note: 36 },       // Football Manager 26
+    3595270: { avis: 24270, note: 48 },       // Call of Duty: Modern Warfare III
+    1430190: { avis: 24015, note: 44 },       // Killing Floor 3
+    1154030: { avis: 18505, note: 81 },       // Titan Quest II
+    2947440: { avis: 30000, note: 81 },       // SILENT HILL f (≈)
+    2352620: { avis: 17670, note: 75 },       // Fellowship
+    1984270: { avis: 22886, note: 89 },       // Digimon Story Time Stranger
+    2171440: { avis: 15700, note: 97 },       // Fear & Hunger 2: Termina
+    2119830: { avis: 26600, note: 84 },       // MISERY (≈)
+    1601570: { avis: 20116, note: 90 },       // The Alters
+    2444750: { avis: 21407, note: 90 },       // Shape of Dreams
+    2429640: { avis: 68963, note: 67 },       // Throne and Liberty
 };
 
 // Jeux sans avis : on écarte ce qui n'est pas un jeu complet (démos, playtests, bandes-son, serveurs…)
