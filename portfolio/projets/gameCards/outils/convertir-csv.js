@@ -101,7 +101,33 @@ const col = Object.fromEntries(entete.map((nom, i) => [nom, i]));
 // (à lire sur la page Steam du jeu). Format : identifiant: { avis: total des avis, note: % d'avis positifs }
 const CORRECTIONS = {
     // 1223750: { avis: 0, note: 0 }, // Cloud Meadow : à remplir avec les chiffres de sa page Steam
-    2357570: { avis: 5523, note: 57 },
+    2357570: { avis: 429544, note: 32 },
+    3764200: { avis: 109711, note: 95 }, // Resident Evil Requiem
+    1030300: { avis: 426230, note: 90 },      // Hollow Knight: Silksong
+    2807960: { avis: 376204, note: 63 },      // Battlefield 6
+    3527290: { avis: 380967, note: 94 },      // PEAK
+    1808500: { avis: 429211, note: 82 },      // ARC Raiders
+    2592160: { avis: 185636, note: 97 },      // Dispatch
+    2669320: { avis: 107154, note: 53 },      // EA SPORTS FC 25
+    3405340: { avis: 107215, note: 94 },      // Megabonk
+    3167020: { avis: 104941, note: 84 },      // Escape From Duckov
+    1172710: { avis: 80900, note: 72 },       // Dune: Awakening
+    3489700: { avis: 95756, note: 93 },       // Stellar Blade
+    3949040: { avis: 89813, note: 90 },       // RV There Yet?
+    1285190: { avis: 87239, note: 58 },       // Borderlands 4
+    3008130: { avis: 73193, note: 86 },       // Dying Light: The Beast
+    2277560: { avis: 106936, note: 57 },      // WUCHANG: Fallen Feathers
+    3932890: { avis: 68044, note: 50 },       // Escape from Tarkov
+    2138720: { avis: 56837, note: 69 },       // REMATCH
+    3405690: { avis: 109955, note: 51 },      // EA SPORTS FC 26
+    3159330: { avis: 40682, note: 75 },       // Assassin’s Creed Shadows
+    1948280: { avis: 30529, note: 96 },       // Stacklands
+    1604270: { avis: 36465, note: 54 },       // Broken Arrow
+    3180070: { avis: 31622, note: 93 },       // No, I’m not a Human
+    3450310: { avis: 29794, note: 67 },       // Europa Universalis V
+    1002300: { avis: 23064, note: 94 },       // Fear & Hunger
+    3314790: { avis: 26523, note: 90 },       // CloverPit
+    1941540: { avis: 31017, note: 73 },       // Mafia: The Old Country
 };
 
 // Jeux sans avis : on écarte ce qui n'est pas un jeu complet (démos, playtests, bandes-son, serveurs…)

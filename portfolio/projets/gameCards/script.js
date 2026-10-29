@@ -149,6 +149,8 @@ const CULTES_LEGENDAIRES = [
     22330,   // The Elder Scrolls IV: Oblivion (GOTY Edition)
     268910,  // Cuphead
     2357570, // Overwatch 2
+    304240,  // Resident Evil (le premier)
+    3764200, // Resident Evil Requiem
     620980,  // Beat Saber
     698780,  // Doki Doki Literature Club!
     646570,  // Slay the Spire
@@ -217,7 +219,7 @@ const CULTES_EPIQUES = [
 
 // Stats réglées à la main, quand les données Steam ne reflètent pas le jeu
 const STATS_FORCEES = {
-    2357570: { attaque: 75, popularite: 88 }, // Overwatch 2 : le CSV date d'avant sa sortie sur Steam
+    //2357570: { attaque: 75, popularite: 88 }, // Overwatch 2 : le CSV date d'avant sa sortie sur Steam
     72850: { attaque: 84 },                   // The Elder Scrolls V: Skyrim (2011)
 };
 
@@ -404,6 +406,7 @@ const notePublic = (note, avis) => Math.round((note * avis + NOTE_MOYENNE * POID
 // moitié selon le rang (plus ancien que X % du catalogue). Le rang seul tasserait tous les jeux
 // d'avant 2012 vers 100, l'âge seul tasserait les jeux récents vers 0.
 let ancienneteParAnnee = {};
+let premiereAnnee = Infinity;
 
 function calculerAnciennete() {
     const parAnnee = {};
@@ -411,6 +414,7 @@ function calculerAnciennete() {
     const annees = Object.keys(parAnnee).map(Number).sort((a, b) => a - b);
     const total = annees.reduce((n, a) => n + parAnnee[a], 0);
     const [plusAncienne, plusRecente] = [annees[0], annees.at(-1)];
+    premiereAnnee = plusAncienne;
     let plusRecents = total;
     ancienneteParAnnee = {};
     for (const annee of annees) {
@@ -421,12 +425,17 @@ function calculerAnciennete() {
     }
 }
 
-const anciennete = annee => ancienneteParAnnee[annee] ?? 0;
+const anciennete = annee => ancienneteParAnnee[annee] ?? (annee < premiereAnnee ? 100 : 0);
 // Les rééditions lauréates d'un GOTY (GTA IV, Resident Evil 4, Skyrim SE…) comptent depuis l'année du prix,
 // pas depuis la sortie de leur version Steam
 // sauf les remakes, qui sont presque de nouveaux jeux
 const REMAKES_GOTY = [2623190]; // Oblivion Remastered
-const anneeOriginale = jeu => GOTY[jeu.id] && !REMAKES_GOTY.includes(jeu.id) ? Math.min(GOTY[jeu.id][0], jeu.annee ?? Infinity) : jeu.annee;
+// Rééditions dont l'ancienneté compte depuis la sortie du jeu d'origine, saisie à la main
+const ANNEES_ORIGINALES = {
+    304240: 1996, // Resident Evil (HD Remaster de 2015)
+};
+const anneeOriginale = jeu => ANNEES_ORIGINALES[jeu.id]
+    ?? (GOTY[jeu.id] && !REMAKES_GOTY.includes(jeu.id) ? Math.min(GOTY[jeu.id][0], jeu.annee ?? Infinity) : jeu.annee);
 
 const echelleLog = (valeur, max) => Math.max(0, Math.min(100, Math.log10(Math.max(1, valeur)) * 100 / Math.log10(max)));
 
@@ -639,7 +648,7 @@ const aLeGenre = (carte, valeur) => DISTINCTIONS[valeur]
 // ---------- Données ----------
 
 async function chargerJeux() {
-    const reponse = await fetch('data/jeux.json?v=6');
+    const reponse = await fetch('data/jeux.json?v=8');
     if (!reponse.ok) throw new Error(`data/jeux.json introuvable (${reponse.status})`);
     // Format compact (voir outils/convertir-csv.js) : un tableau par jeu, genres et thèmes codés en caractères
     const { genres, tags, jeux, groupesTags: groupes, estimes = [] } = await reponse.json();
