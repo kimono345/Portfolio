@@ -31,7 +31,7 @@ const RARETES = [
 const CHANCE_HOLO_PRESTIGE = 0.08; // contre 2 % dans un booster normal
 
 // Full Art : variante des Légendaires et Mythiques (illustration sur toute la carte). Jamais holo en même temps.
-const CHANCE_FULL_ART = 1;
+const CHANCE_FULL_ART = 0.10;
 const CHANCE_FULL_ART_GOD_PACK = 0.30;
 const MULTIPLICATEUR_FULL_ART = 5; // revente
 
