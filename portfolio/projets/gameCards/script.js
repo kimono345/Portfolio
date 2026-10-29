@@ -11,49 +11,20 @@
 //   `chance`          : les 4 premières cartes d'un booster
 //   `chanceGarantie`  : la 5ᵉ carte, garantie Peu commune ou mieux, avec sa propre table pour ne pas
 //                       servir de raccourci vers les hautes raretés
+//   `chancePrestige`  : les 4 premières cartes d'un Prestige (Peu commune ou mieux)
+//   `chancePrestigeGarantie` : la 5ᵉ carte d'un Prestige (Épique ou mieux)
 //   `chanceDuel`      : les cartes tirées en duel (toi et l'ordinateur)
+// Chaque colonne de chances doit faire 100 au total ; 0 interdit la rareté.
 // `prix` : achat direct dans le catalogue, volontairement bien plus cher que la chance en boosters.
 const RARETES = [
-    { id: 'mythique',    nom: 'Mythique',    seuil: 750000, chance: 0.1,  chanceGarantie: 0.1, chanceDuel: 3,  revente: 300, prix: 10000 },
-    { id: 'legendaire',  nom: 'Légendaire',  seuil: 200000, chance: 0.5,  chanceGarantie: 0.9, chanceDuel: 7,  revente: 100, prix: 4000 },
-    { id: 'epique',      nom: 'Épique',      seuil: 60000,  chance: 3,    chanceGarantie: 19,  chanceDuel: 12, revente: 40,  prix: 1500 },
-    { id: 'rare',        nom: 'Rare',        seuil: 12000,  chance: 6,    chanceGarantie: 30,   chanceDuel: 18, revente: 15,  prix: 600 },
-    { id: 'peu-commune', nom: 'Peu commune', seuil: 3000,   chance: 18,   chanceGarantie: 50,   chanceDuel: 25, revente: 5,   prix: 250 },
-    { id: 'commune',     nom: 'Commune',     seuil: 0,      chance: 72.4, chanceGarantie: 0,    chanceDuel: 35, revente: 2,   prix: 100 },
+    { id: 'mythique',    nom: 'Mythique',    seuil: 750000, chance: 0.1,  chanceGarantie: 0.1, chancePrestige: 0.2,  chancePrestigeGarantie: 1,  chanceDuel: 3,  revente: 300, prix: 10000 },
+    { id: 'legendaire',  nom: 'Légendaire',  seuil: 200000, chance: 0.5,  chanceGarantie: 0.9, chancePrestige: 1,    chancePrestigeGarantie: 5,  chanceDuel: 7,  revente: 100, prix: 4000 },
+    { id: 'epique',      nom: 'Épique',      seuil: 60000,  chance: 3,    chanceGarantie: 19,  chancePrestige: 6,    chancePrestigeGarantie: 94, chanceDuel: 12, revente: 40,  prix: 1500 },
+    { id: 'rare',        nom: 'Rare',        seuil: 12000,  chance: 6,    chanceGarantie: 30,  chancePrestige: 22.8, chancePrestigeGarantie: 0,  chanceDuel: 18, revente: 15,  prix: 600 },
+    { id: 'peu-commune', nom: 'Peu commune', seuil: 3000,   chance: 18,   chanceGarantie: 50,  chancePrestige: 70,   chancePrestigeGarantie: 0,  chanceDuel: 25, revente: 5,   prix: 250 },
+    { id: 'commune',     nom: 'Commune',     seuil: 0,      chance: 72.4, chanceGarantie: 0,   chancePrestige: 0,    chancePrestigeGarantie: 0,  chanceDuel: 35, revente: 2,   prix: 100 },
 ];
-// Booster Prestige : ses propres chances, dans l'ordre de RARETES
-// (4 premières cartes, puis 5ᵉ carte garantie Rare ou mieux)
-[[0.5, 1], [3, 6], [10, 23], [25, 70], [30, 0], [31.5, 0]].forEach(([chance, garantie], i) => {
-    RARETES[i].chancePrestige = chance;
-    RARETES[i].chancePrestigeGarantie = garantie;
-});
 const CHANCE_HOLO_PRESTIGE = 0.08; // contre 2 % dans un booster normal
-
-// Boosters spéciaux : le Prestige (meilleures chances) et des thématiques (seulement les jeux d'un genre ou d'un thème).
-// `fond`, `texte` et `ombre` habillent le paquet. Les jeux de chaque thème sont rangés par rareté au chargement.
-const BOOSTERS_SPECIAUX = [
-    { id: 'prestige', nom: 'Prestige', prix: 250, prestige: true, description: 'Rare ou mieux garantie, 4× plus de holos',
-      fond: 'linear-gradient(160deg, #15100a 0%, #3a2a10 50%, #b8862b 100%)', texte: '#f6dc8a', ombre: 'rgba(230, 170, 50, 0.5)' },
-    { id: 'rpg', nom: 'RPG', prix: 60, description: 'Que des jeux de rôle', filtre: j => j.genres.includes('RPG'),
-      fond: 'linear-gradient(160deg, #2b1f6b, #6a3cff 55%, #c58bff)', texte: '#fff', ombre: 'rgba(106, 60, 255, 0.45)' },
-    { id: 'horreur', nom: 'Horreur', prix: 60, description: 'Frissons garantis', filtre: j => j.tags.includes('Horreur'),
-      fond: 'linear-gradient(160deg, #0d1410, #2a3d26 55%, #7a1f1f)', texte: '#e8f0e0', ombre: 'rgba(122, 31, 31, 0.5)' },
-    { id: 'course-sport', nom: 'Course & Sport', prix: 60, description: 'Vitesse et compétition',
-      filtre: j => j.genres.includes('Course') || j.genres.includes('Sport'),
-      fond: 'linear-gradient(160deg, #0a4fa8, #1fb5ff 55%, #ffd23f)', texte: '#fff', ombre: 'rgba(31, 181, 255, 0.45)' },
-    { id: 'anime', nom: 'Anime', prix: 60, description: 'Style japonais', filtre: j => j.tags.includes('Anime'),
-      fond: 'linear-gradient(160deg, #ff5fa2, #ffb3d9 55%, #9ad8ff)', texte: '#3a1030', ombre: 'rgba(255, 95, 162, 0.45)' },
-    { id: 'inde', nom: 'Indé', prix: 60, description: 'Les pépites indépendantes', filtre: j => j.genres.includes('Indé'),
-      fond: 'linear-gradient(160deg, #136e52, #3fbf6f 55%, #d6f56b)', texte: '#0d2a1c', ombre: 'rgba(63, 191, 111, 0.45)' },
-    { id: 'multijoueur', nom: 'Multijoueur', prix: 60, description: 'À plusieurs, c’est mieux',
-      filtre: j => j.tags.includes('Multijoueur') || j.tags.includes('Coopération'),
-      fond: 'linear-gradient(160deg, #b8400c, #ff8a3d 55%, #ffd23f)', texte: '#2a1200', ombre: 'rgba(255, 138, 61, 0.45)' },
-    { id: 'sf', nom: 'Science-fiction', prix: 60, description: 'Espace et futur', filtre: j => j.tags.includes('Science-fiction'),
-      fond: 'linear-gradient(160deg, #081530, #1f4fd1 55%, #45d4ff)', texte: '#e6f6ff', ombre: 'rgba(69, 212, 255, 0.45)' },
-    { id: 'adulte', nom: 'Adulte 18+', prix: 60, description: 'Contenu à caractère sexuel',
-      filtre: j => j.tags.includes('Contenu sexuel') || j.tags.includes('Nudité'),
-      fond: 'linear-gradient(160deg, #1a0610, #6e0f2c 55%, #e0245e)', texte: '#ffe3ec', ombre: 'rgba(224, 36, 94, 0.45)' },
-];
 
 const INDEX_RARE = RARETES.findIndex(r => r.id === 'rare');
 const INDEX_EPIQUE = RARETES.findIndex(r => r.id === 'epique');
@@ -68,7 +39,13 @@ const PART_MYTHIQUE_GOD_PACK = 0.25; // en plus de la Mythique garantie
 const CARTES_PAR_BOOSTER = 5;
 const BOOSTERS_PAR_LOT = 10; // ouverture ×10
 const PRIX_BOOSTER = 0;
-const DELAI_BOOSTER = 10 * 60 * 1000;
+
+// Les deux boosters. Chacun se recharge gratuitement (`recharge` ms), avec une réserve de `stockMax` ;
+// quand il n'en reste plus, on peut en acheter (`prix` pièces). `paquet` : le paquet de l'accueil.
+const TYPES_BOOSTER = {
+    standard: { id: 'standard', nom: 'booster', prix: PRIX_BOOSTER, recharge: 10 * 60 * 1000, stockMax: 10, paquet: '#paquet-gratuit' },
+    prestige: { id: 'prestige', nom: 'Prestige', prix: 250, recharge: 24 * 60 * 60 * 1000, stockMax: 1, prestige: true, paquet: '#paquet-prestige' },
+};
 const CHANCE_HOLO = 0.02;
 const MULTIPLICATEUR_HOLO = 3;
 const SEUIL_CHEF_OEUVRE = 90;
@@ -178,9 +155,13 @@ function echapper(texte) {
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+// 7:05 sous une heure, 23:59:59 au-delà
 function formatDuree(ms) {
-    const s = Math.ceil(ms / 1000);
-    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    const deux = n => String(n).padStart(2, '0');
+    return s >= 3600
+        ? `${Math.floor(s / 3600)}:${deux(Math.floor(s / 60) % 60)}:${deux(s % 60)}`
+        : `${Math.floor(s / 60)}:${deux(s % 60)}`;
 }
 
 function toast(message, type = 'info') {
@@ -198,7 +179,7 @@ function toast(message, type = 'info') {
 const CLES = {
     collection: 'gameCards.collection',
     pieces: 'gameCards.pieces',
-    dernierBooster: 'gameCards.dernierBooster',
+    charges: 'gameCards.charges',
     godPacks: 'gameCards.godPacks',
 };
 
@@ -222,7 +203,12 @@ function ecrire(cle, valeur) {
 const etat = {
     collection: lire(CLES.collection, {}),       // { id: carte + exemplaires, holos, obtenue }
     pieces: lire(CLES.pieces, 0),
-    dernierBooster: lire(CLES.dernierBooster, 0),
+    // Boosters gratuits en réserve, et début du chrono de la prochaine recharge
+    charges: {
+        standard: { charges: 1, depuis: Date.now() },
+        prestige: { charges: 1, depuis: Date.now() },
+        ...lire(CLES.charges, {}),
+    },
     godPacks: lire(CLES.godPacks, { nombre: 0, premier: null }), // trophée : combien, et la date du premier
 };
 
@@ -393,12 +379,6 @@ async function chargerJeux() {
     jeuxParId = new Map(tousLesJeux.map(jeu => [jeu.id, jeu]));
     calculerAnciennete();
     genresCatalogue = genres;
-    for (const booster of BOOSTERS_SPECIAUX) {
-        booster.bacs = booster.filtre
-            ? Object.fromEntries(RARETES.map(r => [r.id, jeuxParRarete[r.id].filter(booster.filtre)]))
-            : jeuxParRarete;
-        booster.total = Object.values(booster.bacs).reduce((n, liste) => n + liste.length, 0);
-    }
     majCollectionDepuisDonnees();
 }
 
@@ -428,14 +408,9 @@ function tirerRarete(cle = 'chance', possibles = RARETES) {
     return indexRarete(possibles.at(-1).id);
 }
 
-// Pioche un jeu au hasard dans la rareté demandée, tous avec la même chance (sans doublon dans `exclus`).
-// `bacs` : les jeux rangés par rareté (un thème pour les boosters thématiques). Si la rareté est vide
-// dans ce thème, on prend la plus proche : d'abord plus commune, puis plus rare.
-function piocher(index, exclus = new Set(), bacs = jeuxParRarete) {
-    const ordre = [index];
-    for (let d = 1; d < RARETES.length; d++) ordre.push(index + d, index - d);
-    const trouve = ordre.find(i => i >= 0 && i < RARETES.length && bacs[RARETES[i].id]?.length);
-    const bac = bacs[RARETES[trouve].id];
+// Pioche un jeu au hasard dans la rareté demandée, tous avec la même chance (sans doublon dans `exclus`)
+function piocher(index, exclus = new Set()) {
+    const bac = jeuxParRarete[RARETES[index].id];
     let jeu = auHasard(bac);
     for (let essai = 0; essai < 20 && exclus.has(jeu.id); essai++) jeu = auHasard(bac);
     return creerCarte(jeu);
@@ -481,84 +456,92 @@ function valeurDoublons(entree) {
 // ---------- En-tête et paquets ----------
 
 let ouvertureEnCours = false;
-const tempsRestant = () => Math.max(0, etat.dernierBooster + DELAI_BOOSTER - Date.now());
+
+// ---------- Recharges des boosters gratuits ----------
+// Un booster gratuit arrive toutes les `recharge` ms, jusqu'à `stockMax` en réserve.
+// Réserve pleine : le chrono attend, il ne repart qu'une fois un booster ouvert.
+function majCharges(type) {
+    const reserve = etat.charges[type.id];
+    if (reserve.charges >= type.stockMax) {
+        reserve.depuis = Date.now();
+        return;
+    }
+    const gagnees = Math.floor((Date.now() - reserve.depuis) / type.recharge);
+    if (gagnees <= 0) return;
+    reserve.charges = Math.min(type.stockMax, reserve.charges + gagnees);
+    reserve.depuis = reserve.charges >= type.stockMax ? Date.now() : reserve.depuis + gagnees * type.recharge;
+    sauvegarder();
+}
+
+function chargesDispo(type) {
+    majCharges(type);
+    return etat.charges[type.id].charges;
+}
+
+// Temps avant le prochain booster gratuit (0 si la réserve est pleine)
+function avantRecharge(type) {
+    majCharges(type);
+    const reserve = etat.charges[type.id];
+    return reserve.charges >= type.stockMax ? 0 : reserve.depuis + type.recharge - Date.now();
+}
+
+function consommerCharges(type, nombre) {
+    majCharges(type);
+    etat.charges[type.id].charges -= nombre;
+}
 
 function majEntete() {
     $('#solde').textContent = nombre(etat.pieces);
     majPaquets();
 }
 
-// Appelée chaque seconde : minuteur du booster gratuit et état des paquets
+// Appelée chaque seconde : réserve et minuteur de chaque paquet, boutons de l'écran de bilan
 function majPaquets() {
-    const reste = tempsRestant();
-    const manque = PRIX_BOOSTER - etat.pieces;
-
-    const gratuit = $('#paquet-gratuit');
-    gratuit.classList.toggle('verrouille', reste > 0);
-    gratuit.setAttribute('aria-disabled', reste > 0);
-    gratuit.setAttribute('aria-label', reste > 0
-        ? `Booster gratuit, disponible dans ${formatDuree(reste)}` : 'Ouvrir le booster gratuit');
-    $('#compte-gratuit').textContent = formatDuree(reste);
-    $('#legende-gratuit').textContent = reste > 0 ? `Prochain dans ${formatDuree(reste)}` : 'Prêt ! Clique pour l’ouvrir';
-
-    const achat = $('#paquet-achat');
-    achat.classList.toggle('verrouille', manque > 0);
-    achat.setAttribute('aria-disabled', manque > 0);
-    achat.setAttribute('aria-label', manque > 0
-        ? `Booster à ${PRIX_BOOSTER} pièces, il te manque ${manque} pièces` : `Acheter un booster pour ${PRIX_BOOSTER} pièces`);
-    $('#manque-achat').textContent = `Il manque ${manque}`;
-
-    // Ouverture ×10 (payante uniquement : le gratuit ne revient que toutes les 10 min)
-    const prixLot = PRIX_BOOSTER * BOOSTERS_PAR_LOT;
-    for (const bouton of [$('#btn-x10'), $('#btn-autre-x10')]) {
-        bouton.disabled = etat.pieces < prixLot;
-        bouton.title = bouton.disabled ? `Il te manque ${prixLot - etat.pieces} pièces` : '';
-        bouton.innerHTML = `Ouvrir ×${BOOSTERS_PAR_LOT} · ${prixLot} ${PIECE}`;
+    for (const type of Object.values(TYPES_BOOSTER)) {
+        const charges = chargesDispo(type);
+        const reste = avantRecharge(type);
+        const paquet = $(type.paquet);
+        paquet.classList.toggle('verrouille', charges === 0);
+        paquet.setAttribute('aria-label', charges
+            ? `Ouvrir un ${type.nom} gratuit (${charges} disponible${charges > 1 ? 's' : ''})`
+            : `Plus de ${type.nom} gratuit, prochain dans ${formatDuree(reste)}. Cliquer pour en acheter`);
+        $(`#compte-${type.id}`).textContent = formatDuree(reste);
+        $(`#charges-${type.id}`).hidden = charges === 0;
+        $(`#charges-${type.id}`).textContent = `×${charges}`;
+        $(`#legende-${type.id}`).innerHTML = charges
+            ? `<b>${charges} / ${type.stockMax}</b> gratuit${type.stockMax > 1 ? 's' : ''}${reste ? ` · prochain dans ${formatDuree(reste)}` : ' · réserve pleine'}`
+            : `Prochain gratuit dans ${formatDuree(reste)}<br>Clique pour en acheter`;
     }
 
-    for (const booster of BOOSTERS_SPECIAUX) {
-        const bouton = document.querySelector(`[data-booster="${booster.id}"]`);
-        if (!bouton) continue;
-        const manqueSpecial = booster.prix - etat.pieces;
-        bouton.classList.toggle('verrouille', manqueSpecial > 0);
-        bouton.setAttribute('aria-disabled', manqueSpecial > 0);
-        bouton.setAttribute('aria-label', manqueSpecial > 0
-            ? `Booster ${booster.nom} à ${booster.prix} pièces, il te manque ${manqueSpecial} pièces`
-            : `Acheter un booster ${booster.nom} pour ${booster.prix} pièces`);
-        bouton.querySelector('[data-manque]').textContent = `Il manque ${manqueSpecial}`;
-    }
+    // Ouvrir d'un coup toute la réserve de boosters gratuits
+    const reserve = chargesDispo(TYPES_BOOSTER.standard);
+    $('#btn-tout-ouvrir').hidden = reserve < 2;
+    $('#btn-tout-ouvrir').textContent = `Ouvrir les ${reserve} boosters gratuits`;
 
-    // "Ouvrir un autre" : le même booster spécial, sinon le gratuit s'il est prêt, sinon un booster payant
-    const autre = $('#btn-autre');
-    if (dernierType) {
-        autre.disabled = etat.pieces < dernierType.prix;
-        autre.innerHTML = `Ouvrir un autre ${dernierType.nom} · ${dernierType.prix} ${PIECE}`;
-    } else {
-        autre.disabled = reste > 0 && manque > 0;
-        autre.innerHTML = reste === 0 ? 'Ouvrir un autre booster · gratuit'
-            : autre.disabled ? `Booster gratuit dans ${formatDuree(reste)}`
-            : `Ouvrir un autre booster · ${PRIX_BOOSTER} ${PIECE}`;
-    }
-
-    $('#lien-accueil').classList.toggle('pret', reste === 0);
+    $('#lien-accueil').classList.toggle('pret', Object.values(TYPES_BOOSTER).some(type => chargesDispo(type) > 0));
 }
 
-function afficherBoostersSpeciaux() {
-    $('#boosters-speciaux').innerHTML = BOOSTERS_SPECIAUX.map(b => `
-        <div class="emplacement-paquet emplacement-special">
-            <button class="paquet paquet-mini${b.prestige ? ' paquet-prestige' : ''}" data-booster="${b.id}" data-incline
-                    style="--fond-paquet: ${b.fond}; --texte-paquet: ${b.texte}; --ombre-paquet: ${b.ombre}">
-                <span class="paquet-haut"></span>
-                <span class="paquet-corps">
-                    <span class="paquet-marque">${b.nom}</span>
-                    <span class="paquet-embleme" aria-hidden="true"></span>
-                    <span class="paquet-type">${b.prix} pièces</span>
-                </span>
-                <span class="paquet-verrou"><span class="piece" aria-hidden="true"></span><b data-manque></b></span>
-            </button>
-            <p class="legende-paquet">${b.description}${b.total && b.filtre ? `<br><span>${nombre(b.total)} jeux</span>` : ''}</p>
-        </div>`).join('');
-    majPaquets();
+// Clic sur un paquet de l'accueil : on ouvre un gratuit s'il en reste, sinon on propose d'en acheter
+function cliquerPaquet(type) {
+    if (chargesDispo(type) > 0) ouvrirBooster('gratuit', 1, type);
+    else proposerAchat(type);
+}
+
+function proposerAchat(type) {
+    const prixLot = type.prix * BOOSTERS_PAR_LOT;
+    $('#modale-contenu').innerHTML = `
+        <div class="achat">
+            <h2>Plus de ${type.nom} gratuit</h2>
+            <p>Le prochain arrive dans <b>${formatDuree(avantRecharge(type))}</b>. En attendant, tu peux en acheter :</p>
+            <div class="achat-options">
+                <button class="btn btn-principal btn-grand" data-acheter-booster="${type.id}" data-nombre="1"${etat.pieces < type.prix ? ' disabled' : ''}>
+                    Acheter 1 ${type.nom} · ${nombre(type.prix)} ${PIECE}</button>
+                <button class="btn btn-or btn-grand" data-acheter-booster="${type.id}" data-nombre="${BOOSTERS_PAR_LOT}"${etat.pieces < prixLot ? ' disabled' : ''}>
+                    Ouvrir ×${BOOSTERS_PAR_LOT} · ${nombre(prixLot)} ${PIECE}</button>
+            </div>
+            <p class="achat-solde">Tu as ${nombre(etat.pieces)} ${PIECE}${etat.pieces < type.prix ? ' : revends des doublons ou gagne des duels pour en avoir plus.' : ''}</p>
+        </div>`;
+    if (!$('#modale').open) $('#modale').showModal();
 }
 
 // ---------- Ouverture de boosters ----------
@@ -571,54 +554,48 @@ window.forcerGodPack = () => {
 };
 
 // God pack : une Mythique garantie, puis des Légendaires (et parfois d'autres Mythiques), une chance sur 4 d'être holo
-function tirerGodPack(bacs) {
+function tirerGodPack() {
     const exclus = new Set();
     return Array.from({ length: CARTES_PAR_BOOSTER }, (_, i) => {
         const index = i === 0 || Math.random() < PART_MYTHIQUE_GOD_PACK ? INDEX_MYTHIQUE : INDEX_LEGENDAIRE;
-        const carte = piocher(index, exclus, bacs);
+        const carte = piocher(index, exclus);
         exclus.add(carte.id);
         return { carte, holo: Math.random() < CHANCE_HOLO_GOD_PACK, godPack: true };
     });
 }
 
-// Les 5 cartes d'un booster : 4 au hasard + une 5ᵉ garantie (ou, très rarement, un god pack).
-// `type` : un booster spécial (thème ou Prestige), ou rien pour le booster standard.
-function tirerBooster(type = null) {
-    const bacs = type?.bacs || jeuxParRarete;
+// Les 5 cartes d'un booster : 4 au hasard + une 5ᵉ garantie (ou, très rarement, un god pack)
+function tirerBooster(type) {
     if (prochainGodPack || Math.random() < CHANCE_GOD_PACK) {
         prochainGodPack = false;
-        return tirerGodPack(bacs);
+        return tirerGodPack();
     }
-    const [cleChance, cleGarantie] = type?.prestige ? ['chancePrestige', 'chancePrestigeGarantie'] : ['chance', 'chanceGarantie'];
-    const chanceHolo = type?.prestige ? CHANCE_HOLO_PRESTIGE : CHANCE_HOLO;
+    const [cleChance, cleGarantie] = type.prestige ? ['chancePrestige', 'chancePrestigeGarantie'] : ['chance', 'chanceGarantie'];
+    const chanceHolo = type.prestige ? CHANCE_HOLO_PRESTIGE : CHANCE_HOLO;
     const indices = Array.from({ length: CARTES_PAR_BOOSTER - 1 }, () => tirerRarete(cleChance));
     indices.push(tirerRarete(cleGarantie));
     const exclus = new Set();
     return indices.map(index => {
-        const carte = piocher(index, exclus, bacs);
+        const carte = piocher(index, exclus);
         exclus.add(carte.id);
         return { carte, holo: Math.random() < chanceHolo };
     });
 }
 
-let dernierType = null; // dernier booster spécial ouvert, pour « Ouvrir un autre »
-
-async function ouvrirBooster(mode, nombreBoosters = 1, type = null) {
+// `mode` : 'gratuit' (pris dans la réserve) ou 'achat' (payé en pièces)
+async function ouvrirBooster(mode, nombreBoosters = 1, type = TYPES_BOOSTER.standard) {
     if (ouvertureEnCours || !donneesPretes()) return;
-    const prix = (type ? type.prix : PRIX_BOOSTER) * nombreBoosters;
-    if (mode === 'gratuit' && tempsRestant() > 0) {
-        return toast(`Prochain booster gratuit dans ${formatDuree(tempsRestant())}`);
-    }
+    const prix = type.prix * nombreBoosters;
+    if (mode === 'gratuit' && chargesDispo(type) < nombreBoosters) return proposerAchat(type);
     if (mode === 'achat' && etat.pieces < prix) {
         return toast(`Il te manque ${prix - etat.pieces} pièces. Revends des doublons ou gagne un duel !`);
     }
     ouvertureEnCours = true;
-    dernierType = type;
 
     const boosters = Array.from({ length: nombreBoosters }, () => tirerBooster(type));
     const tirage = boosters.flat();
     const godPacks = tirage.filter(t => t.godPack).length / CARTES_PAR_BOOSTER;
-    if (mode === 'gratuit') etat.dernierBooster = Date.now();
+    if (mode === 'gratuit') consommerCharges(type, nombreBoosters);
     else etat.pieces -= prix;
     if (godPacks) {
         etat.godPacks.nombre += godPacks;
@@ -632,14 +609,14 @@ async function ouvrirBooster(mode, nombreBoosters = 1, type = null) {
     $('#ouverture').hidden = false;
     $('#ouverture').classList.toggle('multiple', nombreBoosters > 1);
     $('#tirage').innerHTML = '';
-    for (const id of ['#bilan', '#btn-autre', '#btn-autre-x10', '#btn-voir-collection']) $(id).hidden = true;
+    for (const id of ['#bilan', '#btn-retour', '#btn-voir-collection']) $(id).hidden = true;
     $('#btn-passer').textContent = nombreBoosters > 1 ? 'Tout passer' : 'Passer';
     $('#btn-passer').hidden = false;
     $('#ouverture-aide').hidden = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Chaque paquet : on le déchire, puis on fait défiler sa pile, la carte la plus rare en dernier
-    const modele = type ? $(`[data-booster="${type.id}"]`) : $(mode === 'gratuit' ? '#paquet-gratuit' : '#paquet-achat');
+    const modele = $(type.paquet);
     seance.passer = false;
     for (let i = 0; i < boosters.length && !seance.passer; i++) {
         const cartes = [...boosters[i]].sort((a, b) => indexRarete(b.carte.rarete) - indexRarete(a.carte.rarete));
@@ -712,8 +689,8 @@ function clonerPaquet(modele) {
     paquet.removeAttribute('data-incline');
     for (const variable of ['--rx', '--ry', '--mx', '--my']) paquet.style.removeProperty(variable);
     paquet.removeAttribute('aria-describedby');
-    paquet.removeAttribute('data-booster');
-    paquet.classList.remove('verrouille', 'paquet-mini');
+    paquet.classList.remove('verrouille');
+    paquet.querySelector('.paquet-charges')?.remove();
     paquet.classList.add('paquet-seul');
     paquet.querySelector('.paquet-verrou')?.remove();
     paquet.setAttribute('aria-label', 'Ouvrir le paquet');
@@ -722,33 +699,67 @@ function clonerPaquet(modele) {
     return paquet;
 }
 
-// Attend un glissé (ou un clic) sur le paquet, puis le fait trembler et le déchire dans le sens du geste
+// Part de la largeur du paquet à parcourir le long du haut pour le déchirer
+const DECHIRURE_COMPLETE = 0.7;
+
+// Attend un vrai geste de déchirure : attraper le haut du paquet et glisser le long, de gauche à droite
+// ou de droite à gauche. Le bandeau se soulève au fil du geste ; lâché trop tôt, il retombe.
+// Un simple clic ne suffit pas (il rappelle le geste). Le clavier (Espace, Entrée) reste possible.
 async function dechirerPaquet(modele, divin, rang) {
     const paquet = clonerPaquet(modele);
     $('#ouverture-scene').replaceChildren(paquet);
-    $('#ouverture-aide').innerHTML = `${rang}Glisse sur le haut du paquet pour l’ouvrir`;
+    const consigne = `${rang}Attrape le haut du paquet et glisse le long pour le déchirer`;
+    $('#ouverture-aide').innerHTML = consigne;
+
+    // Petite secousse du bandeau et consigne mise en avant : rappelle le geste attendu
+    const rappelerGeste = () => {
+        paquet.classList.remove('indice');
+        void paquet.offsetWidth; // relance l'animation
+        paquet.classList.add('indice');
+        $('#ouverture-aide').innerHTML = `<b>${consigne}</b>`;
+    };
 
     let sens = 1;
     await new Promise(resolve => {
         let depart = null;
         seance.reprendre = resolve;
         paquet.addEventListener('pointerdown', e => {
+            const cadre = paquet.getBoundingClientRect();
+            // Il faut attraper le haut du paquet (le tiers supérieur, pour rester facile au doigt)
+            if (e.clientY - cadre.top > cadre.height * 0.3) return rappelerGeste();
             depart = e.clientX;
             paquet.setPointerCapture(e.pointerId);
+            paquet.classList.add('en-dechirure');
         });
-        paquet.addEventListener('pointerup', e => {
-            if (depart !== null && e.clientX < depart - 10) sens = -1;
-            resolve();
+        paquet.addEventListener('pointermove', e => {
+            if (depart === null) return;
+            const dx = e.clientX - depart;
+            sens = dx < 0 ? -1 : 1;
+            const progres = Math.min(1, Math.abs(dx) / (paquet.getBoundingClientRect().width * DECHIRURE_COMPLETE));
+            paquet.style.setProperty('--sens', sens);
+            paquet.style.setProperty('--dechirure', progres.toFixed(3));
+            if (progres >= 1) {
+                depart = null;
+                resolve();
+            }
         });
+        const lacher = () => {
+            if (depart === null) return;
+            depart = null;
+            paquet.classList.remove('en-dechirure');
+            paquet.style.setProperty('--dechirure', 0);
+            rappelerGeste();
+        };
+        paquet.addEventListener('pointerup', lacher);
+        paquet.addEventListener('pointercancel', lacher);
     });
     seance.reprendre = null;
     if (seance.passer) return;
 
-    paquet.classList.add('secoue');
-    await attendre(500);
-    if (divin) await revelationGodPack(paquet);
-    paquet.classList.remove('secoue', 'divin');
+    paquet.classList.remove('en-dechirure', 'indice');
     paquet.style.setProperty('--sens', sens);
+    if (divin) await revelationGodPack(paquet);
+    paquet.classList.remove('divin');
     paquet.classList.add('dechire');
     await attendre(600);
 }
@@ -867,7 +878,7 @@ function finTirage() {
         <span class="rarete-${meilleure.id}">Meilleure : <b class="texte-rarete">${meilleure.nom}</b></span>
         ${holos ? `<span>✨ <b>${holos}</b> holo${holos > 1 ? 's' : ''}</span>` : ''}`;
     majPaquets();
-    for (const id of ['#bilan', '#btn-autre', '#btn-autre-x10', '#btn-voir-collection']) $(id).hidden = false;
+    for (const id of ['#bilan', '#btn-retour', '#btn-voir-collection']) $(id).hidden = false;
 }
 
 // ---------- Écran accueil ----------
@@ -1319,12 +1330,16 @@ function afficherEcran(nom) {
 
 function init() {
     // Accueil : paquets et ouverture
-    $('#paquet-gratuit').addEventListener('click', () => ouvrirBooster('gratuit'));
-    $('#paquet-achat').addEventListener('click', () => ouvrirBooster('achat'));
-    afficherBoostersSpeciaux();
-    $('#boosters-speciaux').addEventListener('click', e => {
-        const bouton = e.target.closest('[data-booster]');
-        if (bouton) ouvrirBooster('achat', 1, BOOSTERS_SPECIAUX.find(b => b.id === bouton.dataset.booster));
+    $('#paquet-gratuit').addEventListener('click', () => cliquerPaquet(TYPES_BOOSTER.standard));
+    $('#paquet-prestige').addEventListener('click', () => cliquerPaquet(TYPES_BOOSTER.prestige));
+    $('#btn-tout-ouvrir').addEventListener('click', () =>
+        ouvrirBooster('gratuit', chargesDispo(TYPES_BOOSTER.standard), TYPES_BOOSTER.standard));
+    // Fenêtre d'achat (plus de booster gratuit)
+    $('#modale-contenu').addEventListener('click', e => {
+        const bouton = e.target.closest('[data-acheter-booster]');
+        if (!bouton) return;
+        $('#modale').close();
+        ouvrirBooster('achat', Number(bouton.dataset.nombre), TYPES_BOOSTER[bouton.dataset.acheterBooster]);
     });
     $('#btn-passer').addEventListener('click', passerOuverture);
     // Clavier pendant l'ouverture : Espace, Entrée ou flèche droite pour déchirer le paquet ou passer à la carte suivante
@@ -1335,12 +1350,8 @@ function init() {
         e.preventDefault();
         seance.reprendre();
     });
-    $('#btn-autre').addEventListener('click', () => dernierType
-        ? ouvrirBooster('achat', 1, dernierType)
-        : ouvrirBooster(tempsRestant() === 0 ? 'gratuit' : 'achat'));
-    $('#btn-x10').addEventListener('click', () => ouvrirBooster('achat', BOOSTERS_PAR_LOT));
-    // Le ×10 de l'écran de bilan est toujours le standard
-    $('#btn-autre-x10').addEventListener('click', () => ouvrirBooster('achat', BOOSTERS_PAR_LOT));
+    // Écran de bilan : retour aux paquets de l'accueil
+    $('#btn-retour').addEventListener('click', afficherAccueil);
     $('#tirage').addEventListener('click', e => cliquerCarteTirage(e.target.closest('.flip')));
     $('#tirage').addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -1439,7 +1450,6 @@ function init() {
 
     chargerJeux()
         .then(() => {
-            afficherBoostersSpeciaux(); // avec le nombre de jeux de chaque thème
             const ecran = location.hash.slice(1) || 'accueil';
             if (ecran === 'accueil') afficherAccueil();
             if (ecran === 'regles') afficherRegles();

@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=40">
+    <link rel="stylesheet" href="style.css?v=42">
 </head>
 <body>
 
@@ -73,45 +73,40 @@
 
                 <div class="paquets">
                     <div class="emplacement-paquet">
-                        <button class="paquet paquet-gratuit" id="paquet-gratuit" data-incline aria-describedby="legende-gratuit">
+                        <button class="paquet paquet-gratuit" id="paquet-gratuit" data-incline aria-describedby="legende-standard">
                             <span class="paquet-haut"></span>
                             <span class="paquet-corps">
                                 <span class="paquet-marque">Game<br>Cards</span>
                                 <span class="paquet-embleme" aria-hidden="true"></span>
-                                <span class="paquet-type">Booster gratuit</span>
+                                <span class="paquet-type">Booster</span>
                             </span>
                             <span class="paquet-verrou">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>
-                                <b id="compte-gratuit">10:00</b>
+                                <b id="compte-standard">10:00</b>
                             </span>
+                            <span class="paquet-charges" id="charges-standard" hidden></span>
                         </button>
-                        <p class="legende-paquet" id="legende-gratuit">Gratuit toutes les 10 min</p>
+                        <p class="legende-paquet" id="legende-standard">Un gratuit toutes les 10 min</p>
+                        <button class="btn btn-principal btn-tout-ouvrir" id="btn-tout-ouvrir" hidden>Ouvrir tous mes boosters</button>
                     </div>
 
                     <div class="emplacement-paquet">
-                        <button class="paquet paquet-premium" id="paquet-achat" data-incline aria-describedby="legende-achat">
+                        <button class="paquet paquet-prestige" id="paquet-prestige" data-incline aria-describedby="legende-prestige"
+                                style="--fond-paquet: linear-gradient(160deg, #15100a 0%, #3a2a10 50%, #b8862b 100%); --texte-paquet: #f6dc8a; --ombre-paquet: rgba(230, 170, 50, 0.5)">
                             <span class="paquet-haut"></span>
                             <span class="paquet-corps">
                                 <span class="paquet-marque">Game<br>Cards</span>
                                 <span class="paquet-embleme" aria-hidden="true"></span>
-                                <span class="paquet-type">50 pièces</span>
+                                <span class="paquet-type">Prestige</span>
                             </span>
                             <span class="paquet-verrou">
-                                <span class="piece" aria-hidden="true"></span>
-                                <b id="manque-achat">Il manque 50</b>
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>
+                                <b id="compte-prestige">24:00:00</b>
                             </span>
+                            <span class="paquet-charges" id="charges-prestige" hidden></span>
                         </button>
-                        <p class="legende-paquet" id="legende-achat">Revends tes doublons pour gagner des pièces</p>
-                        <button class="btn btn-or btn-x10" id="btn-x10">Ouvrir ×10</button>
+                        <p class="legende-paquet" id="legende-prestige">Un gratuit toutes les 24 h</p>
                     </div>
-                </div>
-
-                <div class="speciaux">
-                    <div class="speciaux-tete">
-                        <h2>Boosters spéciaux</h2>
-                        <p>Le Prestige pour de meilleures chances, ou un thème pour viser tes jeux préférés.</p>
-                    </div>
-                    <div class="speciaux-liste" id="boosters-speciaux"></div>
                 </div>
 
                 <div class="progression">
@@ -139,11 +134,10 @@
                 <div class="tirage" id="tirage"></div>
                 <!-- Pour un ×10, cette barre reste collée en haut de l'écran (en bas sur mobile) -->
                 <div class="ouverture-actions" id="ouverture-actions">
-                    <p class="ouverture-aide" id="ouverture-aide" aria-live="polite">Glisse sur le haut du paquet pour l’ouvrir</p>
+                    <p class="ouverture-aide" id="ouverture-aide" aria-live="polite">Attrape le haut du paquet et glisse le long pour le déchirer</p>
                     <button class="btn" id="btn-passer">Passer</button>
                     <div class="bilan" id="bilan" hidden></div>
-                    <button class="btn btn-principal" id="btn-autre" hidden>Ouvrir un autre booster</button>
-                    <button class="btn btn-or" id="btn-autre-x10" hidden>Ouvrir ×10</button>
+                    <button class="btn btn-principal" id="btn-retour" hidden>Retour</button>
                     <a class="btn" id="btn-voir-collection" href="#collection" hidden>Voir ma collection</a>
                 </div>
             </div>
@@ -290,11 +284,11 @@
                 </article>
                 <article>
                     <h3>Boosters</h3>
-                    <p>5 cartes. Les 4 premières suivent la colonne « Chance », la 5ᵉ est garantie Peu commune ou mieux et suit la colonne « 5ᵉ carte ». La rareté est tirée d’abord, puis le jeu au hasard dans cette rareté. Un gratuit toutes les 10 minutes, ou 50 pièces.</p>
+                    <p>5 cartes. Les 4 premières suivent la colonne « Chance », la 5ᵉ est garantie Peu commune ou mieux et suit la colonne « 5ᵉ carte ». Un booster gratuit toutes les 10 minutes, jusqu’à 10 en réserve. Quand il n’y en a plus, tu peux en acheter un (ou 10 d’un coup).</p>
                 </article>
                 <article>
-                    <h3>🎁 Boosters spéciaux</h3>
-                    <p>Prestige (250 pièces) : 4 premières cartes à 0,5 % Mythique, 3 % Légendaire, 10 % Épique, 25 % Rare, et la 5ᵉ Rare ou mieux ; 8 % de holos. Thématiques (60 pièces) : RPG, Horreur, Course & Sport, Anime, Indé, Multijoueur, Science-fiction, Adulte 18+ (contenu sexuel ou nudité), avec les chances normales mais seulement parmi les jeux du thème.</p>
+                    <h3>👑 Prestige</h3>
+                    <p>Un Prestige gratuit toutes les 24 heures, sinon 250 pièces. Les 4 premières cartes sont Peu communes ou mieux (0,2 % Mythique, 1 % Légendaire, 6 % Épique, 22,8 % Rare), la 5ᵉ Épique ou mieux (1 % Mythique, 5 % Légendaire). 8 % de holos.</p>
                 </article>
                 <article>
                     <h3>✨ Holo</h3>
@@ -351,6 +345,6 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="script.js?v=41"></script>
+    <script src="script.js?v=46"></script>
 </body>
 </html>

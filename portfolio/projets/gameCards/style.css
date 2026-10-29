@@ -385,28 +385,37 @@ main {
 .paquet.verrouille .paquet-corps > * { opacity: 0.15; }
 .paquet.verrouille .paquet-verrou { display: flex; }
 
-/* ── Boosters spéciaux ── */
-.speciaux { margin: 0 0 clamp(2.5rem, 6vw, 4rem); }
-.speciaux-tete { text-align: center; margin-bottom: 1.8rem; }
-.speciaux-tete p { color: var(--texte-doux); margin-top: 0.3rem; }
-.speciaux-liste {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 1.8rem 1rem;
-    justify-items: center;
-}
-.emplacement-special { gap: 0.7rem; }
-.paquet-mini { width: 128px; }
-.paquet-mini .paquet-corps { padding: 12% 8% 14%; }
-.paquet-mini .paquet-marque { font-size: 1.05rem; line-height: 1.05; overflow-wrap: anywhere; }
-.paquet-mini .paquet-type { font-size: 0.68rem; padding: 0.2rem 0.55rem; }
-.paquet-mini .paquet-verrou b { font-size: 0.85rem; padding: 0.1rem 0.45rem; }
-.paquet-mini .paquet-verrou .piece { font-size: 1.3rem; }
-.emplacement-special .legende-paquet { font-size: 0.8rem; text-align: center; max-width: 150px; line-height: 1.35; }
-.emplacement-special .legende-paquet span { color: var(--texte); font-family: 'Space Mono', monospace; font-size: 0.75rem; }
-/* Prestige : liseré doré et lueur plus forte */
+/* ── Prestige : liseré doré ── */
 .paquet-prestige .paquet-corps, .paquet-prestige .paquet-haut { box-shadow: inset 0 0 0 1.5px rgba(246, 220, 138, 0.55); }
 .paquet-prestige .paquet-type { background: rgba(246, 220, 138, 0.18); }
+
+/* Réserve de boosters gratuits : pastille ×N sur le paquet */
+.paquet-charges {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    z-index: 2;
+    min-width: 40px;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background: var(--accent-2);
+    color: #fff;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    box-shadow: 0 0 0 3px var(--fond), 0 6px 14px rgba(0, 0, 0, 0.4);
+}
+.legende-paquet b { color: var(--texte); font-family: 'Space Mono', monospace; }
+.btn-tout-ouvrir { padding: 0.5rem 1rem; font-size: 0.9rem; }
+
+/* Fenêtre d'achat quand il n'y a plus de booster gratuit */
+.modale-contenu:has(.achat) { display: block; }
+.achat { text-align: center; padding: 0.5rem 0.5rem 0; }
+.achat h2 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+.achat > p { color: var(--texte-doux); }
+.achat > p b { color: var(--texte); font-family: 'Space Mono', monospace; }
+.achat-options { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.8rem; margin: 1.5rem 0 1rem; }
+.achat-solde { font-size: 0.9rem; }
+
 /* Un paquet ouvert reprend la taille normale */
 .paquet.paquet-seul { width: clamp(200px, 50vw, 260px); }
 
@@ -471,8 +480,34 @@ main {
 .ouverture { display: flex; flex-direction: column; align-items: center; }
 .ouverture-scene { display: grid; place-items: center; min-height: 500px; padding: 1rem 0; }
 .ouverture-scene:empty { display: none; }
-.paquet-seul { width: clamp(200px, 50vw, 260px); cursor: grab; touch-action: none; }
-.paquet-seul:active { cursor: grabbing; }
+.paquet-seul { width: clamp(200px, 50vw, 260px); cursor: default; touch-action: none; }
+
+/* Déchirure : on attrape le bandeau du haut, il se soulève au fil du geste (--dechirure de 0 à 1),
+   en pivotant depuis le côté opposé au geste (--sens : 1 vers la droite, -1 vers la gauche) */
+.paquet-seul .paquet-haut {
+    cursor: grab;
+    transform-origin: calc(50% + var(--sens, 1) * 50%) 100%;
+    transform: rotate(calc(var(--sens, 1) * var(--dechirure, 0) * 14deg)) translateY(calc(var(--dechirure, 0) * -5px));
+    transition: transform 0.25s ease;
+}
+.paquet-seul.en-dechirure, .paquet-seul.en-dechirure .paquet-haut { cursor: grabbing; }
+.paquet-seul.en-dechirure .paquet-haut { transition: none; }
+.paquet-seul.en-dechirure .geste-dechirer i { display: none; }
+/* Ligne lumineuse qui suit la découpe, depuis le bord où le geste a commencé */
+.geste-dechirer::after {
+    content: '';
+    position: absolute;
+    top: -1.5px;
+    left: calc((1 - var(--sens, 1)) / 2 * (100% - var(--dechirure, 0) * 100%));
+    width: calc(var(--dechirure, 0) * 100%);
+    height: 3px;
+    border-radius: 2px;
+    background: #fff;
+    box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.85);
+}
+/* Rappel du geste (clic au lieu d'un glissé, ou lâché trop tôt) */
+.paquet-seul.indice .paquet-haut { animation: indice-dechirer 0.5s ease; }
+.paquet-seul.indice .geste-dechirer i { animation-duration: 0.9s; }
 
 /* Indication du geste : un point lumineux glisse le long de la ligne de découpe */
 .geste-dechirer {
@@ -1544,6 +1579,11 @@ main {
     75% { rotate: 3deg; translate: 3px -2px; }
 }
 @keyframes haut-arrache { to { transform: translate(calc(var(--sens, 1) * 60px), -140px) rotate(calc(var(--sens, 1) * 28deg)); opacity: 0; } }
+@keyframes indice-dechirer {
+    25% { translate: 0 -7px; }
+    50% { translate: 0 0; }
+    75% { translate: 0 -3px; }
+}
 @keyframes geste-dechirer {
     0% { left: 0; opacity: 0; }
     15% { opacity: 1; }
@@ -1622,9 +1662,6 @@ main {
     .legende-paquet { font-size: 0.8rem; text-align: center; max-width: 40vw; }
 
     .ouverture-scene { min-height: 440px; }
-    .speciaux-liste { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 1.4rem 0.6rem; }
-    .paquet-mini { width: 108px; }
-    .paquet-mini .paquet-marque { font-size: 0.9rem; }
     .tirage { grid-template-columns: repeat(6, minmax(0, 1fr)); max-width: 440px; margin-left: auto; margin-right: auto; }
     .tirage .flip { grid-column: span 2; }
     .tirage .flip:nth-child(4) { grid-column: 2 / span 2; }
