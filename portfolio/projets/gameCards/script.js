@@ -17,13 +17,15 @@
 //   `chanceDuel`      : les cartes tirées en duel (toi et l'ordinateur)
 // Chaque colonne de chances doit faire 100 au total ; 0 interdit la rareté.
 // `prix` : achat direct dans le catalogue, volontairement bien plus cher que la chance en boosters.
+// `stats` : fourchette des stats de jeu de la rareté ; les vraies données placent la carte dans cette fourchette,
+// pour qu'une carte rare soit presque toujours plus forte (les fourchettes se chevauchent un peu).
 const RARETES = [
-    { id: 'mythique',    nom: 'Mythique',    quota: null, chance: 0.1,  chanceGarantie: 0.1, chancePrestige: 0.2,  chancePrestigeGarantie: 1,  chanceDuel: 3,  revente: 300, prix: 10000 },
-    { id: 'legendaire',  nom: 'Légendaire',  quota: 110, chance: 0.5,  chanceGarantie: 0.9, chancePrestige: 1,    chancePrestigeGarantie: 5,  chanceDuel: 7,  revente: 100, prix: 4000 },
-    { id: 'epique',      nom: 'Épique',      quota: 284, chance: 3,    chanceGarantie: 19,  chancePrestige: 6,    chancePrestigeGarantie: 94, chanceDuel: 12, revente: 40,  prix: 1500 },
-    { id: 'rare',        nom: 'Rare',        quota: 1109, chance: 6,    chanceGarantie: 30,  chancePrestige: 22.8, chancePrestigeGarantie: 0,  chanceDuel: 18, revente: 15,  prix: 600 },
-    { id: 'peu-commune', nom: 'Peu commune', quota: 2257, chance: 18,   chanceGarantie: 50,  chancePrestige: 70,   chancePrestigeGarantie: 0,  chanceDuel: 25, revente: 5,   prix: 250 },
-    { id: 'commune',     nom: 'Commune',     quota: null, chance: 72.4, chanceGarantie: 0,   chancePrestige: 0,    chancePrestigeGarantie: 0,  chanceDuel: 35, revente: 2,   prix: 100 },
+    { id: 'mythique',    nom: 'Mythique',    quota: null, stats: [62, 100], chance: 0.1, chanceGarantie: 0.1, chancePrestige: 0.2,  chancePrestigeGarantie: 1,  chanceDuel: 3,  revente: 300, prix: 10000 },
+    { id: 'legendaire',  nom: 'Légendaire',  quota: 110,  stats: [50, 89],  chance: 0.5, chanceGarantie: 0.9, chancePrestige: 1,    chancePrestigeGarantie: 5,  chanceDuel: 7,  revente: 100, prix: 4000 },
+    { id: 'epique',      nom: 'Épique',      quota: 284,  stats: [40, 79],  chance: 3, chanceGarantie: 19,  chancePrestige: 6,    chancePrestigeGarantie: 94, chanceDuel: 12, revente: 40,  prix: 1500 },
+    { id: 'rare',        nom: 'Rare',        quota: 1109, stats: [30, 71],  chance: 6, chanceGarantie: 30,  chancePrestige: 22.8, chancePrestigeGarantie: 0,  chanceDuel: 18, revente: 15,  prix: 600 },
+    { id: 'peu-commune', nom: 'Peu commune', quota: 2257, stats: [20, 63],  chance: 18, chanceGarantie: 50,  chancePrestige: 70,   chancePrestigeGarantie: 0,  chanceDuel: 25, revente: 5,   prix: 250 },
+    { id: 'commune',     nom: 'Commune',     quota: null, stats: [10, 55],  chance: 72.4, chanceGarantie: 0,   chancePrestige: 0,    chancePrestigeGarantie: 0,  chanceDuel: 35, revente: 2,   prix: 100 },
 ];
 const CHANCE_HOLO_PRESTIGE = 0.08; // contre 2 % dans un booster normal
 
@@ -260,10 +262,11 @@ function brinLaurierSVG() {
 }
 const BRIN_LAURIER = brinLaurierSVG();
 
+// Ordre d'affichage : l'Ancienneté, stat « joker » souvent plus basse, en dernier
 const STATS = {
     attaque:    { nom: 'Note public',     icone: ICONES.pouce },
-    anciennete: { nom: 'Ancienneté',      icone: ICONES.sablier },
     popularite: { nom: 'Popularité',      icone: '★' },
+    anciennete: { nom: 'Ancienneté',      icone: ICONES.sablier },
 };
 
 // ---------- Utilitaires ----------
@@ -465,14 +468,24 @@ function calculerRaretes() {
     }
 }
 
+// Place une valeur réelle (0 à 100) dans la fourchette de stats de la rareté
+function statDeJeu(valeur, rarete) {
+    const [min, max] = RARETES[indexRarete(rarete)].stats;
+    return Math.round(min + (Math.max(0, Math.min(100, valeur)) / 100) * (max - min));
+}
+
 function creerCarte(jeu) {
     return {
         id: jeu.id,
         nom: jeu.nom,
         image: `${URL_IMAGES}/${jeu.id}/${jeu.image || 'header.jpg'}`,
-        attaque: notePublic(jeu.note, jeu.avis),
+        attaque: statDeJeu(notePublic(jeu.note, jeu.avis), jeu.rarete),
+        // Stat « joker » : la vraie ancienneté, sans lien avec la rareté (une vieille Commune peut battre une Mythique récente)
         anciennete: anciennete(jeu.annee),
-        popularite: popularite(jeu.avis),
+        popularite: statDeJeu(popularite(jeu.avis), jeu.rarete),
+        // Vraies données, affichées sur la fiche à côté des stats de jeu
+        noteReelle: jeu.note,
+        avis: jeu.avis,
         metacritic: jeu.metacritic,
         rarete: jeu.rarete,
         annee: jeu.annee,
@@ -1251,9 +1264,9 @@ function afficherFiche(id) {
             ${carte.tags?.length ? `<p class="fiche-tags">${carte.tags.map(t => `<span${(groupesTags['Contenu sensible'] || []).includes(t)
                 ? ' class="tag-sensible"' : ''}>${echapper(t)}</span>`).join('')}</p>` : ''}
             <dl class="fiche-stats">
-                <div><dt>${STATS.attaque.icone} Note public</dt><dd>${carte.attaque} %</dd></div>
-                <div><dt>${STATS.anciennete.icone} Ancienneté</dt><dd>${carte.anciennete} / 100 <span class="gris">· ${carte.annee}</span></dd></div>
-                <div><dt>★ Popularité</dt><dd>${carte.popularite} / 100</dd></div>
+                <div><dt>${STATS.attaque.icone} Note public</dt><dd>${carte.attaque} <span class="gris">· ${carte.noteReelle ?? '?'} % d’avis positifs</span></dd></div>
+                <div><dt>★ Popularité</dt><dd>${carte.popularite} <span class="gris">· ${carte.avis ? nombre(carte.avis) : '?'} avis Steam</span></dd></div>
+                <div><dt>${STATS.anciennete.icone} Ancienneté</dt><dd>${carte.anciennete} <span class="gris">· sorti en ${carte.annee}</span></dd></div>
                 ${jeu?.joueurs > 1 ? `<div><dt>👥 Joueurs estimés</dt><dd>≈ ${formatJoueurs(jeu.joueurs)}</dd></div>` : ''}
                 <div><dt>📰 Metacritic</dt><dd>${carte.metacritic ?? '<span class="gris">aucune</span>'}</dd></div>
             </dl>
