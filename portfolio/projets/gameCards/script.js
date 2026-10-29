@@ -19,7 +19,7 @@
 // `prix` : achat direct dans le catalogue, volontairement bien plus cher que la chance en boosters.
 const RARETES = [
     { id: 'mythique',    nom: 'Mythique',    quota: null, chance: 0.1,  chanceGarantie: 0.1, chancePrestige: 0.2,  chancePrestigeGarantie: 1,  chanceDuel: 3,  revente: 300, prix: 10000 },
-    { id: 'legendaire',  nom: 'Légendaire',  quota: 88,  chance: 0.5,  chanceGarantie: 0.9, chancePrestige: 1,    chancePrestigeGarantie: 5,  chanceDuel: 7,  revente: 100, prix: 4000 },
+    { id: 'legendaire',  nom: 'Légendaire',  quota: 110, chance: 0.5,  chanceGarantie: 0.9, chancePrestige: 1,    chancePrestigeGarantie: 5,  chanceDuel: 7,  revente: 100, prix: 4000 },
     { id: 'epique',      nom: 'Épique',      quota: 284, chance: 3,    chanceGarantie: 19,  chancePrestige: 6,    chancePrestigeGarantie: 94, chanceDuel: 12, revente: 40,  prix: 1500 },
     { id: 'rare',        nom: 'Rare',        quota: 1109, chance: 6,    chanceGarantie: 30,  chancePrestige: 22.8, chancePrestigeGarantie: 0,  chanceDuel: 18, revente: 15,  prix: 600 },
     { id: 'peu-commune', nom: 'Peu commune', quota: 2257, chance: 18,   chanceGarantie: 50,  chancePrestige: 70,   chancePrestigeGarantie: 0,  chanceDuel: 25, revente: 5,   prix: 250 },
@@ -102,6 +102,96 @@ const MYTHIQUES = [
     33230,   // Assassin's Creed II
     1328670, // Mass Effect Legendary Edition
     39140,   // Final Fantasy VII
+];
+
+// Classiques cultes : leur notoriété dépasse leurs chiffres Steam (jeux anciens ou surtout joués sur console).
+// Ils sont placés exactement dans cette rareté, en prenant une place du quota.
+const CULTES_LEGENDAIRES = [
+    632470,  // Disco Elysium
+    753640,  // Outer Wilds
+    546560,  // Half-Life: Alyx
+    287700,  // Metal Gear Solid V: The Phantom Pain
+    570940,  // Dark Souls Remastered
+    22370,   // Fallout 3
+    8870,    // BioShock Infinite
+    1687950, // Persona 5 Royal
+    524220,  // NieR:Automata
+    20920,   // The Witcher 2
+    205100,  // Dishonored
+    504230,  // Celeste
+    1057090, // Ori and the Will of the Wisps
+    35140,   // Batman: Arkham Asylum
+    200260,  // Batman: Arkham City
+    813780,  // Age of Empires II: Definitive Edition
+    500,     // Left 4 Dead
+    219150,  // Hotline Miami
+    304430,  // INSIDE
+    1222140, // Detroit: Become Human
+    638970,  // Yakuza 0
+    601150,  // Devil May Cry 5
+    782330,  // DOOM Eternal
+    1551360, // Forza Horizon 5
+    2215430, // Ghost of Tsushima
+    1817070, // Marvel's Spider-Man Remastered
+    239030,  // Papers, Please
+    268910,  // Cuphead
+    646570,  // Slay the Spire
+    883710,  // Resident Evil 2
+    2379780, // Balatro
+    294100,  // RimWorld
+];
+// Jeux viraux (petit prix, succès porté par les streamers) : populaires sur Steam mais pas « légendaires ».
+// Ils ne dépassent jamais Épique, leurs places en Légendaire reviennent aux suivants.
+const PLAFONNES_EPIQUE = [
+    304930,  // Unturned
+    1118200, // People Playground
+    648800,  // Raft
+    322170,  // Geometry Dash
+    242760,  // The Forest
+    1326470, // Sons Of The Forest
+    3164500, // Schedule I
+    3241660, // R.E.P.O.
+    444090,  // Paladins
+    291550,  // Brawlhalla
+    284160,  // BeamNG.drive
+    251570,  // 7 Days to Die
+    698780,  // Doki Doki Literature Club!
+    960090,  // Bloons TD 6
+];
+const CULTES_EPIQUES = [
+    32360,   // The Secret of Monkey Island
+    2060130, // Return to Monkey Island
+    316790,  // Grim Fandango
+    466300,  // Planescape: Torment
+    13600,   // Prince of Persia : Les Sables du Temps
+    211600,  // Thief Gold
+    26800,   // Braid
+    40800,   // Super Meat Boy
+    239350,  // Spelunky
+    590380,  // Into the Breach
+    731490,  // Crash Bandicoot N. Sane Trilogy
+    996580,  // Spyro Reignited Trilogy
+    584400,  // Sonic Mania
+    213610,  // Sonic Adventure 2
+    6910,    // Deus Ex
+    238010,  // Deus Ex: Human Revolution
+    12140,   // Max Payne
+    12150,   // Max Payne 2
+    257350,  // Baldur's Gate II
+    38400,   // Fallout
+    38410,   // Fallout 2
+    50,      // Half-Life: Opposing Force
+    2310,    // Quake
+    960910,  // Heavy Rain
+    250320,  // The Wolf Among Us
+    108710,  // Alan Wake
+    1235140, // Yakuza: Like a Dragon
+    460790,  // Bayonetta
+    3830,    // Psychonauts
+    1213210, // Command & Conquer Remastered
+    221910,  // The Stanley Parable
+    1693980, // Dead Space (2023)
+    2252570, // Football Manager 2024
 ];
 
 // Score de prestige des autres jeux : 85 % popularité + 15 % qualité + bonus
@@ -299,7 +389,7 @@ const echelleLog = (valeur, max) => Math.max(0, Math.min(100, Math.log10(Math.ma
 const nomDeBase = nom => nom.toLowerCase()
     .replace(/\(.*?\)/g, '')
     .replace(/[®™:\-–]/g, ' ')
-    .replace(/\b(game of the year|goty|definitive|complete|deluxe|remastered|enhanced|legacy|special|edition)\b/g, '')
+    .replace(/\b(game of the year|goty|definitive|complete|deluxe|remastered|enhanced|legacy|special|edition|vr)\b/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 
@@ -324,29 +414,54 @@ function calculerRaretes() {
         jeu.prestige = POIDS_POPULARITE * pop + (1 - POIDS_POPULARITE) * qualite + bonus;
     }
 
-    // Les meilleurs scores remplissent les quotas, de Légendaire à Peu commune ;
-    // en Légendaire et Épique, une seule édition par jeu (les autres passent en dessous)
+    // Les meilleurs scores remplissent les quotas, de Légendaire à Peu commune.
+    // En Légendaire et Épique, une seule édition par jeu (les autres passent en dessous),
+    // et les autres éditions d'une Mythique ne dépassent pas Épique.
+    const basesMythiques = new Set(tousLesJeux.filter(j => mythiques.has(j.id)).map(j => nomDeBase(j.nom)));
     const classement = [...tousLesJeux].sort((a, b) => b.prestige - a.prestige);
     const pris = RARETES.map(() => 0);
     const vus = RARETES.map(() => new Set());
-    const indexLibre = (j) => {
-        let i = INDEX_LEGENDAIRE;
+    const indexLibre = (j, depart) => {
+        let i = depart;
         while (RARETES[i].quota && (pris[i] >= RARETES[i].quota || (i <= INDEX_EPIQUE && vus[i].has(j.base)))) i++;
         return i;
     };
+    for (const jeu of tousLesJeux) jeu.base = nomDeBase(jeu.nom);
+
+    // Classiques cultes : placés d'abord, ils prennent leur place dans le quota de leur rareté
+    const cultes = new Map([
+        ...CULTES_LEGENDAIRES.map(id => [id, INDEX_LEGENDAIRE]),
+        ...CULTES_EPIQUES.map(id => [id, INDEX_EPIQUE]),
+    ]);
+    for (const jeu of tousLesJeux) {
+        const i = cultes.get(jeu.id);
+        if (i === undefined) continue;
+        pris[i]++;
+        vus[i].add(jeu.base);
+        jeu.rarete = RARETES[i].id;
+        jeu.raisons.unshift('classique culte');
+    }
+
+    const plafonnes = new Set(PLAFONNES_EPIQUE);
+    for (const jeu of tousLesJeux) if (plafonnes.has(jeu.id)) jeu.raisons.push('plafonné à Épique (succès viral)');
+
     let rang = 0;
     for (const jeu of classement) {
         if (mythiques.has(jeu.id)) {
             jeu.rarete = 'mythique';
             continue;
         }
-        jeu.base = nomDeBase(jeu.nom);
-        let i = indexLibre(jeu);
-        if ((GOTY[jeu.id] || jeu.avis >= AVIS_GEANT) && i > INDEX_LEGENDAIRE) i = INDEX_LEGENDAIRE;
+        jeu.rang = ++rang;
+        if (cultes.has(jeu.id)) continue;
+        const editionMythique = basesMythiques.has(jeu.base);
+        const plafonne = plafonnes.has(jeu.id);
+        let i = indexLibre(jeu, editionMythique || plafonne ? INDEX_EPIQUE : INDEX_LEGENDAIRE);
+        // GOTY et géants : au moins Légendaire, sauf si une autre édition du jeu y est déjà
+        const garanti = (GOTY[jeu.id] || jeu.avis >= AVIS_GEANT) && !editionMythique && !plafonne && !vus[INDEX_LEGENDAIRE].has(jeu.base);
+        if (garanti && i > INDEX_LEGENDAIRE) i = INDEX_LEGENDAIRE;
         pris[i]++;
         vus[i].add(jeu.base);
         jeu.rarete = RARETES[i].id;
-        jeu.rang = ++rang;
     }
 }
 
