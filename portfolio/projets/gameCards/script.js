@@ -553,7 +553,7 @@ function creerCarte(jeu) {
 }
 
 // `cachee` masque les stats, et ce qui les trahirait (année, chef-d'œuvre) : carte adverse en duel
-// Jaquette verticale Steam (600 × 900) pour les Full Art ; à défaut, l'image horizontale
+// Jaquette verticale Steam (600 × 900) sur toute la carte ; à défaut, l'image horizontale sur un fond flouté
 const imagePortrait = carte => `${URL_IMAGES}/${carte.id}/library_600x900.jpg`;
 
 function carteHTML(carte, { holo = false, compteur = 0, cachee = false, fullArt = (carte.fullArts || 0) > 0 } = {}) {
@@ -563,30 +563,30 @@ function carteHTML(carte, { holo = false, compteur = 0, cachee = false, fullArt 
     const infos = [cachee ? null : carte.annee, carte.genres[0]].filter(Boolean).join(' · ');
     const chef = !cachee && carte.metacritic >= SEUIL_CHEF_OEUVRE;
     const goty = gotyDe(carte.id);
+    const secours = echapper(carte.image);
     return `
         <article class="carte rarete-${rarete.id}${holo ? ' holo' : ''}${cachee ? ' stats-cachees' : ''}${chef ? ' chef-oeuvre' : ''}${goty ? ' goty' : ''}${fullArt ? ' full-art' : ''}">
             <div class="carte-corps">
-                ${fullArt ? `<div class="full-art-fond" aria-hidden="true"><img src="${imagePortrait(carte)}" alt="" loading="lazy"
-                    onerror="this.onerror=null; this.src='${echapper(carte.image)}'; this.classList.add('paysage')"></div>` : ''}
+                <div class="carte-affiche" style="--secours: url('${secours}')" aria-hidden="true">
+                    <img src="${imagePortrait(carte)}" alt="" loading="lazy"
+                        onerror="this.onerror=null; this.src='${secours}'; this.parentNode.classList.add('paysage')">
+                </div>
                 ${goty ? `<span class="ruban-goty" title="Jeu de l’année ${goty.annee} · ${goty.ceremonie}"><span>${BRIN_LAURIER}GOTY ${goty.annee}${BRIN_LAURIER}</span></span>` : ''}
-                ${goty ? `<span class="filigrane-goty" aria-hidden="true">${LAURIER}</span>` : ''}
                 <header class="carte-haut">
                     <span class="carte-rarete">${rarete.nom}${fullArt ? ' · Full Art' : holo ? ' · Holo' : ''}</span>
                     ${compteur > 1 ? `<span class="carte-compteur">×${compteur}</span>` : ''}
                 </header>
-                <div class="carte-image">
-                    ${carte.image ? `<img src="${echapper(carte.image)}" alt="" loading="lazy" onerror="this.remove()">` : ''}
+                <div class="carte-bas">
                     ${chef ? `<span class="plaque-chef" title="Metacritic : ${carte.metacritic} / 100">${ICONES.medaille}<span>Chef-d’œuvre</span></span>` : ''}
+                    <h3 class="carte-nom">${echapper(carte.nom)}</h3>
+                    <p class="carte-infos">${echapper(infos) || '&nbsp;'}</p>
+                    <ul class="carte-stats">
+                        ${Object.entries(STATS).map(([cle, stat]) => `
+                            <li data-stat="${cle}" title="${stat.nom}">
+                                <span class="stat-icone">${stat.icone}</span><b>${cachee ? '?' : carte[cle]}</b>
+                            </li>`).join('')}
+                    </ul>
                 </div>
-                <h3 class="carte-nom">${echapper(carte.nom)}</h3>
-                <p class="carte-infos">${echapper(infos) || '&nbsp;'}</p>
-                <ul class="carte-stats">
-                    ${Object.entries(STATS).map(([cle, stat]) => `
-                        <li data-stat="${cle}">
-                            <span>${stat.icone} ${stat.nom}</span><b>${cachee ? '?' : carte[cle]}</b>
-                            <i style="--v:${cachee ? 0 : Math.min(100, carte[cle])}%"></i>
-                        </li>`).join('')}
-                </ul>
             </div>
         </article>`;
 }

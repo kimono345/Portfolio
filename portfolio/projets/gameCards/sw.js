@@ -1,8 +1,9 @@
 // Service worker de GameCards : garde en cache les fichiers du jeu pour pouvoir y rejouer hors ligne.
-//   Page (navigation) : le réseau d'abord, la copie en cache si on est hors ligne.
+//   Page (navigation) : le réseau d'abord (sans le cache HTTP de 10 min de GitHub Pages, sinon une mise à jour
+//   tarde à arriver), la copie en cache si on est hors ligne.
 //   Autres fichiers du jeu et polices : la copie en cache tout de suite, mise à jour en arrière-plan.
 //   Les images Steam ne sont pas gardées (des dizaines de milliers possibles).
-const CACHE = 'gamecards-v1';
+const CACHE = 'gamecards-v2';
 
 self.addEventListener('install', e => {
     e.waitUntil(caches.open(CACHE).then(cache => cache.add('./')).then(() => self.skipWaiting()));
@@ -23,7 +24,7 @@ self.addEventListener('fetch', e => {
     if (!aGarder) return;
 
     if (requete.mode === 'navigate') {
-        e.respondWith(fetch(requete)
+        e.respondWith(fetch(requete, { cache: 'no-cache' })
             .then(reponse => {
                 caches.open(CACHE).then(cache => cache.put('./', reponse.clone()));
                 return reponse;
