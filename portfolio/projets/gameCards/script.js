@@ -40,6 +40,10 @@ const CHANCE_GOD_PACK = 1 / 2000;
 const CHANCE_HOLO_GOD_PACK = 0.25; // contre 2 % (CHANCE_HOLO) dans un booster normal
 const PART_MYTHIQUE_GOD_PACK = 0.25; // en plus de la Mythique garantie
 
+// Compteur de malchance : après 50 boosters sans Légendaire ni Mythique, le suivant en garantit une
+const MALCHANCE_MAX = 50;
+const GAIN_POM = 2; // pièces par bonne réponse au Plus ou moins
+
 const CARTES_PAR_BOOSTER = 5;
 const BOOSTERS_PAR_LOT = 10; // ouverture ×10
 const PRIX_BOOSTER = 0;
@@ -218,6 +222,7 @@ const URL_IMAGES = 'https://shared.akamai.steamstatic.com/store_item_assets/stea
 const ICONES = {
     pouce: '<svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.956 1.745C7.021.81 7.908.087 8.864.325l.261.066c.463.116.874.456 1.012.965.22.816.533 2.511.062 4.51a10 10 0 0 1 .443-.051c.713-.065 1.669-.072 2.516.21.518.173.994.681 1.2 1.273.184.532.16 1.162-.234 1.733q.086.18.138.363c.077.27.113.567.113.856s-.036.586-.113.856c-.039.135-.09.273-.16.404.169.387.107.819-.003 1.148a3.2 3.2 0 0 1-.488.901c.054.152.076.312.076.465 0 .305-.089.625-.253.912C13.1 15.522 12.437 16 11.5 16H8c-.605 0-1.07-.081-1.466-.218a4.8 4.8 0 0 1-.97-.484l-.048-.03c-.504-.307-.999-.609-2.068-.722C2.682 14.464 2 13.846 2 13V9c0-.85.685-1.432 1.357-1.615.849-.232 1.574-.787 2.132-1.41.56-.627.914-1.28 1.039-1.639.199-.575.356-1.539.428-2.59z"/></svg>',
     medaille: '<svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="m8 0 1.669.864 1.858.282.842 1.68 1.337 1.32L13.4 6l.306 1.854-1.337 1.32-.842 1.68-1.858.282L8 12l-1.669-.864-1.858-.282-.842-1.68-1.337-1.32L2.6 6l-.306-1.854 1.337-1.32.842-1.68L6.331.864z"/><path d="M4 11.794V16l4-1 4 1v-4.206l-2.018.306L8 13.126 6.018 12.1z"/></svg>',
+    trophee: '<svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5.5A.5.5 0 0 1 3 0h10a.5.5 0 0 1 .5.5q0 .807-.034 1.536a3 3 0 1 1-1.133 5.89c-.79 1.865-1.878 2.777-2.833 3.011v2.173l1.425.356c.194.048.377.135.537.255L13.3 15.1a.5.5 0 0 1-.3.9H3a.5.5 0 0 1-.3-.9l1.838-1.379c.16-.12.343-.207.537-.255L6.5 13.11v-2.173c-.955-.234-2.043-1.146-2.833-3.012a3 3 0 1 1-1.132-5.89A33 33 0 0 1 2.5.5m.099 2.54a2 2 0 0 0 .72 3.935c-.333-1.05-.588-2.346-.72-3.935m10.083 3.935a2 2 0 0 0 .72-3.935c-.133 1.59-.388 2.885-.72 3.935"/></svg>',
     sablier: '<svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 15a.5.5 0 1 1 0-1h1v-1a4.5 4.5 0 0 1 2.557-4.06c.29-.139.443-.377.443-.59v-.7c0-.213-.154-.451-.443-.59A4.5 4.5 0 0 1 3.5 3V2h-1a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-1v1a4.5 4.5 0 0 1-2.557 4.06c-.29.139-.443.377-.443.59v.7c0 .213.154.451.443.59A4.5 4.5 0 0 1 12.5 13v1h1a.5.5 0 0 1 0 1zm2-13v1c0 .537.12 1.045.337 1.5h6.326c.216-.455.337-.963.337-1.5V2zm3 6.35c0 .701-.478 1.236-1.011 1.492A3.5 3.5 0 0 0 4.5 13s.866-1.299 3-1.48zm1 0v3.17c2.134.181 3 1.48 3 1.48a3.5 3.5 0 0 0-1.989-3.158C8.978 9.586 8.5 9.052 8.5 8.351z"/></svg>',
 };
 
@@ -314,6 +319,10 @@ const CLES = {
     pieces: 'gameCards.pieces',
     charges: 'gameCards.charges',
     godPacks: 'gameCards.godPacks',
+    stats: 'gameCards.stats',
+    succes: 'gameCards.succes',
+    malchance: 'gameCards.malchance',
+    reglages: 'gameCards.reglages',
 };
 
 function lire(cle, defaut) {
@@ -344,6 +353,10 @@ const etat = {
         ...lire(CLES.charges, {}),
     },
     godPacks: lire(CLES.godPacks, { nombre: 0, premier: null }), // trophée : combien, et la date du premier
+    stats: { boosters: 0, prestiges: 0, duelsGagnes: 0, duelsParfaits: 0, ventes: 0, recordPom: 0, ...lire(CLES.stats, {}) },
+    succes: lire(CLES.succes, {}),        // { id du succès: date d'obtention }
+    malchance: lire(CLES.malchance, 0),   // boosters ouverts depuis la dernière Légendaire ou Mythique
+    reglages: { sons: false, ...lire(CLES.reglages, {}) },
 };
 
 // Tous les jeux de data/jeux.json (chargés au démarrage), et les mêmes rangés par rareté
@@ -677,6 +690,7 @@ function vendreDoublon(id) {
     if (entree.exemplaires === entree.holos) entree.holos--;
     entree.exemplaires--;
     etat.pieces += prix;
+    etat.stats.ventes++;
     return prix;
 }
 
@@ -800,7 +814,7 @@ function tirerGodPack() {
 }
 
 // Les 5 cartes d'un booster : 4 au hasard + une 5ᵉ garantie (ou, très rarement, un god pack)
-function tirerBooster(type) {
+function tirerBooster(type, legendaireGarantie = false) {
     if (prochainGodPack || Math.random() < CHANCE_GOD_PACK) {
         prochainGodPack = false;
         return tirerGodPack();
@@ -808,7 +822,10 @@ function tirerBooster(type) {
     const [cleChance, cleGarantie] = type.prestige ? ['chancePrestige', 'chancePrestigeGarantie'] : ['chance', 'chanceGarantie'];
     const chanceHolo = type.prestige ? CHANCE_HOLO_PRESTIGE : CHANCE_HOLO;
     const indices = Array.from({ length: CARTES_PAR_BOOSTER - 1 }, () => tirerRarete(cleChance));
-    indices.push(tirerRarete(cleGarantie));
+    // Compteur de malchance atteint : la dernière carte est Légendaire ou mieux
+    indices.push(legendaireGarantie
+        ? tirerRarete('chance', RARETES.slice(0, INDEX_LEGENDAIRE + 1))
+        : tirerRarete(cleGarantie));
     const exclus = new Set();
     return indices.map(index => {
         const carte = piocher(index, exclus);
@@ -827,7 +844,15 @@ async function ouvrirBooster(mode, nombreBoosters = 1, type = TYPES_BOOSTER.stan
     }
     ouvertureEnCours = true;
 
-    const boosters = Array.from({ length: nombreBoosters }, () => tirerBooster(type));
+    const boosters = [];
+    for (let i = 0; i < nombreBoosters; i++) {
+        const booster = tirerBooster(type, etat.malchance >= MALCHANCE_MAX - 1);
+        const hauteRarete = booster.some(t => indexRarete(t.carte.rarete) <= INDEX_LEGENDAIRE);
+        etat.malchance = hauteRarete ? 0 : etat.malchance + 1;
+        boosters.push(booster);
+    }
+    etat.stats.boosters += nombreBoosters;
+    if (type.prestige) etat.stats.prestiges += nombreBoosters;
     const tirage = boosters.flat();
     const godPacks = tirage.filter(t => t.godPack).length / CARTES_PAR_BOOSTER;
     if (mode === 'gratuit') consommerCharges(type, nombreBoosters);
@@ -872,6 +897,7 @@ let dernierTirage = [];
 // Mise en scène du god pack : le paquet devient doré et tremble, flash, pluie d'étincelles, titre géant
 async function revelationGodPack(paquet) {
     paquet.classList.add('divin');
+    jouerSon('godpack');
     await attendre(1200);
 
     const flash = document.createElement('div');
@@ -993,6 +1019,7 @@ async function dechirerPaquet(modele, divin, rang) {
 
     paquet.classList.remove('en-dechirure', 'indice');
     paquet.style.setProperty('--sens', sens);
+    jouerSon('dechirure');
     if (divin) await revelationGodPack(paquet);
     paquet.classList.remove('divin');
     paquet.classList.add('dechire');
@@ -1043,6 +1070,7 @@ async function defilerPile(cartes, rang) {
         elements.forEach((element, k) => element.style.setProperty('--rang', k - i));
         const dessus = elements[i];
         if (indexRarete(cartes[i].carte.rarete) <= INDEX_LEGENDAIRE) dessus.classList.add('apparition-rare');
+        jouerSonRarete(cartes[i].carte.rarete);
 
         // Si la carte suivante est Épique ou mieux, la pile brille de sa couleur : suspense
         const suivante = cartes[i + 1];
@@ -1055,6 +1083,7 @@ async function defilerPile(cartes, rang) {
         if (seance.passer) return;
         dessus.style.setProperty('--sens', sens);
         dessus.classList.add('envolee');
+        jouerSon('carte');
         await attendre(300);
         dessus.hidden = true;
     }
@@ -1114,6 +1143,7 @@ function finTirage() {
         ${holos ? `<span>✨ <b>${holos}</b> holo${holos > 1 ? 's' : ''}</span>` : ''}`;
     majPaquets();
     for (const id of ['#bilan', '#btn-retour', '#btn-voir-collection']) $(id).hidden = false;
+    verifierSucces();
 }
 
 // ---------- Écran accueil ----------
@@ -1132,6 +1162,7 @@ function afficherAccueil() {
     $('#progression-barre').style.width = total ? `${Math.max(0.5, (entrees.length / total) * 100)}%` : '0';
     $('#progression-raretes').innerHTML = pucesRaretesHTML();
     majTropheeGodPack();
+    majMalchance();
 
     const recentes = entrees.sort((a, b) => b.obtenue - a.obtenue).slice(0, 8);
     $('#bloc-recentes').hidden = !recentes.length;
@@ -1230,6 +1261,7 @@ function vendreDepuisCollection(id) {
         majResumeCollection();
     }
     toast(`+${prix} pièces`, 'gain');
+    verifierSucces();
 }
 
 function vendreTousLesDoublons() {
@@ -1241,6 +1273,7 @@ function vendreTousLesDoublons() {
     majEntete();
     afficherCollection();
     toast(`+${nombre(valeur)} pièces`, 'gain');
+    verifierSucces();
 }
 
 // ---------- Fiche détaillée ----------
@@ -1386,6 +1419,7 @@ function acheterCarte(id) {
     sauvegarder();
     majEntete();
     toast(`${carte.nom} rejoint ta collection !`, 'gain');
+    verifierSucces();
     if (!$('#ecran-catalogue').hidden) afficherCatalogue();
     if ($('#modale').open) afficherFiche(id);
 }
@@ -1530,6 +1564,8 @@ async function choisirStat(stat) {
 function finDuel() {
     const victoire = duel.joueur >= MANCHES_GAGNANTES;
     if (victoire) {
+        etat.stats.duelsGagnes++;
+        if (duel.ordi === 0) etat.stats.duelsParfaits++;
         etat.pieces += GAIN_DUEL;
         sauvegarder();
         majEntete();
@@ -1540,6 +1576,306 @@ function finDuel() {
         ? `<br><b class="victoire">Victoire ${duel.joueur} à ${duel.ordi} !</b> Tu gagnes ${GAIN_DUEL} pièces.`
         : `<br><b class="defaite">Défaite ${duel.joueur} à ${duel.ordi}.</b> Retente ta chance !`;
     actionsDuel('<button class="btn btn-principal btn-grand" data-action="demarrer">Rejouer</button>');
+    jouerSon(victoire ? 'succes' : 'mauvaise');
+    verifierSucces();
+}
+
+// ---------- Compteur de malchance ----------
+
+function majMalchance() {
+    const reste = MALCHANCE_MAX - etat.malchance;
+    $('#malchance').innerHTML = reste <= 1
+        ? '<b>Prochain booster : Légendaire garantie !</b>'
+        : `Légendaire garantie au plus tard dans <b>${reste}</b> boosters`;
+}
+
+// ---------- Succès ----------
+
+const possedees = () => Object.values(etat.collection);
+const nombreDeRarete = id => possedees().filter(e => e.rarete === id).length;
+// Années de GOTY couvertes par la collection (plusieurs éditions d'un même GOTY comptent pour une)
+const anneesGotyPossedees = () => new Set(possedees().filter(e => GOTY[e.id]).map(e => GOTY[e.id][0])).size;
+const ANNEES_GOTY = new Set(Object.values(GOTY).map(g => g[0])).size;
+
+// Chaque succès se débloque quand valeur() atteint cible ; la récompense est en pièces
+const SUCCES = [
+    // Collection
+    { id: 'premier-pas', nom: 'Premier pas', description: 'Obtenir ta première carte', cible: 1, recompense: 10, valeur: () => possedees().length },
+    { id: 'collectionneur', nom: 'Collectionneur', description: 'Posséder 100 jeux différents', cible: 100, recompense: 50, valeur: () => possedees().length },
+    { id: 'archiviste', nom: 'Archiviste', description: 'Posséder 500 jeux différents', cible: 500, recompense: 150, valeur: () => possedees().length },
+    { id: 'conservateur', nom: 'Conservateur de musée', description: 'Posséder 1 000 jeux différents', cible: 1000, recompense: 400, valeur: () => possedees().length },
+    { id: 'premiere-rare', nom: 'Ça devient rare', description: 'Obtenir une carte Rare', cible: 1, recompense: 10, valeur: () => nombreDeRarete('rare') },
+    { id: 'premiere-epique', nom: 'Épique !', description: 'Obtenir une carte Épique', cible: 1, recompense: 25, valeur: () => nombreDeRarete('epique') },
+    { id: 'premiere-legendaire', nom: 'Une légende', description: 'Obtenir une carte Légendaire', cible: 1, recompense: 75, valeur: () => nombreDeRarete('legendaire') },
+    { id: 'premiere-mythique', nom: 'Mythe vivant', description: 'Obtenir une carte Mythique', cible: 1, recompense: 250, valeur: () => nombreDeRarete('mythique') },
+    { id: 'pantheon', nom: 'Panthéon', description: 'Posséder 5 Mythiques différentes', cible: 5, recompense: 500, valeur: () => nombreDeRarete('mythique') },
+    { id: 'olympe', nom: 'Olympe', description: 'Posséder toutes les Mythiques', cible: MYTHIQUES.length, recompense: 2000, valeur: () => nombreDeRarete('mythique') },
+    { id: 'palmares', nom: 'Palmarès', description: 'Posséder 5 jeux de l’année (années différentes)', cible: 5, recompense: 150, valeur: anneesGotyPossedees },
+    { id: 'tous-goty', nom: 'Toutes les cérémonies', description: 'Posséder un jeu de l’année pour chaque année', cible: ANNEES_GOTY, recompense: 1000, valeur: anneesGotyPossedees },
+    { id: 'critique', nom: 'Critique avisé', description: 'Posséder 10 chefs-d’œuvre (Metacritic 90+)', cible: 10, recompense: 100, valeur: () => possedees().filter(e => e.metacritic >= SEUIL_CHEF_OEUVRE).length },
+    { id: 'brillant', nom: 'Tout ce qui brille', description: 'Obtenir une carte holo', cible: 1, recompense: 50, valeur: () => possedees().filter(e => e.holos > 0).length },
+    { id: 'galerie-holo', nom: 'Galerie des glaces', description: 'Posséder 10 cartes holo différentes', cible: 10, recompense: 200, valeur: () => possedees().filter(e => e.holos > 0).length },
+    { id: 'divin', nom: 'Intervention divine', description: 'Ouvrir un god pack', cible: 1, recompense: 500, valeur: () => etat.godPacks.nombre },
+    // Boosters
+    { id: 'boosters-10', nom: 'Déchireur', description: 'Ouvrir 10 boosters', cible: 10, recompense: 20, valeur: () => etat.stats.boosters },
+    { id: 'boosters-100', nom: 'Accro aux boosters', description: 'Ouvrir 100 boosters', cible: 100, recompense: 100, valeur: () => etat.stats.boosters },
+    { id: 'boosters-500', nom: 'Usine à cartes', description: 'Ouvrir 500 boosters', cible: 500, recompense: 300, valeur: () => etat.stats.boosters },
+    { id: 'boosters-1000', nom: 'Mille paquets', description: 'Ouvrir 1 000 boosters', cible: 1000, recompense: 600, valeur: () => etat.stats.boosters },
+    { id: 'grand-luxe', nom: 'Grand luxe', description: 'Ouvrir un booster Prestige', cible: 1, recompense: 30, valeur: () => etat.stats.prestiges },
+    { id: 'habitue-prestige', nom: 'Habitué du Prestige', description: 'Ouvrir 30 boosters Prestige', cible: 30, recompense: 200, valeur: () => etat.stats.prestiges },
+    // Jeux
+    { id: 'premier-sang', nom: 'Premier sang', description: 'Gagner un duel', cible: 1, recompense: 20, valeur: () => etat.stats.duelsGagnes },
+    { id: 'duelliste', nom: 'Duelliste', description: 'Gagner 10 duels', cible: 10, recompense: 100, valeur: () => etat.stats.duelsGagnes },
+    { id: 'champion', nom: 'Champion', description: 'Gagner 50 duels', cible: 50, recompense: 300, valeur: () => etat.stats.duelsGagnes },
+    { id: 'sans-appel', nom: 'Sans appel', description: 'Gagner un duel 3 à 0', cible: 1, recompense: 50, valeur: () => etat.stats.duelsParfaits },
+    { id: 'bon-instinct', nom: 'Bon instinct', description: 'Enchaîner 5 bonnes réponses au Plus ou moins', cible: 5, recompense: 20, valeur: () => etat.stats.recordPom },
+    { id: 'encyclopedie', nom: 'Encyclopédie', description: 'Enchaîner 15 bonnes réponses au Plus ou moins', cible: 15, recompense: 100, valeur: () => etat.stats.recordPom },
+    { id: 'oracle', nom: 'Oracle', description: 'Enchaîner 30 bonnes réponses au Plus ou moins', cible: 30, recompense: 300, valeur: () => etat.stats.recordPom },
+    // Commerce
+    { id: 'marchand', nom: 'Marchand', description: 'Revendre un doublon', cible: 1, recompense: 10, valeur: () => etat.stats.ventes },
+    { id: 'grossiste', nom: 'Grossiste', description: 'Revendre 100 doublons', cible: 100, recompense: 100, valeur: () => etat.stats.ventes },
+];
+
+// Débloque les succès atteints, verse leurs récompenses et les annonce
+function verifierSucces() {
+    const nouveaux = SUCCES.filter(s => !etat.succes[s.id] && s.valeur() >= s.cible);
+    if (!nouveaux.length) return;
+    for (const s of nouveaux) {
+        etat.succes[s.id] = Date.now();
+        etat.pieces += s.recompense;
+    }
+    sauvegarder();
+    majEntete();
+    jouerSon('succes');
+    if (nouveaux.length > 3) {
+        const total = nouveaux.reduce((n, s) => n + s.recompense, 0);
+        toast(`${nouveaux.length} succès débloqués ! +${nombre(total)} pièces`, 'gain');
+    } else {
+        for (const s of nouveaux) toast(`Succès « ${s.nom} » ! +${nombre(s.recompense)} pièces`, 'gain');
+    }
+    if (!$('#ecran-profil').hidden) afficherProfil();
+}
+
+// ---------- Écran profil ----------
+
+function afficherProfil() {
+    const faits = SUCCES.filter(s => etat.succes[s.id]).length;
+    const stats = etat.stats;
+    $('#resume-profil').textContent = `${nombre(stats.boosters)} boosters ouverts · ${nombre(stats.duelsGagnes)} duels gagnés`
+        + ` · record au Plus ou moins : ${stats.recordPom}`;
+    $('#succes-compte').textContent = `${faits} / ${SUCCES.length}`;
+    $('#succes-grille').innerHTML = SUCCES.map(succes => {
+        const obtenu = etat.succes[succes.id];
+        const valeur = Math.min(succes.valeur(), succes.cible);
+        return `
+            <article class="succes${obtenu ? ' obtenu' : ''}">
+                ${ICONES.trophee}
+                <div class="succes-texte">
+                    <h3>${succes.nom}</h3>
+                    <p>${succes.description}</p>
+                    ${obtenu
+                        ? `<span class="succes-date">Obtenu le ${new Date(obtenu).toLocaleDateString('fr-FR')}</span>`
+                        : `<span class="succes-progres"><i style="--v: ${(valeur / succes.cible) * 100}%"></i>${nombre(valeur)} / ${nombre(succes.cible)}</span>`}
+                </div>
+                <span class="succes-gain">+${nombre(succes.recompense)} ${PIECE}</span>
+            </article>`;
+    }).join('');
+    $('#reglage-sons').checked = etat.reglages.sons;
+}
+
+// ---------- Mini-jeu « Plus ou moins » ----------
+
+// `different` : écart minimal pour que la question ait une vraie réponse
+const QUESTIONS_POM = [
+    { question: 'Lequel a le plus d’avis Steam ?', valeur: j => j.avis, gagnant: 'max',
+      different: (a, b) => Math.max(a, b) >= Math.min(a, b) * 1.15, texte: j => `${nombre(j.avis)} avis` },
+    { question: 'Lequel est le mieux noté par les joueurs ?', valeur: j => j.note, gagnant: 'max',
+      different: (a, b) => Math.abs(a - b) >= 3, texte: j => `${j.note} % d’avis positifs` },
+    { question: 'Lequel est sorti en premier ?', valeur: j => j.annee, gagnant: 'min',
+      different: (a, b) => a !== b, texte: j => `sorti en ${j.annee}` },
+];
+const pom = { serie: 0, paire: null, question: null, verrou: false };
+let jeuxPom = null;
+
+function majScorePom() {
+    $('#pom-serie').textContent = pom.serie;
+    $('#pom-record').textContent = etat.stats.recordPom;
+}
+
+function nouvelleQuestionPom() {
+    if (!donneesPretes()) return;
+    // Des jeux assez connus pour qu'on puisse deviner (au moins 3 000 avis réels)
+    jeuxPom ??= tousLesJeux.filter(j => !j.estime && j.avis >= 3000 && j.annee);
+    const question = auHasard(QUESTIONS_POM);
+    let a, b;
+    do {
+        a = auHasard(jeuxPom);
+        b = auHasard(jeuxPom);
+    } while (a.id === b.id || !question.different(question.valeur(a), question.valeur(b)));
+    Object.assign(pom, { question, paire: [a, b], verrou: false });
+
+    $('#pom-question').textContent = question.question;
+    $('#pom-plateau').innerHTML = pom.paire.map((jeu, i) => `
+        <button class="pom-choix" data-pom="${i}" aria-label="${echapper(jeu.nom)}">
+            ${carteHTML(creerCarte(jeu), { cachee: true })}
+            <span class="pom-valeur" hidden>${question.texte(jeu)}</span>
+        </button>`).join('<span class="duel-vs">OU</span>');
+    $('#pom-message').textContent = 'Clique sur la bonne carte.';
+    $('#pom-actions').innerHTML = '';
+    majScorePom();
+}
+
+function repondrePom(choix) {
+    if (pom.verrou || !pom.paire) return;
+    pom.verrou = true;
+    const [va, vb] = pom.paire.map(pom.question.valeur);
+    const bonne = pom.question.gagnant === 'max' ? (va > vb ? 0 : 1) : (va < vb ? 0 : 1);
+    document.querySelectorAll('.pom-choix').forEach((bouton, i) => {
+        bouton.disabled = true;
+        bouton.classList.add(i === bonne ? 'bonne' : 'mauvaise');
+        bouton.querySelector('.pom-valeur').hidden = false;
+    });
+
+    if (choix === bonne) {
+        pom.serie++;
+        etat.pieces += GAIN_POM;
+        etat.stats.recordPom = Math.max(etat.stats.recordPom, pom.serie);
+        sauvegarder();
+        majEntete();
+        jouerSon('bonne');
+        $('#pom-message').innerHTML = `<b class="victoire">Bonne réponse !</b> +${GAIN_POM} pièces`;
+        $('#pom-actions').innerHTML = '<button class="btn btn-principal btn-grand" data-pom-action="suivant">Question suivante</button>';
+    } else {
+        jouerSon('mauvaise');
+        const serie = pom.serie;
+        $('#pom-message').innerHTML = `<b class="defaite">Raté !</b> Série terminée : ${serie} bonne${serie > 1 ? 's' : ''} réponse${serie > 1 ? 's' : ''}.`;
+        pom.serie = 0;
+        $('#pom-actions').innerHTML = '<button class="btn btn-principal btn-grand" data-pom-action="suivant">Rejouer</button>';
+    }
+    majScorePom();
+    verifierSucces();
+}
+
+// Onglets de l'écran « Jouer » : Duel ou Plus ou moins
+function changerModeJeu(mode) {
+    document.querySelectorAll('[data-mode]').forEach(onglet => {
+        onglet.classList.toggle('actif', onglet.dataset.mode === mode);
+        onglet.setAttribute('aria-selected', onglet.dataset.mode === mode);
+    });
+    $('#mode-duel').hidden = mode !== 'duel';
+    $('#mode-pom').hidden = mode !== 'pom';
+    if (mode === 'pom' && !pom.paire) nouvelleQuestionPom();
+}
+
+// ---------- Sons (synthétisés avec Web Audio, coupés par défaut) ----------
+
+let contexteAudio = null;
+
+function jouerNote(frequence, debut, duree, { type = 'sine', volume = 0.15 } = {}) {
+    const ctx = contexteAudio;
+    const oscillateur = ctx.createOscillator();
+    const gain = ctx.createGain();
+    oscillateur.type = type;
+    oscillateur.frequency.value = frequence;
+    const t = ctx.currentTime + debut;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(volume, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + duree);
+    oscillateur.connect(gain).connect(ctx.destination);
+    oscillateur.start(t);
+    oscillateur.stop(t + duree + 0.05);
+}
+
+// Bruit filtré : froissement de papier, glissement de carte
+function jouerBruit(duree, { filtre = 'bandpass', de = 4000, a = 800, volume = 0.25 } = {}) {
+    const ctx = contexteAudio;
+    const tampon = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * duree), ctx.sampleRate);
+    const echantillons = tampon.getChannelData(0);
+    for (let i = 0; i < echantillons.length; i++) echantillons[i] = Math.random() * 2 - 1;
+    const source = ctx.createBufferSource();
+    source.buffer = tampon;
+    const passeBande = ctx.createBiquadFilter();
+    passeBande.type = filtre;
+    const t = ctx.currentTime;
+    passeBande.frequency.setValueAtTime(de, t);
+    passeBande.frequency.exponentialRampToValueAtTime(a, t + duree);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(volume, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + duree);
+    source.connect(passeBande).connect(gain).connect(ctx.destination);
+    source.start(t);
+}
+
+const SONS = {
+    dechirure: () => jouerBruit(0.35, { de: 6000, a: 900, volume: 0.3 }),
+    carte: () => jouerBruit(0.12, { filtre: 'highpass', de: 2500, a: 5000, volume: 0.12 }),
+    epique: () => [784, 1175].forEach((f, i) => jouerNote(f, i * 0.09, 0.35)),
+    legendaire: () => [523, 659, 784, 1047].forEach((f, i) => jouerNote(f, i * 0.08, 0.5, { type: 'triangle' })),
+    mythique: () => {
+        [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => jouerNote(f, i * 0.07, 0.7, { type: 'triangle' }));
+        jouerNote(2093, 0.45, 1.2, { volume: 0.08 });
+    },
+    godpack: () => {
+        [392, 523, 659, 784].forEach((f, i) => jouerNote(f, i * 0.12, 0.6, { type: 'sawtooth', volume: 0.07 }));
+        [1047, 1319, 1568].forEach(f => jouerNote(f, 0.55, 1.4, { type: 'triangle', volume: 0.1 }));
+    },
+    succes: () => {
+        jouerNote(1047, 0, 0.3);
+        jouerNote(1568, 0.1, 0.5);
+    },
+    bonne: () => {
+        jouerNote(660, 0, 0.12);
+        jouerNote(990, 0.08, 0.2);
+    },
+    mauvaise: () => jouerNote(180, 0, 0.35, { type: 'square', volume: 0.06 }),
+};
+
+function jouerSon(nom) {
+    if (!etat.reglages.sons) return;
+    try {
+        contexteAudio ??= new (window.AudioContext || window.webkitAudioContext)();
+        if (contexteAudio.state === 'suspended') contexteAudio.resume();
+        SONS[nom]?.();
+    } catch (e) {
+        console.warn('Son impossible', e);
+    }
+}
+
+function jouerSonRarete(rarete) {
+    if (rarete === 'mythique' || rarete === 'legendaire' || rarete === 'epique') jouerSon(rarete);
+}
+
+// ---------- Sauvegarde dans un fichier ----------
+
+function exporterSauvegarde() {
+    const donnees = {};
+    for (const cle of Object.keys(localStorage)) if (cle.startsWith('gameCards.')) donnees[cle] = localStorage.getItem(cle);
+    const contenu = JSON.stringify({ jeu: 'GameCards', version: 1, date: new Date().toISOString(), donnees });
+    const lien = document.createElement('a');
+    lien.href = URL.createObjectURL(new Blob([contenu], { type: 'application/json' }));
+    lien.download = `gamecards-sauvegarde-${new Date().toISOString().slice(0, 10)}.json`;
+    lien.click();
+    setTimeout(() => URL.revokeObjectURL(lien.href), 1000);
+    toast('Sauvegarde téléchargée', 'gain');
+}
+
+async function importerSauvegarde(fichier) {
+    try {
+        const contenu = JSON.parse(await fichier.text());
+        const donnees = contenu?.donnees;
+        if (contenu?.jeu !== 'GameCards' || !donnees || typeof donnees !== 'object') throw new Error('format inconnu');
+        const cles = Object.keys(donnees).filter(cle => cle.startsWith('gameCards.') && typeof donnees[cle] === 'string');
+        if (!cles.length) throw new Error('sauvegarde vide');
+        const date = new Date(contenu.date).toLocaleDateString('fr-FR');
+        if (!confirm(`Remplacer ta progression actuelle par la sauvegarde du ${date} ?`)) return;
+        Object.keys(localStorage).filter(cle => cle.startsWith('gameCards.')).forEach(cle => localStorage.removeItem(cle));
+        for (const cle of cles) localStorage.setItem(cle, donnees[cle]);
+        location.hash = '#accueil';
+        location.reload();
+    } catch (e) {
+        console.warn(e);
+        toast('Ce fichier n’est pas une sauvegarde GameCards valide', 'erreur');
+    }
 }
 
 // ---------- Effet d'inclinaison 3D (paquets, fiche) ----------
@@ -1576,6 +1912,7 @@ function afficherEcran(nom) {
     if (nom === 'collection') afficherCollection();
     if (nom === 'regles') afficherRegles();
     if (nom === 'catalogue') afficherCatalogue();
+    if (nom === 'profil') afficherProfil();
     window.scrollTo(0, 0);
 }
 
@@ -1677,6 +2014,32 @@ function init() {
         else if (bouton.dataset.action === 'manche') nouvelleManche();
     });
 
+    // Jouer : onglets, Plus ou moins
+    $('#onglets-jeu').addEventListener('click', e => {
+        const onglet = e.target.closest('[data-mode]');
+        if (onglet) changerModeJeu(onglet.dataset.mode);
+    });
+    $('#pom-plateau').addEventListener('click', e => {
+        const choix = e.target.closest('[data-pom]');
+        if (choix) repondrePom(Number(choix.dataset.pom));
+    });
+    $('#pom-actions').addEventListener('click', e => {
+        if (e.target.closest('[data-pom-action]')) nouvelleQuestionPom();
+    });
+
+    // Profil : sons, sauvegarde dans un fichier
+    $('#reglage-sons').addEventListener('change', e => {
+        etat.reglages.sons = e.target.checked;
+        sauvegarder();
+        jouerSon('succes');
+    });
+    $('#btn-exporter').addEventListener('click', exporterSauvegarde);
+    $('#btn-importer').addEventListener('click', () => $('#fichier-import').click());
+    $('#fichier-import').addEventListener('change', e => {
+        if (e.target.files[0]) importerSauvegarde(e.target.files[0]);
+        e.target.value = '';
+    });
+
     // Inclinaison 3D à la souris uniquement
     document.addEventListener('pointermove', e => {
         if (e.pointerType !== 'mouse') return;
@@ -1708,6 +2071,9 @@ function init() {
             if (ecran === 'regles') afficherRegles();
             if (ecran === 'catalogue') afficherCatalogue();
             if (ecran === 'collection') afficherCollection();
+            if (ecran === 'profil') afficherProfil();
+            if (!$('#mode-pom').hidden) nouvelleQuestionPom();
+            verifierSucces(); // succès déjà atteints par une collection existante
         })
         .catch(e => {
             console.error(e);
@@ -1716,3 +2082,8 @@ function init() {
 }
 
 init();
+
+// Application installable : le service worker garde le jeu en cache pour y rejouer hors ligne
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(e => console.warn('Service worker indisponible', e));
+}

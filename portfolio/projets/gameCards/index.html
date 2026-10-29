@@ -6,10 +6,13 @@
     <title>GameCards</title>
     <meta name="description" content="Jeu de cartes à collectionner où chaque carte est un vrai jeu vidéo.">
     <meta name="theme-color" content="#0b0d17">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icones/icone-192.png">
+    <link rel="apple-touch-icon" href="icones/icone-192.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=44">
+    <link rel="stylesheet" href="style.css?v=47">
 </head>
 <body>
 
@@ -46,11 +49,15 @@
             </a>
             <a href="#duel" data-ecran="duel">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M14.5 6.5 18 3h3v3l-3.5 3.5M5 14l4 4M7 17l-3 3M3 19l2 2"/></svg>
-                <span>Duel</span>
+                <span>Jouer</span>
             </a>
             <a href="#regles" data-ecran="regles">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg>
                 <span>Règles</span>
+            </a>
+            <a href="#profil" data-ecran="profil">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                <span>Profil</span>
             </a>
         </nav>
 
@@ -116,6 +123,7 @@
                     </div>
                     <div class="barre"><i id="progression-barre"></i></div>
                     <div class="puces-raretes" id="progression-raretes"></div>
+                    <p class="malchance" id="malchance"></p>
                     <p class="trophee-godpack" id="trophee-godpack" hidden></p>
                 </div>
 
@@ -223,9 +231,15 @@
         <!-- ── DUEL ── -->
         <section class="ecran" id="ecran-duel" hidden>
             <div class="titre-ecran titre-centre">
-                <h1>Duel</h1>
-                <p>Premier à 3 manches. À chaque manche, une carte de ta collection affronte une carte adverse : tu vois le jeu adverse mais pas ses stats, à toi de choisir la stat qui le bat.</p>
+                <h1>Jouer</h1>
             </div>
+            <div class="onglets" id="onglets-jeu" role="tablist">
+                <button class="actif" data-mode="duel" role="tab" aria-selected="true">Duel</button>
+                <button data-mode="pom" role="tab" aria-selected="false">Plus ou moins</button>
+            </div>
+
+            <div id="mode-duel">
+            <p class="duel-message">Premier à 3 manches. À chaque manche, une carte de ta collection affronte une carte adverse : tu vois le jeu adverse mais pas ses stats, à toi de choisir la stat qui le bat.</p>
 
             <div class="duel-score">
                 <div class="duel-joueur-score">
@@ -251,6 +265,16 @@
 
             <div class="duel-actions" id="duel-actions">
                 <button class="btn btn-principal btn-grand" data-action="demarrer">Lancer un duel</button>
+            </div>
+            </div>
+
+            <!-- Mini-jeu : deviner lequel des deux jeux gagne sur une question -->
+            <div id="mode-pom" hidden>
+                <p class="pom-question" id="pom-question">Chargement…</p>
+                <div class="pom-plateau" id="pom-plateau"></div>
+                <p class="duel-message" id="pom-message"></p>
+                <div class="duel-actions" id="pom-actions"></div>
+                <p class="pom-score">Série <b id="pom-serie">0</b> · Record <b id="pom-record">0</b> · +2 pièces par bonne réponse</p>
             </div>
         </section>
 
@@ -323,15 +347,56 @@
                     <p>Toutes les cartes du jeu, consultables à tout moment. Tu peux acheter une carte précise, à un prix élevé : de 100 pièces pour une Commune à 10 000 pour une Mythique.</p>
                 </article>
                 <article>
+                    <h3>🏆 Succès</h3>
+                    <p>Une trentaine d’objectifs (collection, boosters, duels, Plus ou moins) qui rapportent des pièces. Ils sont tous dans l’onglet Profil.</p>
+                </article>
+                <article>
+                    <h3>🍀 Compteur de malchance</h3>
+                    <p>Après 50 boosters sans Légendaire ni Mythique, le suivant en contient une à coup sûr. Le compteur est affiché sur l’accueil.</p>
+                </article>
+                <article>
+                    <h3>❓ Plus ou moins</h3>
+                    <p>Deux jeux, une question : lequel a le plus d’avis, le mieux noté, le plus ancien ? 2 pièces par bonne réponse, la série s’arrête à la première erreur.</p>
+                </article>
+                <article>
                     <h3>💰 Revente</h3>
                     <p>Les doublons se revendent selon leur rareté. Tu gardes toujours un exemplaire, la holo en priorité.</p>
                 </article>
+            </div>
+        </section>
+
+        <!-- ── PROFIL ── -->
+        <section class="ecran" id="ecran-profil" hidden>
+            <div class="titre-ecran">
+                <h1>Profil</h1>
+                <p id="resume-profil"></p>
+            </div>
+
+            <h2 class="profil-titre">Succès <span id="succes-compte"></span></h2>
+            <div class="succes-grille" id="succes-grille"></div>
+
+            <h2 class="profil-titre">Réglages</h2>
+            <div class="profil-bloc">
+                <label class="interrupteur">
+                    <input type="checkbox" id="reglage-sons">
+                    <span></span> Sons (ouverture des boosters, cartes rares, succès, jeux)
+                </label>
+            </div>
+
+            <h2 class="profil-titre">Sauvegarde</h2>
+            <div class="profil-bloc">
+                <p>Ta progression est enregistrée dans ce navigateur. Télécharge-la dans un fichier pour la garder en sécurité ou la reprendre sur un autre appareil.</p>
+                <div class="profil-actions">
+                    <button class="btn btn-principal" id="btn-exporter">Télécharger ma sauvegarde</button>
+                    <button class="btn" id="btn-importer">Importer une sauvegarde</button>
+                    <input type="file" id="fichier-import" accept=".json,application/json" hidden>
+                </div>
             </div>
 
             <div class="zone-danger">
                 <div>
                     <h3>Recommencer à zéro</h3>
-                    <p>Supprime ta collection, tes pièces et le minuteur du booster gratuit. Ta sauvegarde est uniquement dans ce navigateur : elle ne pourra pas être récupérée.</p>
+                    <p>Supprime ta collection, tes pièces, tes succès et ta réserve de boosters. Pense à télécharger ta sauvegarde avant : sinon elle ne pourra pas être récupérée.</p>
                 </div>
                 <button class="btn btn-danger" id="btn-reinitialiser">Supprimer ma sauvegarde</button>
             </div>
@@ -353,6 +418,6 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="script.js?v=62"></script>
+    <script src="script.js?v=63"></script>
 </body>
 </html>
