@@ -71,13 +71,13 @@ const TGA = 'The Game Awards';
 const GOTY = {
     1547000: [2004, VGA],                                   // GTA San Andreas (Definitive Edition)
     254700: [2005, VGA],                                    // Resident Evil 4 (2005)
-    22330: [2006, VGA], 900883: [2006, VGA], 2623190: [2006, VGA], // Oblivion (éditions GOTY, Remastered)
+    22330: [2006, VGA], //900883: [2006, VGA], 2623190: [2006, VGA], // Oblivion 
     7670: [2007, VGA],                                      // BioShock
     12210: [2008, VGA],                                     // GTA IV
-    2668510: [2010, VGA],                                   // Red Dead Redemption
-    72850: [2011, VGA], 489830: [2011, VGA], 611670: [2011, VGA], // Skyrim (original, Special Edition, VR)
+    2668510: [2010, VGA],                                   // Red Dead Redemption 
+    489830: [2011, VGA], //72850: [2011, VGA], 611670: [2011, VGA], // Skyrim (original, Special Edition, VR)
     207610: [2012, VGA],                                    // The Walking Dead
-    271590: [2013, VGA], 3240220: [2013, VGA],              // GTA V (Legacy, Enhanced)
+    271590: [2013, VGA], //3240220: [2013, VGA],              // GTA V (Legacy, Enhanced)
     1222690: [2014, TGA],                                   // Dragon Age: Inquisition
     292030: [2015, TGA],                                    // The Witcher 3
     1593500: [2018, TGA],                                   // God of War
