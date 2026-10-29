@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GameCards</title>
-    <meta name="description" content="Jeu de cartes à collectionner où chaque carte est un vrai jeu vidéo.">
+    <meta name="description" data-i18n-attr="content" content="Jeu de cartes à collectionner où chaque carte est un vrai jeu vidéo.">
     <meta name="theme-color" content="#0b0d17">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="icones/icone-192.png">
@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=56">
+    <link rel="stylesheet" href="style.css?v=57">
 </head>
 <body>
 
@@ -29,12 +29,12 @@
     </svg>
 
     <header class="entete">
-        <a class="logo" href="#accueil" aria-label="GameCards, accueil">
+        <a class="logo" href="#accueil" aria-label="GameCards, accueil" data-i18n-attr="aria-label">
             <span class="logo-carte" aria-hidden="true"></span>
             <span>Game<b>Cards</b></span>
         </a>
 
-        <nav class="menu" aria-label="Menu principal">
+        <nav class="menu" aria-label="Menu principal" data-i18n-attr="aria-label">
             <a href="#accueil" data-ecran="accueil" id="lien-accueil">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M5 7h14M9.5 13l2.5-2.5 2.5 2.5-2.5 3.5z"/></svg>
                 <span>Boosters</span>
@@ -45,23 +45,23 @@
             </a>
             <a href="#catalogue" data-ecran="catalogue">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>
-                <span>Catalogue</span>
+                <span data-i18n>Catalogue</span>
             </a>
             <a href="#duel" data-ecran="duel">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M14.5 6.5 18 3h3v3l-3.5 3.5M5 14l4 4M7 17l-3 3M3 19l2 2"/></svg>
-                <span>Jouer</span>
+                <span data-i18n>Jouer</span>
             </a>
             <a href="#regles" data-ecran="regles">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg>
-                <span>Règles</span>
+                <span data-i18n>Règles</span>
             </a>
             <a href="#profil" data-ecran="profil">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
-                <span>Profil</span>
+                <span data-i18n>Profil</span>
             </a>
         </nav>
 
-        <div class="solde" title="Tes pièces">
+        <div class="solde" title="Tes pièces" data-i18n-attr="title">
             <span class="piece" aria-hidden="true"></span>
             <span id="solde">0</span>
         </div>
@@ -74,8 +74,8 @@
 
             <div class="choix" id="choix">
                 <div class="choix-titre">
-                    <h1>Ouvre un booster</h1>
-                    <p>5 vrais jeux vidéo par paquet, dont au moins une carte <b class="texte-peu-commune">Peu commune</b>.</p>
+                    <h1 data-i18n>Ouvre un booster</h1>
+                    <p data-i18n>5 vrais jeux vidéo par paquet, dont au moins une carte <b class="texte-peu-commune">Peu commune</b>.</p>
                 </div>
 
                 <div class="paquets">
@@ -118,7 +118,7 @@
 
                 <div class="progression">
                     <div class="progression-tete">
-                        <h2>Ta progression</h2>
+                        <h2 data-i18n>Ta progression</h2>
                         <span id="progression-texte">0 / 0 jeux</span>
                     </div>
                     <div class="barre"><i id="progression-barre"></i></div>
@@ -129,8 +129,8 @@
 
                 <div class="recentes" id="bloc-recentes" hidden>
                     <div class="recentes-tete">
-                        <h2>Dernières trouvailles</h2>
-                        <a href="#collection">Toute la collection →</a>
+                        <h2 data-i18n>Dernières trouvailles</h2>
+                        <a href="#collection" data-i18n>Toute la collection →</a>
                     </div>
                     <div class="recentes-liste" id="recentes"></div>
                 </div>
@@ -142,11 +142,11 @@
                 <div class="tirage" id="tirage"></div>
                 <!-- Pour un ×10, cette barre reste collée en haut de l'écran (en bas sur mobile) -->
                 <div class="ouverture-actions" id="ouverture-actions">
-                    <p class="ouverture-aide" id="ouverture-aide" aria-live="polite">Attrape le haut du paquet et glisse le long pour le déchirer</p>
-                    <button class="btn" id="btn-passer">Passer</button>
+                    <p class="ouverture-aide" id="ouverture-aide" aria-live="polite" data-i18n>Attrape le haut du paquet et glisse le long pour le déchirer</p>
+                    <button class="btn" id="btn-passer" data-i18n>Passer</button>
                     <div class="bilan" id="bilan" hidden></div>
-                    <button class="btn btn-principal" id="btn-retour" hidden>Retour</button>
-                    <a class="btn" id="btn-voir-collection" href="#collection" hidden>Voir ma collection</a>
+                    <button class="btn btn-principal" id="btn-retour" hidden data-i18n>Retour</button>
+                    <a class="btn" id="btn-voir-collection" href="#collection" hidden data-i18n>Voir ma collection</a>
                 </div>
             </div>
         </section>
@@ -158,25 +158,25 @@
                 <p id="resume-collection"></p>
             </div>
 
-            <div class="puces-raretes filtre-puces" id="filtre-raretes" role="group" aria-label="Filtrer par rareté"></div>
+            <div class="puces-raretes filtre-puces" id="filtre-raretes" role="group" aria-label="Filtrer par rareté" data-i18n-attr="aria-label"></div>
 
             <div class="filtres">
                 <label class="recherche">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-                    <input type="search" id="filtre-nom" placeholder="Rechercher un jeu…" aria-label="Rechercher un jeu">
+                    <input type="search" id="filtre-nom" placeholder="Rechercher un jeu…" aria-label="Rechercher un jeu" data-i18n-attr="placeholder,aria-label">
                 </label>
-                <select id="filtre-genre" aria-label="Filtrer par genre ou thème"></select>
-                <select id="tri" aria-label="Trier">
-                    <option value="rarete">Tri : rareté</option>
-                    <option value="recent">Tri : obtenues récemment</option>
-                    <option value="attaque">Tri : qualité</option>
-                    <option value="anciennete">Tri : ancienneté</option>
-                    <option value="popularite">Tri : popularité</option>
-                    <option value="annee">Tri : année</option>
-                    <option value="nom">Tri : nom</option>
-                    <option value="exemplaires">Tri : exemplaires</option>
+                <select id="filtre-genre" aria-label="Filtrer par genre ou thème" data-i18n-attr="aria-label"></select>
+                <select id="tri" aria-label="Trier" data-i18n-attr="aria-label">
+                    <option value="rarete" data-i18n>Tri : rareté</option>
+                    <option value="recent" data-i18n>Tri : obtenues récemment</option>
+                    <option value="attaque" data-i18n>Tri : qualité</option>
+                    <option value="anciennete" data-i18n>Tri : ancienneté</option>
+                    <option value="popularite" data-i18n>Tri : popularité</option>
+                    <option value="annee" data-i18n>Tri : année</option>
+                    <option value="nom" data-i18n>Tri : nom</option>
+                    <option value="exemplaires" data-i18n>Tri : exemplaires</option>
                 </select>
-                <label class="interrupteur">
+                <label class="interrupteur" data-i18n-texte>
                     <input type="checkbox" id="filtre-doublons">
                     <span></span> Doublons
                 </label>
@@ -184,43 +184,43 @@
                     <input type="checkbox" id="filtre-fullart">
                     <span></span> Full Art
                 </label>
-                <button class="btn btn-or" id="btn-vendre-tout">Revendre les doublons</button>
+                <button class="btn btn-or" id="btn-vendre-tout" data-i18n>Revendre les doublons</button>
             </div>
 
             <div class="grille" id="grille-collection"></div>
             <div class="plus">
-                <button class="btn" id="btn-plus" hidden>Afficher plus</button>
+                <button class="btn" id="btn-plus" hidden data-i18n>Afficher plus</button>
             </div>
         </section>
 
         <!-- ── CATALOGUE ── -->
         <section class="ecran" id="ecran-catalogue" hidden>
             <div class="titre-ecran">
-                <h1>Catalogue</h1>
+                <h1 data-i18n>Catalogue</h1>
                 <p id="resume-catalogue"></p>
             </div>
-            <p class="intro-catalogue">Toutes les cartes du jeu. Tu peux acheter directement celle qui te manque, mais c’est bien plus cher que de tenter ta chance en booster.</p>
+            <p class="intro-catalogue" data-i18n="intro-catalogue">Toutes les cartes du jeu. Tu peux acheter directement celle qui te manque, mais c’est bien plus cher que de tenter ta chance en booster.</p>
 
-            <div class="puces-raretes filtre-puces" id="catalogue-raretes" role="group" aria-label="Filtrer par rareté"></div>
+            <div class="puces-raretes filtre-puces" id="catalogue-raretes" role="group" aria-label="Filtrer par rareté" data-i18n-attr="aria-label"></div>
 
             <div class="filtres">
                 <label class="recherche">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-                    <input type="search" id="catalogue-nom" placeholder="Rechercher parmi tous les jeux…" aria-label="Rechercher un jeu dans le catalogue">
+                    <input type="search" id="catalogue-nom" placeholder="Rechercher parmi tous les jeux…" aria-label="Rechercher un jeu dans le catalogue" data-i18n-attr="placeholder,aria-label">
                 </label>
-                <select id="catalogue-genre" aria-label="Filtrer par genre ou thème">
-                    <option value="">Tous les genres et thèmes</option>
+                <select id="catalogue-genre" aria-label="Filtrer par genre ou thème" data-i18n-attr="aria-label">
+                    <option value="" data-i18n>Tous les genres et thèmes</option>
                 </select>
-                <select id="catalogue-tri" aria-label="Trier">
-                    <option value="rarete" selected>Tri : rareté</option>
-                    <option value="popularite">Tri : popularité</option>
-                    <option value="note">Tri : note des joueurs</option>
-                    <option value="metacritic">Tri : note Metacritic</option>
-                    <option value="recent">Tri : plus récents</option>
-                    <option value="ancien">Tri : plus anciens</option>
-                    <option value="nom">Tri : nom</option>
+                <select id="catalogue-tri" aria-label="Trier" data-i18n-attr="aria-label">
+                    <option value="rarete" selected data-i18n>Tri : rareté</option>
+                    <option value="popularite" data-i18n>Tri : popularité</option>
+                    <option value="note" data-i18n>Tri : note des joueurs</option>
+                    <option value="metacritic" data-i18n>Tri : note Metacritic</option>
+                    <option value="recent" data-i18n>Tri : plus récents</option>
+                    <option value="ancien" data-i18n>Tri : plus anciens</option>
+                    <option value="nom" data-i18n>Tri : nom</option>
                 </select>
-                <label class="interrupteur">
+                <label class="interrupteur" data-i18n-texte>
                     <input type="checkbox" id="catalogue-manquantes">
                     <span></span> Pas encore possédées
                 </label>
@@ -228,26 +228,26 @@
 
             <div class="grille" id="grille-catalogue"></div>
             <div class="plus">
-                <button class="btn" id="btn-catalogue-plus" hidden>Afficher plus</button>
+                <button class="btn" id="btn-catalogue-plus" hidden data-i18n>Afficher plus</button>
             </div>
         </section>
 
         <!-- ── DUEL ── -->
         <section class="ecran" id="ecran-duel" hidden>
             <div class="titre-ecran titre-centre">
-                <h1>Jouer</h1>
+                <h1 data-i18n>Jouer</h1>
             </div>
             <div class="onglets" id="onglets-jeu" role="tablist">
                 <button class="actif" data-mode="duel" role="tab" aria-selected="true">Duel</button>
-                <button data-mode="pom" role="tab" aria-selected="false">Plus ou moins</button>
+                <button data-mode="pom" role="tab" aria-selected="false" data-i18n>Plus ou moins</button>
             </div>
 
             <div id="mode-duel">
-            <p class="duel-message">Premier à 3 manches. À chaque manche, une carte de ta collection affronte une carte adverse : tu vois le jeu adverse mais ni sa rareté ni ses stats, à toi de choisir la stat qui le bat.</p>
+            <p class="duel-message" data-i18n="duel-intro">Premier à 3 manches. À chaque manche, une carte de ta collection affronte une carte adverse : tu vois le jeu adverse mais ni sa rareté ni ses stats, à toi de choisir la stat qui le bat.</p>
 
             <div class="duel-score">
                 <div class="duel-joueur-score">
-                    <span>Toi</span>
+                    <span data-i18n>Toi</span>
                     <div class="pips" id="pips-joueur"></div>
                 </div>
                 <div class="duel-infos">
@@ -255,38 +255,38 @@
                     <span id="duel-manche"></span>
                 </div>
                 <div class="duel-joueur-score">
-                    <span>Ordi</span>
+                    <span data-i18n>Ordi</span>
                     <div class="pips" id="pips-ordi"></div>
                 </div>
             </div>
 
             <div class="duel-plateau">
-                <div class="duel-emplacement" id="duel-joueur" data-titre="Ta carte"></div>
-                <div class="duel-emplacement" id="duel-ordi" data-titre="Ordinateur"></div>
+                <div class="duel-emplacement" id="duel-joueur" data-titre="Ta carte" data-i18n-attr="data-titre"></div>
+                <div class="duel-emplacement" id="duel-ordi" data-titre="Ordinateur" data-i18n-attr="data-titre"></div>
             </div>
 
-            <p class="duel-message" id="duel-message">Lance un duel : chaque manche, une carte de ta collection contre une carte adverse.</p>
+            <p class="duel-message" id="duel-message" data-i18n>Lance un duel : chaque manche, une carte de ta collection contre une carte adverse.</p>
 
             <div class="duel-actions" id="duel-actions">
-                <button class="btn btn-principal btn-grand" data-action="demarrer">Lancer un duel</button>
+                <button class="btn btn-principal btn-grand" data-action="demarrer" data-i18n>Lancer un duel</button>
             </div>
             </div>
 
             <!-- Mini-jeu : deviner lequel des deux jeux gagne sur une question -->
             <div id="mode-pom" hidden>
-                <p class="pom-question" id="pom-question">Chargement…</p>
+                <p class="pom-question" id="pom-question" data-i18n>Chargement…</p>
                 <div class="pom-plateau" id="pom-plateau"></div>
                 <p class="duel-message" id="pom-message"></p>
                 <div class="duel-actions" id="pom-actions"></div>
-                <p class="pom-score">Série <b id="pom-serie">0</b> · Record <b id="pom-record">0</b> · +2 pièces par bonne réponse</p>
+                <p class="pom-score" data-i18n>Série <b id="pom-serie">0</b> · Record <b id="pom-record">0</b> · +2 pièces par bonne réponse</p>
             </div>
         </section>
 
         <!-- ── RÈGLES ── -->
         <section class="ecran" id="ecran-regles" hidden>
             <div class="titre-ecran">
-                <h1>Règles</h1>
-                <p>Chaque carte est un vrai jeu Steam. Les 22 Mythiques sont les jeux les plus cultes, choisis à la main.
+                <h1 data-i18n>Règles</h1>
+                <p data-i18n="regles-intro">Chaque carte est un vrai jeu Steam. Les 22 Mythiques sont les jeux les plus cultes, choisis à la main.
                    Les autres sont classés par score de prestige : 85 % popularité (avis Steam et joueurs estimés), 15 % qualité
                    (note des joueurs et de la presse), plus des bonus (GOTY +3, chef-d’œuvre +2, adoré +1, mal noté −3).
                    Les GOTY et les géants (750 000 avis ou plus) sont au moins Légendaires. Une soixantaine de classiques cultes, moins présents sur Steam, sont placés à la main en Légendaire ou en Épique. Les jeux sans avis dans les données Steam sont aussi présents : leurs avis et leur note sont estimés (c’est indiqué sur leur fiche).</p>
@@ -295,7 +295,7 @@
             <div class="tableau-defile">
                 <table class="legende">
                     <thead>
-                        <tr><th>Rareté</th><th>Jeux</th><th>Chance</th><th>5ᵉ carte</th><th>Duel</th><th>Revente</th><th>Achat</th><th>Possédées</th></tr>
+                        <tr><th data-i18n>Rareté</th><th data-i18n>Jeux</th><th data-i18n>Chance</th><th data-i18n>5ᵉ carte</th><th data-i18n>Duel</th><th data-i18n>Revente</th><th data-i18n>Achat</th><th data-i18n>Possédées</th></tr>
                     </thead>
                     <tbody id="legende-raretes"></tbody>
                 </table>
@@ -303,72 +303,72 @@
 
             <div class="regles">
                 <article>
-                    <h3><svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.956 1.745C7.021.81 7.908.087 8.864.325l.261.066c.463.116.874.456 1.012.965.22.816.533 2.511.062 4.51a10 10 0 0 1 .443-.051c.713-.065 1.669-.072 2.516.21.518.173.994.681 1.2 1.273.184.532.16 1.162-.234 1.733q.086.18.138.363c.077.27.113.567.113.856s-.036.586-.113.856c-.039.135-.09.273-.16.404.169.387.107.819-.003 1.148a3.2 3.2 0 0 1-.488.901c.054.152.076.312.076.465 0 .305-.089.625-.253.912C13.1 15.522 12.437 16 11.5 16H8c-.605 0-1.07-.081-1.466-.218a4.8 4.8 0 0 1-.97-.484l-.048-.03c-.504-.307-.999-.609-2.068-.722C2.682 14.464 2 13.846 2 13V9c0-.85.685-1.432 1.357-1.615.849-.232 1.574-.787 2.132-1.41.56-.627.914-1.28 1.039-1.639.199-.575.356-1.539.428-2.59z"/></svg> Qualité</h3>
-                    <p>Vient du pourcentage d’avis positifs sur Steam (rapproché de la moyenne pour les jeux à peu d’avis : 1 avis à 100 % ne vaut pas 10 000 avis à 95 %).</p>
+                    <h3><svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.956 1.745C7.021.81 7.908.087 8.864.325l.261.066c.463.116.874.456 1.012.965.22.816.533 2.511.062 4.51a10 10 0 0 1 .443-.051c.713-.065 1.669-.072 2.516.21.518.173.994.681 1.2 1.273.184.532.16 1.162-.234 1.733q.086.18.138.363c.077.27.113.567.113.856s-.036.586-.113.856c-.039.135-.09.273-.16.404.169.387.107.819-.003 1.148a3.2 3.2 0 0 1-.488.901c.054.152.076.312.076.465 0 .305-.089.625-.253.912C13.1 15.522 12.437 16 11.5 16H8c-.605 0-1.07-.081-1.466-.218a4.8 4.8 0 0 1-.97-.484l-.048-.03c-.504-.307-.999-.609-2.068-.722C2.682 14.464 2 13.846 2 13V9c0-.85.685-1.432 1.357-1.615.849-.232 1.574-.787 2.132-1.41.56-.627.914-1.28 1.039-1.639.199-.575.356-1.539.428-2.59z"/></svg> <span data-i18n>Qualité</span></h3>
+                    <p data-i18n="regle-qualite">Vient du pourcentage d’avis positifs sur Steam (rapproché de la moyenne pour les jeux à peu d’avis : 1 avis à 100 % ne vaut pas 10 000 avis à 95 %).</p>
                 </article>
                 <article>
-                    <h3><svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 15a.5.5 0 1 1 0-1h1v-1a4.5 4.5 0 0 1 2.557-4.06c.29-.139.443-.377.443-.59v-.7c0-.213-.154-.451-.443-.59A4.5 4.5 0 0 1 3.5 3V2h-1a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-1v1a4.5 4.5 0 0 1-2.557 4.06c-.29.139-.443.377-.443.59v.7c0 .213.154.451.443.59A4.5 4.5 0 0 1 12.5 13v1h1a.5.5 0 0 1 0 1zm2-13v1c0 .537.12 1.045.337 1.5h6.326c.216-.455.337-.963.337-1.5V2zm3 6.35c0 .701-.478 1.236-1.011 1.492A3.5 3.5 0 0 0 4.5 13s.866-1.299 3-1.48zm1 0v3.17c2.134.181 3 1.48 3 1.48a3.5 3.5 0 0 0-1.989-3.158C8.978 9.586 8.5 9.052 8.5 8.351z"/></svg> Ancienneté</h3>
-                    <p>Plus le jeu est ancien, plus elle est haute : 2025 donne 0, 2010 environ 76, 1998 environ 98. C’est la seule stat qui ne dépend pas de la rareté : une vieille Commune peut battre une Mythique récente. En duel, l’année de la carte adverse reste cachée.</p>
+                    <h3><svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 15a.5.5 0 1 1 0-1h1v-1a4.5 4.5 0 0 1 2.557-4.06c.29-.139.443-.377.443-.59v-.7c0-.213-.154-.451-.443-.59A4.5 4.5 0 0 1 3.5 3V2h-1a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-1v1a4.5 4.5 0 0 1-2.557 4.06c-.29.139-.443.377-.443.59v.7c0 .213.154.451.443.59A4.5 4.5 0 0 1 12.5 13v1h1a.5.5 0 0 1 0 1zm2-13v1c0 .537.12 1.045.337 1.5h6.326c.216-.455.337-.963.337-1.5V2zm3 6.35c0 .701-.478 1.236-1.011 1.492A3.5 3.5 0 0 0 4.5 13s.866-1.299 3-1.48zm1 0v3.17c2.134.181 3 1.48 3 1.48a3.5 3.5 0 0 0-1.989-3.158C8.978 9.586 8.5 9.052 8.5 8.351z"/></svg> <span data-i18n>Ancienneté</span></h3>
+                    <p data-i18n="regle-anciennete">Plus le jeu est ancien, plus elle est haute : 2025 donne 0, 2010 environ 76, 1998 environ 98. C’est la seule stat qui ne dépend pas de la rareté : une vieille Commune peut battre une Mythique récente. En duel, l’année de la carte adverse reste cachée.</p>
                 </article>
                 <article>
-                    <h3>★ Popularité</h3>
-                    <p>Vient du nombre d’avis Steam (échelle logarithmique : 1 000 avis valent la moitié d’un million).</p>
+                    <h3 data-i18n>★ Popularité</h3>
+                    <p data-i18n="regle-popularite">Vient du nombre d’avis Steam (échelle logarithmique : 1 000 avis valent la moitié d’un million).</p>
                 </article>
                 <article>
-                    <h3>📊 Stats et rareté</h3>
-                    <p>Les vraies données placent la Qualité et la Popularité dans la fourchette de leur rareté : Commune 5–60, Peu commune 15–68, Rare 25–76, Épique 35–84, Légendaire 45–95, Mythique 55–100. Les fourchettes se chevauchent : une carte rare est en général plus forte, mais une excellente Légendaire peut dépasser une Mythique moyenne. Les vraies valeurs restent affichées sur la fiche.</p>
+                    <h3 data-i18n>📊 Stats et rareté</h3>
+                    <p data-i18n="regle-stats">Les vraies données placent la Qualité et la Popularité dans la fourchette de leur rareté : Commune 5–60, Peu commune 15–68, Rare 25–76, Épique 35–84, Légendaire 45–95, Mythique 55–100. Les fourchettes se chevauchent : une carte rare est en général plus forte, mais une excellente Légendaire peut dépasser une Mythique moyenne. Les vraies valeurs restent affichées sur la fiche.</p>
                 </article>
                 <article>
                     <h3>Boosters</h3>
-                    <p>5 cartes. Les 4 premières suivent la colonne « Chance », la 5ᵉ est garantie Peu commune ou mieux et suit la colonne « 5ᵉ carte ». Un booster gratuit toutes les 10 minutes, jusqu’à 10 en réserve. Quand il n’y en a plus, tu peux en acheter un (ou 10 d’un coup).</p>
+                    <p data-i18n="regle-boosters">5 cartes. Les 4 premières suivent la colonne « Chance », la 5ᵉ est garantie Peu commune ou mieux et suit la colonne « 5ᵉ carte ». Un booster gratuit toutes les 10 minutes, jusqu’à 10 en réserve. Quand il n’y en a plus, tu peux en acheter un (ou 10 d’un coup).</p>
                 </article>
                 <article>
-                    <h3>👑 Prestige</h3>
-                    <p>Un Prestige gratuit toutes les 24 heures, sinon 250 pièces. Les 4 premières cartes sont Peu communes ou mieux (0,2 % Mythique, 1 % Légendaire, 6 % Épique, 22,8 % Rare), la 5ᵉ Épique ou mieux (1 % Mythique, 5 % Légendaire). 8 % de holos.</p>
+                    <h3 data-i18n>👑 Prestige</h3>
+                    <p data-i18n="regle-prestige">Un Prestige gratuit toutes les 24 heures, sinon 250 pièces. Les 4 premières cartes sont Peu communes ou mieux (0,2 % Mythique, 1 % Légendaire, 6 % Épique, 22,8 % Rare), la 5ᵉ Épique ou mieux (1 % Mythique, 5 % Légendaire). 8 % de holos.</p>
                 </article>
                 <article>
-                    <h3>🎨 Full Art</h3>
-                    <p>Chaque Légendaire ou Mythique tirée a 10 % de chance d’être Full Art (30 % dans un god pack) : l’illustration couvre toute la carte sous un voile irisé. Un Full Art n’est jamais holo, et se revend 5 fois plus cher.</p>
+                    <h3 data-i18n>🎨 Full Art</h3>
+                    <p data-i18n="regle-fullart">Chaque Légendaire ou Mythique tirée a 5 % de chance d’être Full Art (30 % dans un god pack) : l’illustration couvre toute la carte sous un voile irisé. Un Full Art n’est jamais holo, et se revend 5 fois plus cher.</p>
                 </article>
                 <article>
-                    <h3>✨ Holo</h3>
-                    <p>2 % de chance par carte. Une holo se revend 3 fois plus cher.</p>
+                    <h3 data-i18n>✨ Holo</h3>
+                    <p data-i18n="regle-holo">2 % de chance par carte. Une holo se revend 3 fois plus cher.</p>
                 </article>
                 <article>
-                    <h3>🏆 Chef-d’œuvre</h3>
-                    <p>Les jeux notés 90 ou plus sur Metacritic reçoivent une présentation de musée : plaque dorée, double filet champagne, nom en lettres classiques.</p>
+                    <h3 data-i18n>🏆 Chef-d’œuvre</h3>
+                    <p data-i18n="regle-chef">Les jeux notés 90 ou plus sur Metacritic reçoivent une présentation de musée : plaque dorée, double filet champagne, nom en lettres classiques.</p>
                 </article>
                 <article>
-                    <h3>⚔ Duel</h3>
-                    <p>Premier à 3 manches, 30 pièces à la clé. Chaque carte est tirée selon les chances de la colonne « Duel », puis au hasard dans sa rareté. Tu vois le jeu adverse mais ni sa rareté ni ses stats (révélées après ton choix). En cas d’égalité, la Popularité départage.</p>
+                    <h3 data-i18n>⚔ Duel</h3>
+                    <p data-i18n="regle-duel">Premier à 3 manches, 30 pièces à la clé. Chaque carte est tirée selon les chances de la colonne « Duel », puis au hasard dans sa rareté. Tu vois le jeu adverse mais ni sa rareté ni ses stats (révélées après ton choix). En cas d’égalité, la Popularité départage.</p>
                 </article>
                 <article>
-                    <h3>✨ God pack</h3>
-                    <p>Un booster sur 2 000 est un god pack : 5 Légendaires ou Mythiques (dont au moins une Mythique), avec 25 % de chance par carte d’être holo au lieu de 2 %. Le paquet devient doré à l’ouverture, impossible de le rater.</p>
+                    <h3 data-i18n>✨ God pack</h3>
+                    <p data-i18n="regle-godpack">Un booster sur 2 000 est un god pack : 5 Légendaires ou Mythiques (dont au moins une Mythique), avec 25 % de chance par carte d’être holo au lieu de 2 %. Le paquet devient doré à l’ouverture, impossible de le rater.</p>
                 </article>
                 <article>
-                    <h3>🏅 GOTY</h3>
-                    <p>Les jeux élus jeu de l’année aux The Game Awards (depuis 2014) ou aux Spike Video Game Awards (avant) portent un bandeau doré « GOTY » avec l’année en coin de carte, et une couronne de laurier en filigrane.</p>
+                    <h3 data-i18n>🏅 GOTY</h3>
+                    <p data-i18n="regle-goty">Les jeux élus jeu de l’année aux The Game Awards (depuis 2014) ou aux Spike Video Game Awards (avant) portent un bandeau doré « GOTY » avec l’année en coin de carte, et une couronne de laurier en filigrane.</p>
                 </article>
                 <article>
-                    <h3>🛒 Catalogue</h3>
-                    <p>Toutes les cartes du jeu, consultables à tout moment. Tu peux acheter une carte précise, à un prix élevé : de 100 pièces pour une Commune à 10 000 pour une Mythique.</p>
+                    <h3 data-i18n>🛒 Catalogue</h3>
+                    <p data-i18n="regle-catalogue">Toutes les cartes du jeu, consultables à tout moment. Tu peux acheter une carte précise, à un prix élevé : de 100 pièces pour une Commune à 10 000 pour une Mythique.</p>
                 </article>
                 <article>
-                    <h3>🏆 Succès</h3>
-                    <p>Une trentaine d’objectifs (collection, boosters, duels, Plus ou moins) qui rapportent des pièces. Ils sont tous dans l’onglet Profil.</p>
+                    <h3 data-i18n>🏆 Succès</h3>
+                    <p data-i18n="regle-succes">Une trentaine d’objectifs (collection, boosters, duels, Plus ou moins) qui rapportent des pièces. Ils sont tous dans l’onglet Profil.</p>
                 </article>
                 <article>
-                    <h3>🍀 Compteur de malchance</h3>
-                    <p>Après 50 boosters sans Légendaire ni Mythique, le suivant en contient une à coup sûr. Le compteur est affiché sur l’accueil.</p>
+                    <h3 data-i18n>🍀 Compteur de malchance</h3>
+                    <p data-i18n="regle-malchance">Après 50 boosters sans Légendaire ni Mythique, le suivant en contient une à coup sûr. Le compteur est affiché sur l’accueil.</p>
                 </article>
                 <article>
-                    <h3>❓ Plus ou moins</h3>
-                    <p>Deux jeux, une question : lequel a le plus d’avis, le mieux noté, le plus ancien ? 2 pièces par bonne réponse, la série s’arrête à la première erreur.</p>
+                    <h3 data-i18n>❓ Plus ou moins</h3>
+                    <p data-i18n="regle-pom">Deux jeux, une question : lequel a le plus d’avis, le mieux noté, le plus ancien ? 2 pièces par bonne réponse, la série s’arrête à la première erreur.</p>
                 </article>
                 <article>
-                    <h3>💰 Revente</h3>
-                    <p>Ouvre la fiche d’une carte pour la vendre, selon sa rareté (holo ×3, Full Art ×5). Si tu en as plusieurs versions, tu choisis laquelle. Vendre ton dernier exemplaire retire la carte de ta collection ; « Revendre les doublons » garde toujours un exemplaire de chaque jeu.</p>
+                    <h3 data-i18n>💰 Revente</h3>
+                    <p data-i18n="regle-revente">Ouvre la fiche d’une carte pour la vendre, selon sa rareté (holo ×3, Full Art ×5). Si tu en as plusieurs versions, tu choisis laquelle. Vendre ton dernier exemplaire retire la carte de ta collection ; « Revendre les doublons » garde toujours un exemplaire de chaque jeu.</p>
                 </article>
             </div>
         </section>
@@ -376,49 +376,53 @@
         <!-- ── PROFIL ── -->
         <section class="ecran" id="ecran-profil" hidden>
             <div class="titre-ecran">
-                <h1>Profil</h1>
+                <h1 data-i18n>Profil</h1>
                 <p id="resume-profil"></p>
             </div>
 
-            <h2 class="profil-titre">Succès <span id="succes-compte"></span></h2>
+            <h2 class="profil-titre" data-i18n-texte>Succès <span id="succes-compte"></span></h2>
             <div class="succes-grille" id="succes-grille"></div>
 
-            <h2 class="profil-titre">Réglages</h2>
+            <h2 class="profil-titre" data-i18n>Réglages</h2>
             <div class="profil-bloc">
-                <label class="interrupteur">
+                <label class="interrupteur" data-i18n-texte>
                     <input type="checkbox" id="reglage-sons">
                     <span></span> Sons (ouverture des boosters, cartes rares, succès, jeux)
                 </label>
+                <label class="reglage-langue">
+                    <span data-i18n>Langue</span>
+                    <select id="reglage-langue"></select>
+                </label>
             </div>
 
-            <h2 class="profil-titre">Sauvegarde</h2>
+            <h2 class="profil-titre" data-i18n>Sauvegarde</h2>
             <div class="profil-bloc">
-                <p>Ta progression est enregistrée dans ce navigateur. Télécharge-la dans un fichier pour la garder en sécurité ou la reprendre sur un autre appareil.</p>
+                <p data-i18n="sauvegarde-texte">Ta progression est enregistrée dans ce navigateur. Télécharge-la dans un fichier pour la garder en sécurité ou la reprendre sur un autre appareil.</p>
                 <div class="profil-actions">
-                    <button class="btn btn-principal" id="btn-exporter">Télécharger ma sauvegarde</button>
-                    <button class="btn" id="btn-importer">Importer une sauvegarde</button>
+                    <button class="btn btn-principal" id="btn-exporter" data-i18n>Télécharger ma sauvegarde</button>
+                    <button class="btn" id="btn-importer" data-i18n>Importer une sauvegarde</button>
                     <input type="file" id="fichier-import" accept=".json,application/json" hidden>
                 </div>
             </div>
 
             <div class="zone-danger">
                 <div>
-                    <h3>Recommencer à zéro</h3>
-                    <p>Supprime ta collection, tes pièces, tes succès et ta réserve de boosters. Pense à télécharger ta sauvegarde avant : sinon elle ne pourra pas être récupérée.</p>
+                    <h3 data-i18n>Recommencer à zéro</h3>
+                    <p data-i18n="reinitialiser-texte">Supprime ta collection, tes pièces, tes succès et ta réserve de boosters. Pense à télécharger ta sauvegarde avant : sinon elle ne pourra pas être récupérée.</p>
                 </div>
-                <button class="btn btn-danger" id="btn-reinitialiser">Supprimer ma sauvegarde</button>
+                <button class="btn btn-danger" id="btn-reinitialiser" data-i18n>Supprimer ma sauvegarde</button>
             </div>
         </section>
 
     </main>
 
-    <footer class="pied">
+    <footer class="pied" data-i18n>
         Données : <a href="https://www.kaggle.com/datasets/fronkongames/steam-games-dataset" target="_blank" rel="noopener">Steam Games Dataset</a> (Kaggle) · images © Steam · GameCards, projet personnel
     </footer>
 
     <!-- Fiche détaillée d'une carte -->
     <dialog class="modale" id="modale">
-        <button class="modale-fermer" id="modale-fermer" aria-label="Fermer">
+        <button class="modale-fermer" id="modale-fermer" aria-label="Fermer" data-i18n-attr="aria-label">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
         </button>
         <div class="modale-contenu" id="modale-contenu"></div>
@@ -426,6 +430,7 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="script.js?v=79"></script>
+    <script src="i18n.js?v=2"></script>
+    <script src="script.js?v=81"></script>
 </body>
 </html>

@@ -21,17 +21,17 @@
 // Les fourchettes se chevauchent : une carte rare est en général plus forte, mais une excellente Légendaire
 // peut dépasser une Mythique moyenne sur son point fort.
 const RARETES = [
-    { id: 'mythique',    nom: 'Mythique',    quota: null, stats: [55, 100], chance: 0.1, chanceGarantie: 0.1, chancePrestige: 0.2,  chancePrestigeGarantie: 1,  chanceDuel: 3,  revente: 300, prix: 10000 },
-    { id: 'legendaire',  nom: 'Légendaire',  quota: 110,  stats: [45, 95],  chance: 0.5, chanceGarantie: 0.9, chancePrestige: 1,    chancePrestigeGarantie: 5,  chanceDuel: 7,  revente: 100, prix: 4000 },
-    { id: 'epique',      nom: 'Épique',      quota: 284,  stats: [35, 84],  chance: 3, chanceGarantie: 19,  chancePrestige: 6,    chancePrestigeGarantie: 94, chanceDuel: 12, revente: 40,  prix: 1500 },
-    { id: 'rare',        nom: 'Rare',        quota: 1109, stats: [25, 76],  chance: 6, chanceGarantie: 30,  chancePrestige: 22.8, chancePrestigeGarantie: 0,  chanceDuel: 18, revente: 15,  prix: 600 },
-    { id: 'peu-commune', nom: 'Peu commune', quota: 2257, stats: [15, 68],  chance: 18, chanceGarantie: 50,  chancePrestige: 70,   chancePrestigeGarantie: 0,  chanceDuel: 25, revente: 5,   prix: 250 },
-    { id: 'commune',     nom: 'Commune',     quota: null, stats: [5, 60],   chance: 72.4, chanceGarantie: 0,   chancePrestige: 0,    chancePrestigeGarantie: 0,  chanceDuel: 35, revente: 2,   prix: 100 },
+    { id: 'mythique',    nom: t('Mythique'),    quota: null, stats: [55, 100], chance: 0.1, chanceGarantie: 0.1, chancePrestige: 0.2,  chancePrestigeGarantie: 1,  chanceDuel: 3,  revente: 300, prix: 10000 },
+    { id: 'legendaire',  nom: t('Légendaire'),  quota: 110,  stats: [45, 95],  chance: 0.5, chanceGarantie: 0.9, chancePrestige: 1,    chancePrestigeGarantie: 5,  chanceDuel: 7,  revente: 100, prix: 4000 },
+    { id: 'epique',      nom: t('Épique'),      quota: 284,  stats: [35, 84],  chance: 3, chanceGarantie: 19,  chancePrestige: 6,    chancePrestigeGarantie: 94, chanceDuel: 12, revente: 40,  prix: 1500 },
+    { id: 'rare',        nom: t('Rare'),        quota: 1109, stats: [25, 76],  chance: 6, chanceGarantie: 30,  chancePrestige: 22.8, chancePrestigeGarantie: 0,  chanceDuel: 18, revente: 15,  prix: 600 },
+    { id: 'peu-commune', nom: t('Peu commune'), quota: 2257, stats: [15, 68],  chance: 18, chanceGarantie: 50,  chancePrestige: 70,   chancePrestigeGarantie: 0,  chanceDuel: 25, revente: 5,   prix: 250 },
+    { id: 'commune',     nom: t('Commune'),     quota: null, stats: [5, 60],   chance: 72.4, chanceGarantie: 0,   chancePrestige: 0,    chancePrestigeGarantie: 0,  chanceDuel: 35, revente: 2,   prix: 100 },
 ];
 const CHANCE_HOLO_PRESTIGE = 0.08; // contre 2 % dans un booster normal
 
 // Full Art : variante des Légendaires et Mythiques (illustration sur toute la carte). Jamais holo en même temps.
-const CHANCE_FULL_ART = 0.01;
+const CHANCE_FULL_ART = 0.05;
 const CHANCE_FULL_ART_GOD_PACK = 0.30;
 const MULTIPLICATEUR_FULL_ART = 5; // revente
 
@@ -56,7 +56,7 @@ const PRIX_BOOSTER = 0;
 // Les deux boosters. Chacun se recharge gratuitement (`recharge` ms), avec une réserve de `stockMax` ;
 // quand il n'en reste plus, on peut en acheter (`prix` pièces). `paquet` : le paquet de l'accueil.
 const TYPES_BOOSTER = {
-    standard: { id: 'standard', nom: 'booster', prix: PRIX_BOOSTER, recharge: 10 * 60 * 1000, stockMax: 10, paquet: '#paquet-gratuit' },
+    standard: { id: 'standard', nom: t('booster'), prix: PRIX_BOOSTER, recharge: 10 * 60 * 1000, stockMax: 10, paquet: '#paquet-gratuit' },
     prestige: { id: 'prestige', nom: 'Prestige', prix: 0, recharge: 24 * 60 * 60 * 1000, stockMax: 1, prestige: true, paquet: '#paquet-prestige' },
 };
 const CHANCE_HOLO = 0.02;
@@ -294,9 +294,9 @@ const BRIN_LAURIER = brinLaurierSVG();
 
 // Ordre d'affichage : l'Ancienneté, stat « joker » souvent plus basse, en dernier
 const STATS = {
-    attaque:    { nom: 'Qualité',         icone: ICONES.pouce },
-    popularite: { nom: 'Popularité',      icone: '★' },
-    anciennete: { nom: 'Ancienneté',      icone: ICONES.sablier },
+    attaque:    { nom: t('Qualité'),      icone: ICONES.pouce },
+    popularite: { nom: t('Popularité'),   icone: '★' },
+    anciennete: { nom: t('Ancienneté'),   icone: ICONES.sablier },
 };
 
 // ---------- Utilitaires ----------
@@ -305,7 +305,7 @@ const $ = sel => document.querySelector(sel);
 const attendre = ms => new Promise(r => setTimeout(r, ms));
 const auHasard = liste => liste[Math.floor(Math.random() * liste.length)];
 const indexRarete = id => RARETES.findIndex(r => r.id === id);
-const nombre = n => n.toLocaleString('fr-FR');
+const nombre = n => n.toLocaleString(LOCALE);
 const PIECE = '<span class="piece" aria-hidden="true"></span>';
 
 function echapper(texte) {
@@ -466,9 +466,9 @@ function calculerRaretes() {
             jeu.raisons.push(raison);
         };
         ajouter(GOTY[jeu.id], BONUS_PRESTIGE.goty, 'GOTY');
-        ajouter(jeu.metacritic >= SEUIL_CHEF_OEUVRE, BONUS_PRESTIGE.chefOeuvre, 'chef-d’œuvre');
-        ajouter(note >= 95 && jeu.avis >= 1000, BONUS_PRESTIGE.adore, 'adoré des joueurs');
-        ajouter(jeu.note < 50 && jeu.avis >= 1000, BONUS_PRESTIGE.malNote, 'mal noté');
+        ajouter(jeu.metacritic >= SEUIL_CHEF_OEUVRE, BONUS_PRESTIGE.chefOeuvre, t('chef-d’œuvre'));
+        ajouter(note >= 95 && jeu.avis >= 1000, BONUS_PRESTIGE.adore, t('adoré des joueurs'));
+        ajouter(jeu.note < 50 && jeu.avis >= 1000, BONUS_PRESTIGE.malNote, t('mal noté'));
         jeu.prestige = POIDS_POPULARITE * pop + (1 - POIDS_POPULARITE) * qualite + bonus;
     }
 
@@ -497,11 +497,11 @@ function calculerRaretes() {
         pris[i]++;
         vus[i].add(jeu.base);
         jeu.rarete = RARETES[i].id;
-        jeu.raisons.unshift('classique culte');
+        jeu.raisons.unshift(t('classique culte'));
     }
 
     const plafonnes = new Set(PLAFONNES_EPIQUE);
-    for (const jeu of tousLesJeux) if (plafonnes.has(jeu.id)) jeu.raisons.push('plafonné à Épique');
+    for (const jeu of tousLesJeux) if (plafonnes.has(jeu.id)) jeu.raisons.push(t('plafonné à Épique'));
 
     let rang = 0;
     for (const jeu of classement) {
@@ -563,7 +563,7 @@ function carteHTML(carte, { holo = false, compteur = 0, cachee = false, fullArt 
     const infos = [cachee ? null : carte.annee, carte.genres[0]].filter(Boolean).join(' · ');
     const chef = !cachee && carte.metacritic >= SEUIL_CHEF_OEUVRE;
     const goty = gotyDe(carte.id);
-    const plaque = chef ? `<span class="plaque-chef" title="Metacritic : ${carte.metacritic} / 100">${ICONES.medaille}<span>Chef-d’œuvre</span></span>` : '';
+    const plaque = chef ? `<span class="plaque-chef" title="${t('Metacritic : {n} / 100', { n: carte.metacritic })}">${ICONES.medaille}<span>${t('Chef-d’œuvre')}</span></span>` : '';
     const texte = `
                 <h3 class="carte-nom">${echapper(carte.nom)}</h3>
                 <p class="carte-infos">${echapper(infos) || '&nbsp;'}</p>
@@ -584,7 +584,7 @@ function carteHTML(carte, { holo = false, compteur = 0, cachee = false, fullArt 
             <div class="carte-corps">
                 ${fullArt ? `<div class="full-art-fond" style="--secours: url('${secours}')" aria-hidden="true"><img src="${imagePortrait(carte)}" alt="" loading="lazy"
                     onerror="this.onerror=null; this.src='${secours}'; this.parentNode.classList.add('paysage')"></div>` : ''}
-                ${goty ? `<span class="ruban-goty" title="Jeu de l’année ${goty.annee} · ${goty.ceremonie}"><span>${BRIN_LAURIER}GOTY ${goty.annee}${BRIN_LAURIER}</span></span>` : ''}
+                ${goty ? `<span class="ruban-goty" title="${t('Jeu de l’année {annee}', { annee: goty.annee })} · ${goty.ceremonie}"><span>${BRIN_LAURIER}GOTY ${goty.annee}${BRIN_LAURIER}</span></span>` : ''}
                 ${goty && !fullArt ? `<span class="filigrane-goty" aria-hidden="true">${LAURIER}</span>` : ''}
                 <header class="carte-haut">
                     <span class="carte-rarete">${rarete.nom}${fullArt ? ' · Full Art' : holo ? ' · Holo' : ''}</span>
@@ -607,7 +607,7 @@ function flipHTML(carte, { holo = false, fullArt = false, retournee = false, nou
             <div class="flip-inner">
                 <div class="flip-face">
                     ${carteHTML(carte, { holo, fullArt, cachee })}
-                    ${nouvelle ? '<span class="badge-nouvelle">Nouvelle !</span>' : ''}
+                    ${nouvelle ? `<span class="badge-nouvelle">${t('Nouvelle !')}</span>` : ''}
                 </div>
                 <div class="flip-dos" aria-hidden="true"><span>GC</span></div>
             </div>
@@ -624,7 +624,7 @@ function pucesRaretesHTML({ boutons = false, actif = '', totaux = !boutons } = {
             ? `<button class="${classe}" data-rarete="${id}" aria-pressed="${actif === id}">${contenu}</button>`
             : `<span class="${classe}">${contenu}</span>`;
     };
-    return (boutons ? puce('', 'Toutes', entrees.length, totaux ? totalJeux() : 0) : '')
+    return (boutons ? puce('', t('Toutes'), entrees.length, totaux ? totalJeux() : 0) : '')
         + RARETES.map(r => puce(r.id, r.nom,
             entrees.filter(e => e.rarete === r.id).length,
             totaux ? jeuxParRarete[r.id]?.length || 0 : 0)).join('');
@@ -639,16 +639,16 @@ function optionsGenresHTML(choisi, presents = null) {
                 `<option value="${echapper(v)}"${v === choisi ? ' selected' : ''}>${echapper(v)}</option>`).join('')}</optgroup>`
             : '';
     };
-    return '<option value="">Tous les genres et thèmes</option>'
-        + groupe('Distinctions', Object.keys(DISTINCTIONS))
-        + groupe('Genres', genresCatalogue)
+    return `<option value="">${t('Tous les genres et thèmes')}</option>`
+        + groupe(t('Distinctions'), Object.keys(DISTINCTIONS))
+        + groupe(t('Genres'), genresCatalogue)
         + Object.entries(groupesTags).map(([titre, liste]) => groupe(titre, liste)).join('');
 }
 
 // Distinctions : valeurs spéciales du filtre, calculées plutôt que stockées
 const DISTINCTIONS = {
-    'GOTY (jeu de l’année)': carte => Boolean(GOTY[carte.id]),
-    'Chef-d’œuvre (Metacritic 90+)': carte => carte.metacritic >= SEUIL_CHEF_OEUVRE,
+    [t('GOTY (jeu de l’année)')]: carte => Boolean(GOTY[carte.id]),
+    [t('Chef-d’œuvre (Metacritic 90+)')]: carte => carte.metacritic >= SEUIL_CHEF_OEUVRE,
 };
 const distinctionsDe = carte => Object.keys(DISTINCTIONS).filter(nom => DISTINCTIONS[nom](carte));
 
@@ -662,7 +662,11 @@ async function chargerJeux() {
     const reponse = await fetch('data/jeux.json?v=10');
     if (!reponse.ok) throw new Error(`data/jeux.json introuvable (${reponse.status})`);
     // Format compact (voir outils/convertir-csv.js) : un tableau par jeu, genres et thèmes codés en caractères
-    const { genres, tags, jeux, groupesTags: groupes, estimes = [] } = await reponse.json();
+    const { genres: genresFr, tags: tagsFr, jeux, groupesTags: groupesFr, estimes = [] } = await reponse.json();
+    // Noms des genres et thèmes dans la langue choisie
+    const genres = genresFr.map(g => t(g));
+    const tags = tagsFr.map(g => t(g));
+    const groupes = Object.fromEntries(Object.entries(groupesFr).map(([nom, liste]) => [t(nom), liste.map(g => t(g))]));
     const decoder = (codes, liste) => [...codes].map(c => liste[ALPHABET_CODES.indexOf(c)]);
     for (const r of RARETES) jeuxParRarete[r.id] = [];
     tousLesJeux = jeux.map(([id, nom, annee, avis, note, metacritic, joueurs, codesGenres, codesTags, image]) =>
@@ -735,7 +739,7 @@ function prochaineVente(entree) {
 }
 
 const VARIANTES = {
-    normale: { nom: 'Normale', multiplicateur: 1 },
+    normale: { nom: t('Normale'), multiplicateur: 1 },
     holo: { nom: 'Holo', multiplicateur: MULTIPLICATEUR_HOLO },
     fullArt: { nom: 'Full Art', multiplicateur: MULTIPLICATEUR_FULL_ART },
 };
@@ -833,20 +837,20 @@ function majPaquets() {
         const paquet = $(type.paquet);
         paquet.classList.toggle('verrouille', charges === 0);
         paquet.setAttribute('aria-label', charges
-            ? `Ouvrir un ${type.nom} gratuit (${charges} disponible${charges > 1 ? 's' : ''})`
-            : `Plus de ${type.nom} gratuit, prochain dans ${formatDuree(reste)}. Cliquer pour en acheter`);
+            ? tn(charges, 'Ouvrir un {type} gratuit ({n} disponible)', 'Ouvrir un {type} gratuit ({n} disponibles)', { type: type.nom })
+            : t('Plus de {type} gratuit, prochain dans {duree}. Cliquer pour en acheter', { type: type.nom, duree: formatDuree(reste) }));
         $(`#compte-${type.id}`).textContent = formatDuree(reste);
         $(`#charges-${type.id}`).hidden = charges === 0;
         $(`#charges-${type.id}`).textContent = `×${charges}`;
         $(`#legende-${type.id}`).innerHTML = charges
-            ? `<b>${charges} / ${type.stockMax}</b> gratuit${type.stockMax > 1 ? 's' : ''}${reste ? ` · prochain dans ${formatDuree(reste)}` : ' · réserve pleine'}`
-            : `Prochain gratuit dans ${formatDuree(reste)}<br>Clique pour en acheter`;
+            ? `<b>${charges} / ${type.stockMax}</b> ${type.stockMax > 1 ? t('gratuits') : t('gratuit')} · ${reste ? t('prochain dans {duree}', { duree: formatDuree(reste) }) : t('réserve pleine')}`
+            : t('Prochain gratuit dans {duree}<br>Clique pour en acheter', { duree: formatDuree(reste) });
     }
 
     // Ouvrir d'un coup toute la réserve de boosters gratuits
     const reserve = chargesDispo(TYPES_BOOSTER.standard);
     $('#btn-tout-ouvrir').hidden = reserve < 2;
-    $('#btn-tout-ouvrir').textContent = `Ouvrir les ${reserve} boosters gratuits`;
+    $('#btn-tout-ouvrir').textContent = t('Ouvrir les {n} boosters gratuits', { n: reserve });
 
     $('#lien-accueil').classList.toggle('pret', Object.values(TYPES_BOOSTER).some(type => chargesDispo(type) > 0));
 }
@@ -861,15 +865,15 @@ function proposerAchat(type) {
     const prixLot = type.prix * BOOSTERS_PAR_LOT;
     $('#modale-contenu').innerHTML = `
         <div class="achat">
-            <h2>Plus de ${type.nom} gratuit</h2>
-            <p>Le prochain arrive dans <b>${formatDuree(avantRecharge(type))}</b>. En attendant, tu peux en acheter :</p>
+            <h2>${t('Plus de {type} gratuit', { type: type.nom })}</h2>
+            <p>${t('Le prochain arrive dans <b>{duree}</b>. En attendant, tu peux en acheter :', { duree: formatDuree(avantRecharge(type)) })}</p>
             <div class="achat-options">
                 <button class="btn btn-principal btn-grand" data-acheter-booster="${type.id}" data-nombre="1"${etat.pieces < type.prix ? ' disabled' : ''}>
-                    Acheter 1 ${type.nom} · ${nombre(type.prix)} ${PIECE}</button>
+                    ${t('Acheter 1 {type}', { type: type.nom })} · ${nombre(type.prix)} ${PIECE}</button>
                 <button class="btn btn-or btn-grand" data-acheter-booster="${type.id}" data-nombre="${BOOSTERS_PAR_LOT}"${etat.pieces < prixLot ? ' disabled' : ''}>
-                    Ouvrir ×${BOOSTERS_PAR_LOT} · ${nombre(prixLot)} ${PIECE}</button>
+                    ${t('Ouvrir')} ×${BOOSTERS_PAR_LOT} · ${nombre(prixLot)} ${PIECE}</button>
             </div>
-            <p class="achat-solde">Tu as ${nombre(etat.pieces)} ${PIECE}${etat.pieces < type.prix ? ' : revends des doublons ou gagne des duels pour en avoir plus.' : ''}</p>
+            <p class="achat-solde">${t('Tu as')} ${nombre(etat.pieces)} ${PIECE}${etat.pieces < type.prix ? t(' : revends des doublons ou gagne des duels pour en avoir plus.') : ''}</p>
         </div>`;
     if (!$('#modale').open) $('#modale').showModal();
 }
@@ -927,7 +931,7 @@ async function ouvrirBooster(mode, nombreBoosters = 1, type = TYPES_BOOSTER.stan
     const prix = type.prix * nombreBoosters;
     if (mode === 'gratuit' && chargesDispo(type) < nombreBoosters) return proposerAchat(type);
     if (mode === 'achat' && etat.pieces < prix) {
-        return toast(`Il te manque ${prix - etat.pieces} pièces. Revends des doublons ou gagne un duel !`);
+        return toast(t('Il te manque {n} pièces. Revends des doublons ou gagne un duel !', { n: nombre(prix - etat.pieces) }));
     }
     ouvertureEnCours = true;
 
@@ -957,7 +961,7 @@ async function ouvrirBooster(mode, nombreBoosters = 1, type = TYPES_BOOSTER.stan
     $('#ouverture').classList.toggle('multiple', nombreBoosters > 1);
     $('#tirage').innerHTML = '';
     for (const id of ['#bilan', '#btn-retour', '#btn-voir-collection']) $(id).hidden = true;
-    $('#btn-passer').textContent = nombreBoosters > 1 ? 'Tout passer' : 'Passer';
+    $('#btn-passer').textContent = nombreBoosters > 1 ? t('Tout passer') : t('Passer');
     $('#btn-passer').hidden = false;
     $('#ouverture-aide').hidden = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -967,7 +971,7 @@ async function ouvrirBooster(mode, nombreBoosters = 1, type = TYPES_BOOSTER.stan
     seance.passer = false;
     for (let i = 0; i < boosters.length && !seance.passer; i++) {
         const cartes = [...boosters[i]].sort((a, b) => indexRarete(b.carte.rarete) - indexRarete(a.carte.rarete));
-        const rang = nombreBoosters > 1 ? `Paquet ${i + 1} / ${nombreBoosters} · ` : '';
+        const rang = nombreBoosters > 1 ? `${t('Paquet {i} / {n}', { i: i + 1, n: nombreBoosters })} · ` : '';
         await dechirerPaquet(modele, cartes[0].godPack, rang);
         if (!seance.passer) await defilerPile(cartes, rang);
     }
@@ -1016,8 +1020,8 @@ function majTropheeGodPack() {
     const { nombre, premier } = etat.godPacks;
     $('#trophee-godpack').hidden = !nombre;
     if (nombre) {
-        $('#trophee-godpack').innerHTML = `✨ <b>${nombre}</b> god pack${nombre > 1 ? 's' : ''} ouvert${nombre > 1 ? 's' : ''}
-            <span>· le premier le ${new Date(premier).toLocaleDateString('fr-FR')}</span>`;
+        $('#trophee-godpack').innerHTML = `✨ ${tn(nombre, '<b>{n}</b> god pack ouvert', '<b>{n}</b> god packs ouverts')}
+            <span>· ${t('le premier le {date}', { date: new Date(premier).toLocaleDateString(LOCALE) })}</span>`;
     }
 }
 
@@ -1041,7 +1045,7 @@ function clonerPaquet(modele) {
     paquet.querySelector('.paquet-charges')?.remove();
     paquet.classList.add('paquet-seul');
     paquet.querySelector('.paquet-verrou')?.remove();
-    paquet.setAttribute('aria-label', 'Ouvrir le paquet');
+    paquet.setAttribute('aria-label', t('Ouvrir le paquet'));
     // Indication du geste : un point lumineux qui glisse le long de la ligne de découpe
     paquet.insertAdjacentHTML('beforeend', '<span class="geste-dechirer" aria-hidden="true"><i></i></span>');
     return paquet;
@@ -1056,7 +1060,7 @@ const DECHIRURE_COMPLETE = 0.7;
 async function dechirerPaquet(modele, divin, rang) {
     const paquet = clonerPaquet(modele);
     $('#ouverture-scene').replaceChildren(paquet);
-    const consigne = `${rang}Attrape le haut du paquet et glisse le long pour le déchirer`;
+    const consigne = `${rang}${t('Attrape le haut du paquet et glisse le long pour le déchirer')}`;
     $('#ouverture-aide').innerHTML = consigne;
 
     // Petite secousse du bandeau et consigne mise en avant : rappelle le geste attendu
@@ -1145,10 +1149,10 @@ function glisserCarte(element) {
 // Pile de cartes face visible : on les fait défiler une par une, la plus rare arrive en dernier
 async function defilerPile(cartes, rang) {
     const pile = document.createElement('div');
-    pile.innerHTML = cartes.map((t, i) => `
+    pile.innerHTML = cartes.map((tiree, i) => `
         <div class="pile-carte" style="z-index: ${cartes.length - i}">
-            ${carteHTML(t.carte, { holo: t.holo, fullArt: t.fullArt })}
-            ${t.nouvelle ? '<span class="badge-nouvelle">Nouvelle !</span>' : ''}
+            ${carteHTML(tiree.carte, { holo: tiree.holo, fullArt: tiree.fullArt })}
+            ${tiree.nouvelle ? `<span class="badge-nouvelle">${t('Nouvelle !')}</span>` : ''}
         </div>`).join('');
     $('#ouverture-scene').replaceChildren(pile);
     const elements = [...pile.children];
@@ -1163,7 +1167,7 @@ async function defilerPile(cartes, rang) {
         const suivante = cartes[i + 1];
         const annonce = suivante && indexRarete(suivante.carte.rarete) <= INDEX_EPIQUE;
         pile.className = `pile${cartes[0].godPack ? ' pile-divine' : ''}${annonce ? ` annonce rarete-${suivante.carte.rarete}` : ''}`;
-        $('#ouverture-aide').innerHTML = `${rang}Carte <b>${i + 1} / ${cartes.length}</b> · glisse-la pour voir la suivante`;
+        $('#ouverture-aide').innerHTML = `${rang}${t('Carte <b>{i} / {n}</b> · glisse-la pour voir la suivante', { i: i + 1, n: cartes.length })}`;
 
         const sens = await glisserCarte(dessus);
         seance.reprendre = null;
@@ -1189,13 +1193,13 @@ function afficherRecapitulatif(tirage, nombreBoosters) {
         const reste = parRarete.filter(t => !t.godPack && indexRarete(t.carte.rarete) > INDEX_RARE);
         $('#tirage').innerHTML = `
             ${divines.length ? `
-                <h2 class="tirage-titre titre-divin">✨ God pack ✨ <span>${divines.length} cartes divines</span></h2>
+                <h2 class="tirage-titre titre-divin">✨ God pack ✨ <span>${t('{n} cartes divines', { n: divines.length })}</span></h2>
                 <div class="tirage-grille tirage-vedettes">${divines.map(visible).join('')}</div>` : ''}
             ${vedettes.length ? `
-                <h2 class="tirage-titre">Tes meilleures cartes <span>Rare et plus · ${vedettes.length}</span></h2>
+                <h2 class="tirage-titre">${t('Tes meilleures cartes')} <span>${t('Rare et plus')} · ${vedettes.length}</span></h2>
                 <div class="tirage-grille tirage-vedettes">${vedettes.map(visible).join('')}</div>` : ''}
             ${reste.length ? `
-                <h2 class="tirage-titre">Le reste <span>Communes et peu communes · ${reste.length}</span></h2>
+                <h2 class="tirage-titre">${t('Le reste')} <span>${t('Communes et peu communes')} · ${reste.length}</span></h2>
                 <div class="tirage-grille tirage-reste">${reste.map(visible).join('')}</div>` : ''}`;
     } else {
         $('#tirage').innerHTML = tirage.map(visible).join('');
@@ -1204,7 +1208,7 @@ function afficherRecapitulatif(tirage, nombreBoosters) {
         flip.style.animationDelay = `${Math.min(i * (nombreBoosters > 1 ? 20 : 90), 600)}ms`;
         flip.tabIndex = 0;
         flip.setAttribute('role', 'button');
-        flip.setAttribute('aria-label', 'Voir le détail de la carte');
+        flip.setAttribute('aria-label', t('Voir le détail de la carte'));
     });
 }
 
@@ -1224,11 +1228,11 @@ function finTirage() {
     $('#bilan').classList.toggle('bilan-divin', divines.length > 0);
     $('#bilan').innerHTML = (divines.length
         ? `<span class="bilan-godpack">✨ GOD PACK ✨</span>
-           <span class="rarete-mythique"><b class="texte-rarete">${mythiques}</b> Mythique${mythiques > 1 ? 's' : ''}</span>`
+           <span class="rarete-mythique">${tn(mythiques, '<b class="texte-rarete">{n}</b> Mythique', '<b class="texte-rarete">{n}</b> Mythiques')}</span>`
         : '') + `
-        <span><b>${nouvelles}</b> nouvelle${nouvelles > 1 ? 's' : ''}</span>
-        <span class="rarete-${meilleure.id}">Meilleure : <b class="texte-rarete">${meilleure.nom}</b></span>
-        ${holos ? `<span>✨ <b>${holos}</b> holo${holos > 1 ? 's' : ''}</span>` : ''}
+        <span>${tn(nouvelles, '<b>{n}</b> nouvelle', '<b>{n}</b> nouvelles')}</span>
+        <span class="rarete-${meilleure.id}">${t('Meilleure :')} <b class="texte-rarete">${meilleure.nom}</b></span>
+        ${holos ? `<span>✨ ${tn(holos, '<b>{n}</b> holo', '<b>{n}</b> holos')}</span>` : ''}
         ${fullArts ? `<span class="bilan-full-art"><b>${fullArts}</b> Full Art</span>` : ''}`;
     majPaquets();
     for (const id of ['#bilan', '#btn-retour', '#btn-voir-collection']) $(id).hidden = false;
@@ -1246,8 +1250,8 @@ function afficherAccueil() {
     const entrees = Object.values(etat.collection);
     const total = totalJeux();
     $('#progression-texte').innerHTML = total
-        ? `<b>${nombre(entrees.length)}</b> / ${nombre(total)} jeux découverts`
-        : 'Chargement des jeux…';
+        ? t('<b>{n}</b> / {total} jeux découverts', { n: nombre(entrees.length), total: nombre(total) })
+        : t('Chargement des jeux…');
     $('#progression-barre').style.width = total ? `${Math.max(0.5, (entrees.length / total) * 100)}%` : '0';
     $('#progression-raretes').innerHTML = pucesRaretesHTML();
     majTropheeGodPack();
@@ -1256,7 +1260,7 @@ function afficherAccueil() {
     const recentes = entrees.sort((a, b) => b.obtenue - a.obtenue).slice(0, 8);
     $('#bloc-recentes').hidden = !recentes.length;
     $('#recentes').innerHTML = recentes.map(e => `
-        <button class="mini" data-fiche="${e.id}" aria-label="Voir ${echapper(e.nom)}">
+        <button class="mini" data-fiche="${e.id}" aria-label="${t('Voir {nom}', { nom: echapper(e.nom) })}">
             ${carteHTML(e, { holo: e.holos > 0 })}
         </button>`).join('');
     majPaquets();
@@ -1271,7 +1275,7 @@ const TRIS = {
     anciennete: (a, b) => b.anciennete - a.anciennete,
     popularite: (a, b) => b.popularite - a.popularite,
     annee: (a, b) => (b.annee || 0) - (a.annee || 0),
-    nom: (a, b) => a.nom.localeCompare(b.nom, 'fr'),
+    nom: (a, b) => a.nom.localeCompare(b.nom, LOCALE),
     exemplaires: (a, b) => b.exemplaires - a.exemplaires,
 };
 
@@ -1281,7 +1285,7 @@ let limiteCollection = CARTES_PAR_PAGE;
 function caseCollectionHTML(entree) {
     return `
         <div class="case" data-id="${entree.id}">
-            <button class="case-carte" data-fiche="${entree.id}" aria-label="Voir ${echapper(entree.nom)}">
+            <button class="case-carte" data-fiche="${entree.id}" aria-label="${t('Voir {nom}', { nom: echapper(entree.nom) })}">
                 ${carteHTML(entree, { holo: entree.holos > 0, compteur: entree.exemplaires })}
             </button>
         </div>`;
@@ -1309,15 +1313,15 @@ function afficherCollection() {
 
     const grille = $('#grille-collection');
     if (!entrees.length) {
-        grille.innerHTML = '<p class="vide">Ta collection est vide.<br><a class="btn btn-principal" href="#accueil">Ouvre ton premier booster</a></p>';
+        grille.innerHTML = `<p class="vide">${t('Ta collection est vide.')}<br><a class="btn btn-principal" href="#accueil">${t('Ouvre ton premier booster')}</a></p>`;
     } else if (!visibles.length) {
-        grille.innerHTML = '<p class="vide">Aucune carte ne correspond à ces filtres.</p>';
+        grille.innerHTML = `<p class="vide">${t('Aucune carte ne correspond à ces filtres.')}</p>`;
     } else {
         grille.innerHTML = visibles.slice(0, limiteCollection).map(caseCollectionHTML).join('');
     }
     const restantes = visibles.length - limiteCollection;
     $('#btn-plus').hidden = restantes <= 0;
-    $('#btn-plus').textContent = `Afficher plus (${nombre(restantes)} restantes)`;
+    $('#btn-plus').textContent = t('Afficher plus ({n} restantes)', { n: nombre(restantes) });
     majResumeCollection();
 }
 
@@ -1331,17 +1335,17 @@ function majResumeCollection() {
     const total = entrees.reduce((n, e) => n + e.exemplaires, 0);
     const valeur = entrees.reduce((n, e) => n + valeurDoublons(e), 0);
     $('#resume-collection').textContent =
-        `${nombre(entrees.length)} jeux différents · ${nombre(total)} cartes · ${nombre(total - entrees.length)} doublons`;
+        t('{jeux} jeux différents · {cartes} cartes · {doublons} doublons', { jeux: nombre(entrees.length), cartes: nombre(total), doublons: nombre(total - entrees.length) });
     const bouton = $('#btn-vendre-tout');
     bouton.disabled = valeur === 0;
-    bouton.innerHTML = valeur ? `Revendre les doublons · +${nombre(valeur)} ${PIECE}` : 'Aucun doublon';
+    bouton.innerHTML = valeur ? `${t('Revendre les doublons')} · +${nombre(valeur)} ${PIECE}` : t('Aucun doublon');
 }
 
 function vendreDepuisFiche(id, variante) {
     const entree = etat.collection[id];
     if (!entree) return;
     if (entree.exemplaires === 1
-        && !confirm(`C’est ton seul exemplaire de « ${entree.nom} » : la carte quittera ta collection. La vendre quand même ?`)) return;
+        && !confirm(t('C’est ton seul exemplaire de « {nom} » : la carte quittera ta collection. La vendre quand même ?', { nom: entree.nom }))) return;
     const prix = vendreExemplaire(id, variante);
     if (!prix) return;
     sauvegarder();
@@ -1354,19 +1358,19 @@ function vendreDepuisFiche(id, variante) {
         majResumeCollection();
     }
     if (!$('#ecran-catalogue').hidden) afficherCatalogue();
-    toast(`+${prix} pièces`, 'gain');
+    toast(t('+{n} pièces', { n: nombre(prix) }), 'gain');
     verifierSucces();
 }
 
 function vendreTousLesDoublons() {
     const entrees = Object.values(etat.collection);
     const valeur = entrees.reduce((n, e) => n + valeurDoublons(e), 0);
-    if (!valeur || !confirm(`Revendre tous tes doublons pour ${valeur} pièces ? Tu gardes un exemplaire de chaque jeu (la holo en priorité).`)) return;
+    if (!valeur || !confirm(t('Revendre tous tes doublons pour {n} pièces ? Tu gardes un exemplaire de chaque jeu (la holo en priorité).', { n: nombre(valeur) }))) return;
     for (const e of entrees) while (e.exemplaires > 1) vendreDoublon(e.id);
     sauvegarder();
     majEntete();
     afficherCollection();
-    toast(`+${nombre(valeur)} pièces`, 'gain');
+    toast(t('+{n} pièces', { n: nombre(valeur) }), 'gain');
     verifierSucces();
 }
 
@@ -1374,14 +1378,14 @@ function vendreTousLesDoublons() {
 
 // « 3,2 M », « 450 k »
 const formatJoueurs = n => n >= 1e6
-    ? `${(n / 1e6).toLocaleString('fr-FR', { maximumFractionDigits: n >= 1e7 ? 0 : 1 })} M`
-    : `${Math.round(n / 1e3).toLocaleString('fr-FR')} k`;
+    ? `${(n / 1e6).toLocaleString(LOCALE, { maximumFractionDigits: n >= 1e7 ? 0 : 1 })} M`
+    : `${Math.round(n / 1e3).toLocaleString(LOCALE)} k`;
 
 // Pourquoi ce jeu a cette rareté, en une phrase
 function raisonRarete(jeu) {
-    if (jeu.rarete === 'mythique') return 'Mythique : l’un des 22 jeux les plus cultes du jeu vidéo';
+    if (jeu.rarete === 'mythique') return t('Mythique : l’un des 22 jeux les plus cultes du jeu vidéo');
     const raisons = jeu.raisons.length ? ` · ${jeu.raisons.join(', ')}` : '';
-    return `Rang ${nombre(jeu.rang)} au score de prestige${raisons}`;
+    return `${t('Rang {n} au score de prestige', { n: nombre(jeu.rang) })}${raisons}`;
 }
 
 // Une seule variante : vente directe. Plusieurs : « Vendre » ouvre le choix de l'exemplaire
@@ -1389,16 +1393,16 @@ function boutonsVenteHTML(e) {
     const variantes = Object.entries(exemplairesParVariante(e)).filter(([, n]) => n > 0);
     if (variantes.length === 1) {
         const [variante] = variantes[0];
-        return `<button class="btn btn-or" data-vendre="${e.id}" data-variante="${variante}">Vendre · +${prixVariante(e, variante)} ${PIECE}</button>`;
+        return `<button class="btn btn-or" data-vendre="${e.id}" data-variante="${variante}">${t('Vendre')} · +${prixVariante(e, variante)} ${PIECE}</button>`;
     }
-    return `<button class="btn btn-or" data-choix-vente>Vendre…</button>
+    return `<button class="btn btn-or" data-choix-vente>${t('Vendre…')}</button>
         <div class="fiche-vente" hidden>
-            <p>Quel exemplaire veux-tu vendre ?</p>
+            <p>${t('Quel exemplaire veux-tu vendre ?')}</p>
             ${variantes.map(([variante, n]) => `
                 <button class="btn" data-vendre="${e.id}" data-variante="${variante}">
                     ${VARIANTES[variante].nom} <span class="gris">×${n}</span> · +${prixVariante(e, variante)} ${PIECE}
                 </button>`).join('')}
-            <button class="btn" data-annuler-vente>Annuler</button>
+            <button class="btn" data-annuler-vente>${t('Annuler')}</button>
         </div>`;
 }
 
@@ -1417,36 +1421,37 @@ function afficherFiche(id) {
             <p class="fiche-meta">${[carte.annee, ...carte.genres].filter(Boolean).map(echapper).join(' · ')}</p>
             ${jeu ? `<p class="fiche-raison">${raisonRarete(jeu)}</p>` : ''}
             ${gotyDe(carte.id) || carte.metacritic >= SEUIL_CHEF_OEUVRE ? `<div class="fiche-distinctions">
-                ${gotyDe(carte.id) ? `<p class="fiche-distinction">${LAURIER}Jeu de l’année ${gotyDe(carte.id).annee}<span>${gotyDe(carte.id).ceremonie}</span></p>` : ''}
-                ${carte.metacritic >= SEUIL_CHEF_OEUVRE ? `<p class="fiche-distinction">${ICONES.medaille}Chef-d’œuvre<span>noté ${carte.metacritic}/100 par la presse (Metacritic)</span></p>` : ''}
+                ${gotyDe(carte.id) ? `<p class="fiche-distinction">${LAURIER}${t('Jeu de l’année {annee}', { annee: gotyDe(carte.id).annee })}<span>${gotyDe(carte.id).ceremonie}</span></p>` : ''}
+                ${carte.metacritic >= SEUIL_CHEF_OEUVRE ? `<p class="fiche-distinction">${ICONES.medaille}${t('Chef-d’œuvre')}<span>${t('noté {n}/100 par la presse (Metacritic)', { n: carte.metacritic })}</span></p>` : ''}
             </div>` : ''}
-            ${carte.tags?.length ? `<p class="fiche-tags">${carte.tags.map(t => `<span${(groupesTags['Contenu sensible'] || []).includes(t)
-                ? ' class="tag-sensible"' : ''}>${echapper(t)}</span>`).join('')}</p>` : ''}
+            ${carte.tags?.length ? `<p class="fiche-tags">${carte.tags.map(tag => `<span${(groupesTags[t('Contenu sensible')] || []).includes(tag)
+                ? ' class="tag-sensible"' : ''}>${echapper(tag)}</span>`).join('')}</p>` : ''}
             <dl class="fiche-stats">
-                <div><dt>${STATS.attaque.icone} Qualité</dt><dd>${carte.attaque} <span class="gris">· ${jeu?.estime ? 'note estimée' : `${carte.noteReelle ?? '?'} % d’avis positifs`}</span></dd></div>
-                <div><dt>★ Popularité</dt><dd>${carte.popularite} <span class="gris">· ${jeu?.estime
-                    ? (carte.avis ? `≈ ${nombre(carte.avis)} avis (estimés)` : 'pas encore d’avis Steam')
-                    : `${carte.avis ? nombre(carte.avis) : '?'} avis Steam`}</span></dd></div>
-                <div><dt>${STATS.anciennete.icone} Ancienneté</dt><dd>${carte.anciennete} <span class="gris">· sorti en ${jeu && anneeOriginale(jeu) !== carte.annee ? `${anneeOriginale(jeu)} (sur Steam en ${carte.annee})` : carte.annee}</span></dd></div>
-                ${jeu?.joueurs > 1 ? `<div><dt>👥 Joueurs estimés</dt><dd>≈ ${formatJoueurs(jeu.joueurs)}</dd></div>` : ''}
-                <div><dt>📰 Metacritic</dt><dd>${carte.metacritic ?? '<span class="gris">aucune</span>'}</dd></div>
-                <div><dt># ID Steam</dt><dd>${carte.id}</dd></div>
+                <div><dt>${STATS.attaque.icone} ${STATS.attaque.nom}</dt><dd>${carte.attaque} <span class="gris">· ${jeu?.estime ? t('note estimée') : t('{n} % d’avis positifs', { n: carte.noteReelle ?? '?' })}</span></dd></div>
+                <div><dt>★ ${STATS.popularite.nom}</dt><dd>${carte.popularite} <span class="gris">· ${jeu?.estime
+                    ? (carte.avis ? t('≈ {n} avis (estimés)', { n: nombre(carte.avis) }) : t('pas encore d’avis Steam'))
+                    : t('{n} avis Steam', { n: carte.avis ? nombre(carte.avis) : '?' })}</span></dd></div>
+                <div><dt>${STATS.anciennete.icone} ${STATS.anciennete.nom}</dt><dd>${carte.anciennete} <span class="gris">· ${t('sorti en {annee}', { annee: jeu && anneeOriginale(jeu) !== carte.annee
+                    ? t('{annee} (sur Steam en {steam})', { annee: anneeOriginale(jeu), steam: carte.annee }) : carte.annee })}</span></dd></div>
+                ${jeu?.joueurs > 1 ? `<div><dt>👥 ${t('Joueurs estimés')}</dt><dd>≈ ${formatJoueurs(jeu.joueurs)}</dd></div>` : ''}
+                <div><dt>📰 Metacritic</dt><dd>${carte.metacritic ?? `<span class="gris">${t('aucune')}</span>`}</dd></div>
+                <div><dt># ${t('ID Steam')}</dt><dd>${carte.id}</dd></div>
             </dl>
             <p class="fiche-exemplaires">
                 ${e
-                    ? `${e.exemplaires} exemplaire${e.exemplaires > 1 ? 's' : ''}${[e.holos ? `${e.holos} holo` : '', e.fullArts ? `${e.fullArts} Full Art` : ''].filter(Boolean).map(t => ` · ${t}`).join('')}
-                       · obtenue le ${new Date(e.obtenue).toLocaleDateString('fr-FR')}`
-                    : 'Pas encore dans ta collection.'}
+                    ? `${tn(e.exemplaires, '{n} exemplaire', '{n} exemplaires')}${[e.holos ? `${e.holos} holo` : '', e.fullArts ? `${e.fullArts} Full Art` : ''].filter(Boolean).map(v => ` · ${v}`).join('')}
+                       · ${t('obtenue le {date}', { date: new Date(e.obtenue).toLocaleDateString(LOCALE) })}`
+                    : t('Pas encore dans ta collection.')}
             </p>
             <div class="fiche-actions">
                 ${e ? boutonsVenteHTML(e) : ''}
                 ${!e
-                    ? `<button class="btn btn-principal" data-acheter="${carte.id}"${manque > 0 ? ` disabled title="Il te manque ${nombre(manque)} pièces"` : ''}>
-                           Acheter · ${nombre(rarete.prix)} ${PIECE}</button>`
+                    ? `<button class="btn btn-principal" data-acheter="${carte.id}"${manque > 0 ? ` disabled title="${t('Il te manque {n} pièces', { n: nombre(manque) })}"` : ''}>
+                           ${t('Acheter')} · ${nombre(rarete.prix)} ${PIECE}</button>`
                     : ''}
-                <a class="btn" href="https://store.steampowered.com/app/${carte.id}" target="_blank" rel="noopener">Voir sur Steam ↗</a>
+                <a class="btn" href="https://store.steampowered.com/app/${carte.id}" target="_blank" rel="noopener">${t('Voir sur Steam ↗')}</a>
             </div>
-            ${!e && manque > 0 ? `<p class="fiche-note">Il te manque ${nombre(manque)} pièces.</p>` : ''}
+            ${!e && manque > 0 ? `<p class="fiche-note">${t('Il te manque {n} pièces.', { n: nombre(manque) })}</p>` : ''}
         </div>`;
     if (!$('#modale').open) $('#modale').showModal();
 }
@@ -1462,7 +1467,7 @@ const TRIS_CATALOGUE = {
     metacritic: (a, b) => (b.metacritic ?? -1) - (a.metacritic ?? -1),
     recent: (a, b) => (b.annee || 0) - (a.annee || 0),
     ancien: (a, b) => (a.annee || 9999) - (b.annee || 9999),
-    nom: (a, b) => a.nom.localeCompare(b.nom, 'fr'),
+    nom: (a, b) => a.nom.localeCompare(b.nom, LOCALE),
 };
 
 let filtreRareteCatalogue = '';
@@ -1473,16 +1478,16 @@ function caseCatalogueHTML(jeu) {
     const entree = etat.collection[jeu.id];
     return `
         <div class="case">
-            <button class="case-carte${entree ? '' : ' non-possedee'}" data-fiche="${jeu.id}" aria-label="Voir ${echapper(jeu.nom)}${entree ? ' (dans ta collection)' : ''}">
+            <button class="case-carte${entree ? '' : ' non-possedee'}" data-fiche="${jeu.id}" aria-label="${t('Voir {nom}', { nom: echapper(jeu.nom) })}${entree ? ` ${t('(dans ta collection)')}` : ''}">
                 ${carteHTML(carte, { holo: entree?.holos > 0, fullArt: entree?.fullArts > 0, compteur: entree?.exemplaires || 0 })}
-                ${entree ? '<span class="badge-possedee" title="Dans ta collection">✓</span>' : ''}
+                ${entree ? `<span class="badge-possedee" title="${t('Dans ta collection')}">✓</span>` : ''}
             </button>
         </div>`;
 }
 
 function afficherCatalogue() {
     if (!donneesPretes()) {
-        $('#grille-catalogue').innerHTML = '<p class="vide">Chargement des jeux…</p>';
+        $('#grille-catalogue').innerHTML = `<p class="vide">${t('Chargement des jeux…')}</p>`;
         return;
     }
     $('#catalogue-raretes').innerHTML = pucesRaretesHTML({ boutons: true, actif: filtreRareteCatalogue, totaux: true });
@@ -1503,12 +1508,12 @@ function afficherCatalogue() {
 
     $('#grille-catalogue').innerHTML = visibles.length
         ? visibles.slice(0, limiteCatalogue).map(caseCatalogueHTML).join('')
-        : '<p class="vide">Aucun jeu ne correspond à ces filtres.</p>';
+        : `<p class="vide">${t('Aucun jeu ne correspond à ces filtres.')}</p>`;
     const restantes = visibles.length - limiteCatalogue;
     $('#btn-catalogue-plus').hidden = restantes <= 0;
-    $('#btn-catalogue-plus').textContent = `Afficher plus (${nombre(restantes)} restants)`;
-    $('#resume-catalogue').textContent = `${nombre(totalJeux())} jeux · tu en possèdes ${nombre(Object.keys(etat.collection).length)}`
-        + (visibles.length !== totalJeux() ? ` · ${nombre(visibles.length)} avec ces filtres` : '');
+    $('#btn-catalogue-plus').textContent = t('Afficher plus ({n} restants)', { n: nombre(restantes) });
+    $('#resume-catalogue').textContent = t('{total} jeux · tu en possèdes {n}', { total: nombre(totalJeux()), n: nombre(Object.keys(etat.collection).length) })
+        + (visibles.length !== totalJeux() ? ` · ${t('{n} avec ces filtres', { n: nombre(visibles.length) })}` : '');
 }
 
 function filtrerCatalogue() {
@@ -1521,13 +1526,13 @@ function acheterCarte(id) {
     if (!jeu || etat.collection[id]) return;
     const carte = creerCarte(jeu);
     const prix = RARETES[indexRarete(carte.rarete)].prix;
-    if (etat.pieces < prix) return toast(`Il te manque ${nombre(prix - etat.pieces)} pièces pour acheter ${carte.nom}`);
-    if (!confirm(`Acheter ${carte.nom} pour ${nombre(prix)} pièces ?`)) return;
+    if (etat.pieces < prix) return toast(t('Il te manque {n} pièces pour acheter {nom}', { n: nombre(prix - etat.pieces), nom: carte.nom }));
+    if (!confirm(t('Acheter {nom} pour {n} pièces ?', { nom: carte.nom, n: nombre(prix) }))) return;
     etat.pieces -= prix;
     ajouterACollection(carte, false);
     sauvegarder();
     majEntete();
-    toast(`${carte.nom} rejoint ta collection !`, 'gain');
+    toast(t('{nom} rejoint ta collection !', { nom: carte.nom }), 'gain');
     verifierSucces();
     if (!$('#ecran-catalogue').hidden) afficherCatalogue();
     if ($('#modale').open) afficherFiche(id);
@@ -1542,7 +1547,7 @@ function afficherRegles() {
     $('#legende-raretes').innerHTML = RARETES.map((r, i) => `
         <tr class="rarete-${r.id}">
             <td><span class="pastille"></span>${r.nom}</td>
-            <td>${r.id === 'mythique' ? 'choisis à la main' : r.quota ? `${nombre(r.quota)} suivants` : 'tous les autres'}</td>
+            <td>${r.id === 'mythique' ? t('choisis à la main') : r.quota ? t('{n} suivants', { n: nombre(r.quota) }) : t('tous les autres')}</td>
             <td>${chanceRarete(r)}</td>
             <td>${r.chanceGarantie ? `${nombre(r.chanceGarantie)} %` : '—'}</td>
             <td>${nombre(r.chanceDuel)} %</td>
@@ -1555,8 +1560,8 @@ function afficherRegles() {
 // Efface tout ce que le jeu a enregistré (clés "gameCards.") et repart de zéro
 function reinitialiser() {
     const cartes = Object.values(etat.collection).reduce((n, e) => n + e.exemplaires, 0);
-    const message = `Supprimer définitivement ta sauvegarde ?\n\nTu perdras tes ${nombre(cartes)} cartes et tes ${nombre(etat.pieces)} pièces. `
-        + 'Cette action ne peut pas être annulée.';
+    const message = t('Supprimer définitivement ta sauvegarde ?\n\nTu perdras tes {cartes} cartes et tes {pieces} pièces. Cette action ne peut pas être annulée.',
+        { cartes: nombre(cartes), pieces: nombre(etat.pieces) });
     if (!confirm(message)) return;
     try {
         Object.keys(localStorage).filter(cle => cle.startsWith('gameCards.')).forEach(cle => localStorage.removeItem(cle));
@@ -1589,14 +1594,14 @@ function majScoreDuel() {
     const pips = n => Array.from({ length: MANCHES_GAGNANTES }, (_, i) => `<i${i < n ? ' class="plein"' : ''}></i>`).join('');
     $('#pips-joueur').innerHTML = pips(duel.joueur);
     $('#pips-ordi').innerHTML = pips(duel.ordi);
-    $('#pips-joueur').setAttribute('aria-label', `${duel.joueur} manche(s) gagnée(s)`);
-    $('#pips-ordi').setAttribute('aria-label', `${duel.ordi} manche(s) gagnée(s)`);
+    $('#pips-joueur').setAttribute('aria-label', t('{n} manche(s) gagnée(s)', { n: duel.joueur }));
+    $('#pips-ordi').setAttribute('aria-label', t('{n} manche(s) gagnée(s)', { n: duel.ordi }));
 }
 
 function demarrerDuel() {
     if (!donneesPretes()) return;
     if (!Object.keys(etat.collection).length) {
-        toast('Ouvre d’abord un booster pour avoir des cartes', 'erreur');
+        toast(t('Ouvre d’abord un booster pour avoir des cartes'), 'erreur');
         return;
     }
     duel.joueur = 0;
@@ -1616,8 +1621,8 @@ function nouvelleManche() {
     $('#duel-joueur').innerHTML = flipHTML(duel.carteJoueur, { holo: duel.carteJoueur.holos > 0, retournee: true });
     // On voit le jeu adverse, pas ses stats : à toi de deviner où il est faible
     $('#duel-ordi').innerHTML = flipHTML(duel.carteOrdi, { retournee: true, cachee: true });
-    $('#duel-manche').textContent = `Manche ${duel.manche}`;
-    $('#duel-message').innerHTML = `L’ordinateur joue <b>${echapper(duel.carteOrdi.nom)}</b>. Sur quelle stat penses-tu le battre ?`;
+    $('#duel-manche').textContent = t('Manche {n}', { n: duel.manche });
+    $('#duel-message').innerHTML = t('L’ordinateur joue <b>{nom}</b>. Sur quelle stat penses-tu le battre ?', { nom: echapper(duel.carteOrdi.nom) });
     actionsDuel(Object.entries(STATS).map(([cle, stat]) => `
         <button class="btn-stat" data-stat="${cle}">
             <span>${stat.icone} ${stat.nom}</span><b>${duel.carteJoueur[cle]}</b>
@@ -1648,26 +1653,26 @@ async function choisirStat(stat) {
         const pm = duel.carteJoueur.popularite;
         const ps = duel.carteOrdi.popularite;
         ecart = pm - ps;
-        if (ecart) departage = ` Égalité, départagée par la Popularité (${pm} contre ${ps}).`;
+        if (ecart) departage = ` ${t('Égalité, départagée par la Popularité ({a} contre {b}).', { a: pm, b: ps })}`;
     }
 
-    let resultat = 'Égalité parfaite, personne ne marque.';
+    let resultat = t('Égalité parfaite, personne ne marque.');
     if (ecart > 0) {
         duel.joueur++;
-        resultat = 'Manche gagnée !';
+        resultat = t('Manche gagnée !');
         $('#duel-joueur').classList.add('gagne');
         $('#duel-ordi').classList.add('perd');
     } else if (ecart < 0) {
         duel.ordi++;
-        resultat = 'Manche perdue.';
+        resultat = t('Manche perdue.');
         $('#duel-joueur').classList.add('perd');
         $('#duel-ordi').classList.add('gagne');
     }
     majScoreDuel();
-    $('#duel-message').innerHTML = `${STATS[stat].icone} ${STATS[stat].nom} : <b>${mienne}</b> contre <b>${sienne}</b>.${departage} <b>${resultat}</b>`;
+    $('#duel-message').innerHTML = `${t('{stat} : <b>{a}</b> contre <b>{b}</b>.', { stat: `${STATS[stat].icone} ${STATS[stat].nom}`, a: mienne, b: sienne })}${departage} <b>${resultat}</b>`;
 
     if (duel.joueur >= MANCHES_GAGNANTES || duel.ordi >= MANCHES_GAGNANTES) finDuel();
-    else actionsDuel('<button class="btn btn-principal btn-grand" data-action="manche">Manche suivante</button>');
+    else actionsDuel(`<button class="btn btn-principal btn-grand" data-action="manche">${t('Manche suivante')}</button>`);
 }
 
 function finDuel() {
@@ -1678,13 +1683,13 @@ function finDuel() {
         etat.pieces += GAIN_DUEL;
         sauvegarder();
         majEntete();
-        toast(`Victoire ! +${GAIN_DUEL} pièces`, 'gain');
+        toast(t('Victoire ! +{n} pièces', { n: GAIN_DUEL }), 'gain');
     }
     // Le détail de la dernière manche reste affiché au-dessus du résultat
     $('#duel-message').innerHTML += victoire
-        ? `<br><b class="victoire">Victoire ${duel.joueur} à ${duel.ordi} !</b> Tu gagnes ${GAIN_DUEL} pièces.`
-        : `<br><b class="defaite">Défaite ${duel.joueur} à ${duel.ordi}.</b> Retente ta chance !`;
-    actionsDuel('<button class="btn btn-principal btn-grand" data-action="demarrer">Rejouer</button>');
+        ? t('<br><b class="victoire">Victoire {a} à {b} !</b> Tu gagnes {n} pièces.', { a: duel.joueur, b: duel.ordi, n: GAIN_DUEL })
+        : t('<br><b class="defaite">Défaite {a} à {b}.</b> Retente ta chance !', { a: duel.joueur, b: duel.ordi });
+    actionsDuel(`<button class="btn btn-principal btn-grand" data-action="demarrer">${t('Rejouer')}</button>`);
     jouerSon(victoire ? 'succes' : 'mauvaise');
     verifierSucces();
 }
@@ -1694,8 +1699,8 @@ function finDuel() {
 function majMalchance() {
     const reste = MALCHANCE_MAX - etat.malchance;
     $('#malchance').innerHTML = reste <= 1
-        ? '<b>Prochain booster : Légendaire garantie !</b>'
-        : `Légendaire garantie au plus tard dans <b>${reste}</b> boosters`;
+        ? t('<b>Prochain booster : Légendaire garantie !</b>')
+        : t('Légendaire garantie au plus tard dans <b>{n}</b> boosters', { n: reste });
 }
 
 // ---------- Succès ----------
@@ -1709,42 +1714,42 @@ const ANNEES_GOTY = new Set(Object.values(GOTY).map(g => g[0])).size;
 // Chaque succès se débloque quand valeur() atteint cible ; la récompense est en pièces
 const SUCCES = [
     // Collection
-    { id: 'premier-pas', nom: 'Premier pas', description: 'Obtenir ta première carte', cible: 1, recompense: 10, valeur: () => possedees().length },
-    { id: 'collectionneur', nom: 'Collectionneur', description: 'Posséder 100 jeux différents', cible: 100, recompense: 50, valeur: () => possedees().length },
-    { id: 'archiviste', nom: 'Archiviste', description: 'Posséder 500 jeux différents', cible: 500, recompense: 150, valeur: () => possedees().length },
-    { id: 'conservateur', nom: 'Conservateur de musée', description: 'Posséder 1 000 jeux différents', cible: 1000, recompense: 400, valeur: () => possedees().length },
-    { id: 'premiere-rare', nom: 'Ça devient rare', description: 'Obtenir une carte Rare', cible: 1, recompense: 10, valeur: () => nombreDeRarete('rare') },
-    { id: 'premiere-epique', nom: 'Épique !', description: 'Obtenir une carte Épique', cible: 1, recompense: 25, valeur: () => nombreDeRarete('epique') },
-    { id: 'premiere-legendaire', nom: 'Une légende', description: 'Obtenir une carte Légendaire', cible: 1, recompense: 75, valeur: () => nombreDeRarete('legendaire') },
-    { id: 'premiere-mythique', nom: 'Mythe vivant', description: 'Obtenir une carte Mythique', cible: 1, recompense: 250, valeur: () => nombreDeRarete('mythique') },
-    { id: 'pantheon', nom: 'Panthéon', description: 'Posséder 5 Mythiques différentes', cible: 5, recompense: 500, valeur: () => nombreDeRarete('mythique') },
-    { id: 'olympe', nom: 'Olympe', description: 'Posséder toutes les Mythiques', cible: MYTHIQUES.length, recompense: 2000, valeur: () => nombreDeRarete('mythique') },
-    { id: 'palmares', nom: 'Palmarès', description: 'Posséder 5 jeux de l’année (années différentes)', cible: 5, recompense: 150, valeur: anneesGotyPossedees },
-    { id: 'tous-goty', nom: 'Toutes les cérémonies', description: 'Posséder un jeu de l’année pour chaque année', cible: ANNEES_GOTY, recompense: 1000, valeur: anneesGotyPossedees },
-    { id: 'critique', nom: 'Critique avisé', description: 'Posséder 10 chefs-d’œuvre (Metacritic 90+)', cible: 10, recompense: 100, valeur: () => possedees().filter(e => e.metacritic >= SEUIL_CHEF_OEUVRE).length },
-    { id: 'brillant', nom: 'Tout ce qui brille', description: 'Obtenir une carte holo', cible: 1, recompense: 50, valeur: () => possedees().filter(e => e.holos > 0).length },
-    { id: 'galerie-holo', nom: 'Galerie des glaces', description: 'Posséder 10 cartes holo différentes', cible: 10, recompense: 200, valeur: () => possedees().filter(e => e.holos > 0).length },
-    { id: 'oeuvre-art', nom: 'Œuvre d’art', description: 'Obtenir une carte Full Art', cible: 1, recompense: 100, valeur: () => possedees().filter(e => e.fullArts > 0).length },
-    { id: 'galerie-privee', nom: 'Galerie privée', description: 'Posséder 5 cartes Full Art différentes', cible: 5, recompense: 500, valeur: () => possedees().filter(e => e.fullArts > 0).length },
-    { id: 'divin', nom: 'Intervention divine', description: 'Ouvrir un god pack', cible: 1, recompense: 500, valeur: () => etat.godPacks.nombre },
+    { id: 'premier-pas', nom: t('Premier pas'), description: t('Obtenir ta première carte'), cible: 1, recompense: 10, valeur: () => possedees().length },
+    { id: 'collectionneur', nom: t('Collectionneur'), description: t('Posséder 100 jeux différents'), cible: 100, recompense: 50, valeur: () => possedees().length },
+    { id: 'archiviste', nom: t('Archiviste'), description: t('Posséder 500 jeux différents'), cible: 500, recompense: 150, valeur: () => possedees().length },
+    { id: 'conservateur', nom: t('Conservateur de musée'), description: t('Posséder 1 000 jeux différents'), cible: 1000, recompense: 400, valeur: () => possedees().length },
+    { id: 'premiere-rare', nom: t('Ça devient rare'), description: t('Obtenir une carte Rare'), cible: 1, recompense: 10, valeur: () => nombreDeRarete('rare') },
+    { id: 'premiere-epique', nom: t('Épique !'), description: t('Obtenir une carte Épique'), cible: 1, recompense: 25, valeur: () => nombreDeRarete('epique') },
+    { id: 'premiere-legendaire', nom: t('Une légende'), description: t('Obtenir une carte Légendaire'), cible: 1, recompense: 75, valeur: () => nombreDeRarete('legendaire') },
+    { id: 'premiere-mythique', nom: t('Mythe vivant'), description: t('Obtenir une carte Mythique'), cible: 1, recompense: 250, valeur: () => nombreDeRarete('mythique') },
+    { id: 'pantheon', nom: t('Panthéon'), description: t('Posséder 5 Mythiques différentes'), cible: 5, recompense: 500, valeur: () => nombreDeRarete('mythique') },
+    { id: 'olympe', nom: t('Olympe'), description: t('Posséder toutes les Mythiques'), cible: MYTHIQUES.length, recompense: 2000, valeur: () => nombreDeRarete('mythique') },
+    { id: 'palmares', nom: t('Palmarès'), description: t('Posséder 5 jeux de l’année (années différentes)'), cible: 5, recompense: 150, valeur: anneesGotyPossedees },
+    { id: 'tous-goty', nom: t('Toutes les cérémonies'), description: t('Posséder un jeu de l’année pour chaque année'), cible: ANNEES_GOTY, recompense: 1000, valeur: anneesGotyPossedees },
+    { id: 'critique', nom: t('Critique avisé'), description: t('Posséder 10 chefs-d’œuvre (Metacritic 90+)'), cible: 10, recompense: 100, valeur: () => possedees().filter(e => e.metacritic >= SEUIL_CHEF_OEUVRE).length },
+    { id: 'brillant', nom: t('Tout ce qui brille'), description: t('Obtenir une carte holo'), cible: 1, recompense: 50, valeur: () => possedees().filter(e => e.holos > 0).length },
+    { id: 'galerie-holo', nom: t('Galerie des glaces'), description: t('Posséder 10 cartes holo différentes'), cible: 10, recompense: 200, valeur: () => possedees().filter(e => e.holos > 0).length },
+    { id: 'oeuvre-art', nom: t('Œuvre d’art'), description: t('Obtenir une carte Full Art'), cible: 1, recompense: 100, valeur: () => possedees().filter(e => e.fullArts > 0).length },
+    { id: 'galerie-privee', nom: t('Galerie privée'), description: t('Posséder 5 cartes Full Art différentes'), cible: 5, recompense: 500, valeur: () => possedees().filter(e => e.fullArts > 0).length },
+    { id: 'divin', nom: t('Intervention divine'), description: t('Ouvrir un god pack'), cible: 1, recompense: 500, valeur: () => etat.godPacks.nombre },
     // Boosters
-    { id: 'boosters-10', nom: 'Déchireur', description: 'Ouvrir 10 boosters', cible: 10, recompense: 20, valeur: () => etat.stats.boosters },
-    { id: 'boosters-100', nom: 'Accro aux boosters', description: 'Ouvrir 100 boosters', cible: 100, recompense: 100, valeur: () => etat.stats.boosters },
-    { id: 'boosters-500', nom: 'Usine à cartes', description: 'Ouvrir 500 boosters', cible: 500, recompense: 300, valeur: () => etat.stats.boosters },
-    { id: 'boosters-1000', nom: 'Mille paquets', description: 'Ouvrir 1 000 boosters', cible: 1000, recompense: 600, valeur: () => etat.stats.boosters },
-    { id: 'grand-luxe', nom: 'Grand luxe', description: 'Ouvrir un booster Prestige', cible: 1, recompense: 30, valeur: () => etat.stats.prestiges },
-    { id: 'habitue-prestige', nom: 'Habitué du Prestige', description: 'Ouvrir 30 boosters Prestige', cible: 30, recompense: 200, valeur: () => etat.stats.prestiges },
+    { id: 'boosters-10', nom: t('Déchireur'), description: t('Ouvrir 10 boosters'), cible: 10, recompense: 20, valeur: () => etat.stats.boosters },
+    { id: 'boosters-100', nom: t('Accro aux boosters'), description: t('Ouvrir 100 boosters'), cible: 100, recompense: 100, valeur: () => etat.stats.boosters },
+    { id: 'boosters-500', nom: t('Usine à cartes'), description: t('Ouvrir 500 boosters'), cible: 500, recompense: 300, valeur: () => etat.stats.boosters },
+    { id: 'boosters-1000', nom: t('Mille paquets'), description: t('Ouvrir 1 000 boosters'), cible: 1000, recompense: 600, valeur: () => etat.stats.boosters },
+    { id: 'grand-luxe', nom: t('Grand luxe'), description: t('Ouvrir un booster Prestige'), cible: 1, recompense: 30, valeur: () => etat.stats.prestiges },
+    { id: 'habitue-prestige', nom: t('Habitué du Prestige'), description: t('Ouvrir 30 boosters Prestige'), cible: 30, recompense: 200, valeur: () => etat.stats.prestiges },
     // Jeux
-    { id: 'premier-sang', nom: 'Premier sang', description: 'Gagner un duel', cible: 1, recompense: 20, valeur: () => etat.stats.duelsGagnes },
-    { id: 'duelliste', nom: 'Duelliste', description: 'Gagner 10 duels', cible: 10, recompense: 100, valeur: () => etat.stats.duelsGagnes },
-    { id: 'champion', nom: 'Champion', description: 'Gagner 50 duels', cible: 50, recompense: 300, valeur: () => etat.stats.duelsGagnes },
-    { id: 'sans-appel', nom: 'Sans appel', description: 'Gagner un duel 3 à 0', cible: 1, recompense: 50, valeur: () => etat.stats.duelsParfaits },
-    { id: 'bon-instinct', nom: 'Bon instinct', description: 'Enchaîner 5 bonnes réponses au Plus ou moins', cible: 5, recompense: 20, valeur: () => etat.stats.recordPom },
-    { id: 'encyclopedie', nom: 'Encyclopédie', description: 'Enchaîner 15 bonnes réponses au Plus ou moins', cible: 15, recompense: 100, valeur: () => etat.stats.recordPom },
-    { id: 'oracle', nom: 'Oracle', description: 'Enchaîner 30 bonnes réponses au Plus ou moins', cible: 30, recompense: 300, valeur: () => etat.stats.recordPom },
+    { id: 'premier-sang', nom: t('Premier sang'), description: t('Gagner un duel'), cible: 1, recompense: 20, valeur: () => etat.stats.duelsGagnes },
+    { id: 'duelliste', nom: t('Duelliste'), description: t('Gagner 10 duels'), cible: 10, recompense: 100, valeur: () => etat.stats.duelsGagnes },
+    { id: 'champion', nom: t('Champion'), description: t('Gagner 50 duels'), cible: 50, recompense: 300, valeur: () => etat.stats.duelsGagnes },
+    { id: 'sans-appel', nom: t('Sans appel'), description: t('Gagner un duel 3 à 0'), cible: 1, recompense: 50, valeur: () => etat.stats.duelsParfaits },
+    { id: 'bon-instinct', nom: t('Bon instinct'), description: t('Enchaîner 5 bonnes réponses au Plus ou moins'), cible: 5, recompense: 20, valeur: () => etat.stats.recordPom },
+    { id: 'encyclopedie', nom: t('Encyclopédie'), description: t('Enchaîner 15 bonnes réponses au Plus ou moins'), cible: 15, recompense: 100, valeur: () => etat.stats.recordPom },
+    { id: 'oracle', nom: t('Oracle'), description: t('Enchaîner 30 bonnes réponses au Plus ou moins'), cible: 30, recompense: 300, valeur: () => etat.stats.recordPom },
     // Commerce
-    { id: 'marchand', nom: 'Marchand', description: 'Revendre un doublon', cible: 1, recompense: 10, valeur: () => etat.stats.ventes },
-    { id: 'grossiste', nom: 'Grossiste', description: 'Revendre 100 doublons', cible: 100, recompense: 100, valeur: () => etat.stats.ventes },
+    { id: 'marchand', nom: t('Marchand'), description: t('Revendre un doublon'), cible: 1, recompense: 10, valeur: () => etat.stats.ventes },
+    { id: 'grossiste', nom: t('Grossiste'), description: t('Revendre 100 doublons'), cible: 100, recompense: 100, valeur: () => etat.stats.ventes },
 ];
 
 // Débloque les succès atteints, verse leurs récompenses et les annonce
@@ -1760,9 +1765,9 @@ function verifierSucces() {
     jouerSon('succes');
     if (nouveaux.length > 3) {
         const total = nouveaux.reduce((n, s) => n + s.recompense, 0);
-        toast(`${nouveaux.length} succès débloqués ! +${nombre(total)} pièces`, 'gain');
+        toast(t('{n} succès débloqués ! +{total} pièces', { n: nouveaux.length, total: nombre(total) }), 'gain');
     } else {
-        for (const s of nouveaux) toast(`Succès « ${s.nom} » ! +${nombre(s.recompense)} pièces`, 'gain');
+        for (const s of nouveaux) toast(t('Succès « {nom} » ! +{n} pièces', { nom: s.nom, n: nombre(s.recompense) }), 'gain');
     }
     if (!$('#ecran-profil').hidden) afficherProfil();
 }
@@ -1772,8 +1777,8 @@ function verifierSucces() {
 function afficherProfil() {
     const faits = SUCCES.filter(s => etat.succes[s.id]).length;
     const stats = etat.stats;
-    $('#resume-profil').textContent = `${nombre(stats.boosters)} boosters ouverts · ${nombre(stats.duelsGagnes)} duels gagnés`
-        + ` · record au Plus ou moins : ${stats.recordPom}`;
+    $('#resume-profil').textContent = t('{boosters} boosters ouverts · {duels} duels gagnés · record au Plus ou moins : {record}',
+        { boosters: nombre(stats.boosters), duels: nombre(stats.duelsGagnes), record: stats.recordPom });
     $('#succes-compte').textContent = `${faits} / ${SUCCES.length}`;
     $('#succes-grille').innerHTML = SUCCES.map(succes => {
         const obtenu = etat.succes[succes.id];
@@ -1785,25 +1790,26 @@ function afficherProfil() {
                     <h3>${succes.nom}</h3>
                     <p>${succes.description}</p>
                     ${obtenu
-                        ? `<span class="succes-date">Obtenu le ${new Date(obtenu).toLocaleDateString('fr-FR')}</span>`
+                        ? `<span class="succes-date">${t('Obtenu le {date}', { date: new Date(obtenu).toLocaleDateString(LOCALE) })}</span>`
                         : `<span class="succes-progres"><i style="--v: ${(valeur / succes.cible) * 100}%"></i>${nombre(valeur)} / ${nombre(succes.cible)}</span>`}
                 </div>
                 <span class="succes-gain">+${nombre(succes.recompense)} ${PIECE}</span>
             </article>`;
     }).join('');
     $('#reglage-sons').checked = etat.reglages.sons;
+    $('#reglage-langue').value = LANGUE;
 }
 
 // ---------- Mini-jeu « Plus ou moins » ----------
 
 // `different` : écart minimal pour que la question ait une vraie réponse
 const QUESTIONS_POM = [
-    { question: 'Lequel a le plus d’avis Steam ?', valeur: j => j.avis, gagnant: 'max',
-      different: (a, b) => Math.max(a, b) >= Math.min(a, b) * 1.15, texte: j => `${nombre(j.avis)} avis` },
-    { question: 'Lequel est le mieux noté par les joueurs ?', valeur: j => j.note, gagnant: 'max',
-      different: (a, b) => Math.abs(a - b) >= 3, texte: j => `${j.note} % d’avis positifs` },
-    { question: 'Lequel est sorti en premier ?', valeur: j => j.annee, gagnant: 'min',
-      different: (a, b) => a !== b, texte: j => `sorti en ${j.annee}` },
+    { question: t('Lequel a le plus d’avis Steam ?'), valeur: j => j.avis, gagnant: 'max',
+      different: (a, b) => Math.max(a, b) >= Math.min(a, b) * 1.15, texte: j => t('{n} avis', { n: nombre(j.avis) }) },
+    { question: t('Lequel est le mieux noté par les joueurs ?'), valeur: j => j.note, gagnant: 'max',
+      different: (a, b) => Math.abs(a - b) >= 3, texte: j => t('{n} % d’avis positifs', { n: j.note }) },
+    { question: t('Lequel est sorti en premier ?'), valeur: j => j.annee, gagnant: 'min',
+      different: (a, b) => a !== b, texte: j => t('sorti en {annee}', { annee: j.annee }) },
 ];
 const pom = { serie: 0, paire: null, question: null, verrou: false };
 let jeuxPom = null;
@@ -1830,8 +1836,8 @@ function nouvelleQuestionPom() {
         <button class="pom-choix" data-pom="${i}" aria-label="${echapper(jeu.nom)}">
             ${carteHTML(creerCarte(jeu), { cachee: true })}
             <span class="pom-valeur" hidden>${question.texte(jeu)}</span>
-        </button>`).join('<span class="duel-vs">OU</span>');
-    $('#pom-message').textContent = 'Clique sur la bonne carte.';
+        </button>`).join(`<span class="duel-vs">${t('OU')}</span>`);
+    $('#pom-message').textContent = t('Clique sur la bonne carte.');
     $('#pom-actions').innerHTML = '';
     majScorePom();
 }
@@ -1854,14 +1860,14 @@ function repondrePom(choix) {
         sauvegarder();
         majEntete();
         jouerSon('bonne');
-        $('#pom-message').innerHTML = `<b class="victoire">Bonne réponse !</b> +${GAIN_POM} pièces`;
-        $('#pom-actions').innerHTML = '<button class="btn btn-principal btn-grand" data-pom-action="suivant">Question suivante</button>';
+        $('#pom-message').innerHTML = t('<b class="victoire">Bonne réponse !</b> +{n} pièces', { n: GAIN_POM });
+        $('#pom-actions').innerHTML = `<button class="btn btn-principal btn-grand" data-pom-action="suivant">${t('Question suivante')}</button>`;
     } else {
         jouerSon('mauvaise');
         const serie = pom.serie;
-        $('#pom-message').innerHTML = `<b class="defaite">Raté !</b> Série terminée : ${serie} bonne${serie > 1 ? 's' : ''} réponse${serie > 1 ? 's' : ''}.`;
+        $('#pom-message').innerHTML = tn(serie, '<b class="defaite">Raté !</b> Série terminée : {n} bonne réponse.', '<b class="defaite">Raté !</b> Série terminée : {n} bonnes réponses.');
         pom.serie = 0;
-        $('#pom-actions').innerHTML = '<button class="btn btn-principal btn-grand" data-pom-action="suivant">Rejouer</button>';
+        $('#pom-actions').innerHTML = `<button class="btn btn-principal btn-grand" data-pom-action="suivant">${t('Rejouer')}</button>`;
     }
     majScorePom();
     verifierSucces();
@@ -1967,7 +1973,7 @@ function exporterSauvegarde() {
     lien.download = `gamecards-sauvegarde-${new Date().toISOString().slice(0, 10)}.json`;
     lien.click();
     setTimeout(() => URL.revokeObjectURL(lien.href), 1000);
-    toast('Sauvegarde téléchargée', 'gain');
+    toast(t('Sauvegarde téléchargée'), 'gain');
 }
 
 async function importerSauvegarde(fichier) {
@@ -1977,15 +1983,15 @@ async function importerSauvegarde(fichier) {
         if (contenu?.jeu !== 'GameCards' || !donnees || typeof donnees !== 'object') throw new Error('format inconnu');
         const cles = Object.keys(donnees).filter(cle => cle.startsWith('gameCards.') && typeof donnees[cle] === 'string');
         if (!cles.length) throw new Error('sauvegarde vide');
-        const date = new Date(contenu.date).toLocaleDateString('fr-FR');
-        if (!confirm(`Remplacer ta progression actuelle par la sauvegarde du ${date} ?`)) return;
+        const date = new Date(contenu.date).toLocaleDateString(LOCALE);
+        if (!confirm(t('Remplacer ta progression actuelle par la sauvegarde du {date} ?', { date }))) return;
         Object.keys(localStorage).filter(cle => cle.startsWith('gameCards.')).forEach(cle => localStorage.removeItem(cle));
         for (const cle of cles) localStorage.setItem(cle, donnees[cle]);
         location.hash = '#accueil';
         location.reload();
     } catch (e) {
         console.warn(e);
-        toast('Ce fichier n’est pas une sauvegarde GameCards valide', 'erreur');
+        toast(t('Ce fichier n’est pas une sauvegarde GameCards valide'), 'erreur');
     }
 }
 
@@ -2030,6 +2036,8 @@ function afficherEcran(nom) {
 // ---------- Démarrage ----------
 
 function init() {
+    traduirePage();
+
     // Accueil : paquets et ouverture
     $('#paquet-gratuit').addEventListener('click', () => cliquerPaquet(TYPES_BOOSTER.standard));
     $('#paquet-prestige').addEventListener('click', () => cliquerPaquet(TYPES_BOOSTER.prestige));
@@ -2151,6 +2159,14 @@ function init() {
         sauvegarder();
         jouerSon('succes');
     });
+    // Langue : on recharge la page, tous les textes repartent dans la nouvelle langue
+    $('#reglage-langue').innerHTML = Object.entries(LANGUES)
+        .map(([code, nom]) => `<option value="${code}"${code === LANGUE ? ' selected' : ''}>${nom}</option>`).join('');
+    $('#reglage-langue').addEventListener('change', e => {
+        etat.reglages.langue = e.target.value;
+        sauvegarder();
+        location.reload();
+    });
     $('#btn-exporter').addEventListener('click', exporterSauvegarde);
     $('#btn-importer').addEventListener('click', () => $('#fichier-import').click());
     $('#fichier-import').addEventListener('change', e => {
@@ -2195,7 +2211,7 @@ function init() {
         })
         .catch(e => {
             console.error(e);
-            toast('Impossible de charger les jeux (lance le site via WAMP ou Live Server)', 'erreur');
+            toast(t('Impossible de charger les jeux (lance le site via WAMP ou Live Server)'), 'erreur');
         });
 }
 

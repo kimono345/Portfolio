@@ -1635,6 +1635,18 @@ main {
 }
 .profil-bloc > p { color: var(--texte-doux); margin-bottom: 1rem; max-width: 640px; }
 .profil-bloc .interrupteur { padding: 0; color: var(--texte); }
+/* Choix de la langue */
+.reglage-langue { display: flex; align-items: center; gap: 0.8rem; margin-top: 1rem; font-weight: 600; }
+.reglage-langue select {
+    padding: 0.5rem 0.8rem;
+    border-radius: 10px;
+    border: 1px solid var(--bord);
+    background: var(--fond-3);
+    color: var(--texte);
+    font: inherit;
+    cursor: pointer;
+}
+.reglage-langue select option { background: var(--fond-2); }
 .profil-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
 
 /* Compteur de malchance sur l'accueil */
