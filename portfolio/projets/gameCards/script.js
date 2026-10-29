@@ -336,10 +336,11 @@ function ecrire(cle, valeur) {
 const etat = {
     collection: lire(CLES.collection, {}),       // { id: carte + exemplaires, holos, obtenue }
     pieces: lire(CLES.pieces, 0),
-    // Boosters gratuits en réserve, et début du chrono de la prochaine recharge
+    // Boosters gratuits en réserve, et début du chrono de la prochaine recharge.
+    // Première partie : la réserve est déjà pleine (10 boosters et 1 Prestige).
     charges: {
-        standard: { charges: 1, depuis: Date.now() },
-        prestige: { charges: 1, depuis: Date.now() },
+        standard: { charges: TYPES_BOOSTER.standard.stockMax, depuis: Date.now() },
+        prestige: { charges: TYPES_BOOSTER.prestige.stockMax, depuis: Date.now() },
         ...lire(CLES.charges, {}),
     },
     godPacks: lire(CLES.godPacks, { nombre: 0, premier: null }), // trophée : combien, et la date du premier
