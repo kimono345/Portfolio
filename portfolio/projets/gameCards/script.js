@@ -218,6 +218,7 @@ const CULTES_EPIQUES = [
 // Stats réglées à la main, quand les données Steam ne reflètent pas le jeu
 const STATS_FORCEES = {
     2357570: { attaque: 75, popularite: 88 }, // Overwatch 2 : le CSV date d'avant sa sortie sur Steam
+    72850: { attaque: 84 },                   // The Elder Scrolls V: Skyrim (2011)
 };
 
 // Score de prestige des autres jeux : 85 % popularité + 15 % qualité + bonus

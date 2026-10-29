@@ -161,9 +161,19 @@ for (const l of lignes) {
     jeux.push(jeu);
 }
 
+// DLC et modules (multijoueur, season pass, packs…) : Steam leur donne le nom du jeu de base.
+// Parmi les fiches de même nom sorties la même année, on ne garde que la plus commentée : le jeu lui-même.
+const cleNom = j => `${j.nom.toLowerCase().replace(/[®™]/g, '').replace(/\s+/g, ' ').trim()}|${j.annee}`;
+const principales = new Map();
+for (const j of jeux) {
+    const autre = principales.get(cleNom(j));
+    if (!autre || j.avis > autre.avis || (j.avis === autre.avis && j.id < autre.id)) principales.set(cleNom(j), j);
+}
+const dlc = jeux.length - principales.size;
+
 // On garde les jeux les plus commentés, du plus populaire au moins populaire
-jeux.sort((a, b) => b.avis - a.avis);
-const garde = jeux.slice(0, NOMBRE);
+const garde = [...principales.values()].sort((a, b) => b.avis - a.avis).slice(0, NOMBRE);
+const ids = new Set(garde.map(j => j.id));
 
 // Format compact pour alléger le fichier : un tableau par jeu au lieu d'un objet,
 // et genres / thèmes codés par un caractère chacun (position dans ALPHABET).
@@ -181,12 +191,12 @@ const compact = {
         return ligne;
     }),
     // Jeux sans avis dans le dataset : avis et note estimés (affiché sur leur fiche)
-    estimes,
+    estimes: estimes.filter(id => ids.has(id)),
 };
 
 fs.mkdirSync(path.dirname(CIBLE), { recursive: true });
 fs.writeFileSync(CIBLE, JSON.stringify(compact));
 
 const rang = n => garde[Math.min(n, garde.length) - 1]?.avis;
-console.log(`${jeux.length} jeux (dont ${estimes.length} aux avis estimés), ${garde.length} gardés → ${path.relative(RACINE, CIBLE)} (${Math.round(fs.statSync(CIBLE).size / 1024)} Ko)`);
+console.log(`${jeux.length} fiches, ${dlc} DLC écartés (même nom que leur jeu), ${garde.length} gardés dont ${compact.estimes.length} aux avis estimés → ${path.relative(RACINE, CIBLE)} (${Math.round(fs.statSync(CIBLE).size / 1024)} Ko)`);
 console.log('Nombre d’avis au rang :', [20, 100, 400, 1500, 4000, garde.length].map(n => `${n} → ${rang(n)}`).join(' · '));
