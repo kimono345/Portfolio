@@ -148,7 +148,7 @@ for (const l of lignes) {
     const annee = (l[col['Release date']].match(/\d{4}/) || [])[0];
     // Joueurs estimés : Steam donne une tranche ("2000000 - 5000000"), on garde son milieu (moyenne géométrique)
     const [min, max] = (l[col['Estimated owners']] || '0 - 0').split(' - ').map(Number);
-    const joueurs = Math.round(Math.sqrt(Math.max(min, 1) * Math.max(max, 1)));
+    let joueurs = Math.round(Math.sqrt(Math.max(min, 1) * Math.max(max, 1)));
     const metacritic = Number(l[col['Metacritic score']]) || null;
 
     const positifs = Number(l[col.Positive]) || 0;
@@ -158,6 +158,8 @@ for (const l of lignes) {
     let estime = false;
     if (CORRECTIONS[id]) {
         ({ avis, note } = CORRECTIONS[id]);
+        // La tranche de joueurs du dataset date d'avant la correction : on l'estime à partir des vrais avis
+        joueurs = Math.max(joueurs, avis * JOUEURS_PAR_AVIS);
     } else if (!avis) {
         // Pas d'avis : on estime à partir des autres colonnes, sinon valeurs neutres
         if (PAS_UN_JEU.test(l[col.Name])) continue;

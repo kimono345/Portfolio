@@ -650,7 +650,7 @@ const aLeGenre = (carte, valeur) => DISTINCTIONS[valeur]
 // ---------- Données ----------
 
 async function chargerJeux() {
-    const reponse = await fetch('data/jeux.json?v=8');
+    const reponse = await fetch('data/jeux.json?v=9');
     if (!reponse.ok) throw new Error(`data/jeux.json introuvable (${reponse.status})`);
     // Format compact (voir outils/convertir-csv.js) : un tableau par jeu, genres et thèmes codés en caractères
     const { genres, tags, jeux, groupesTags: groupes, estimes = [] } = await reponse.json();
