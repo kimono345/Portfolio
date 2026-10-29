@@ -999,6 +999,8 @@ main {
 /* Le badge ×N du compteur ne passe pas sous le bandeau */
 .carte.goty .carte-haut { padding-right: 21cqi; }
 
+.fiche-raison { margin-top: 0.3rem; color: var(--texte-doux); font-size: 0.88rem; font-style: italic; }
+
 /* Pastilles GOTY et Chef-d'œuvre sur la fiche */
 .fiche-distinctions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
 .fiche-distinction {

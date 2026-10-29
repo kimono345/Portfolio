@@ -6,7 +6,8 @@
 
 // ---------- Règles du jeu (valeurs de départ, à équilibrer) ----------
 
-// Du plus rare au plus commun. `seuil` porte sur le nombre d'avis Steam.
+// Du plus rare au plus commun. Les Mythiques sont choisies à la main (MYTHIQUES) ; les autres jeux sont classés
+// par score de prestige, puis répartis selon `quota` (nombre de jeux de la rareté, la Commune prend le reste).
 // Chaque carte tire d'abord sa rareté selon une colonne de chances (en %), puis un jeu au hasard dans cette rareté :
 //   `chance`          : les 4 premières cartes d'un booster
 //   `chanceGarantie`  : la 5ᵉ carte, garantie Peu commune ou mieux, avec sa propre table pour ne pas
@@ -17,12 +18,12 @@
 // Chaque colonne de chances doit faire 100 au total ; 0 interdit la rareté.
 // `prix` : achat direct dans le catalogue, volontairement bien plus cher que la chance en boosters.
 const RARETES = [
-    { id: 'mythique',    nom: 'Mythique',    seuil: 750000, chance: 0.1,  chanceGarantie: 0.1, chancePrestige: 0.2,  chancePrestigeGarantie: 1,  chanceDuel: 3,  revente: 300, prix: 10000 },
-    { id: 'legendaire',  nom: 'Légendaire',  seuil: 200000, chance: 0.5,  chanceGarantie: 0.9, chancePrestige: 1,    chancePrestigeGarantie: 5,  chanceDuel: 7,  revente: 100, prix: 4000 },
-    { id: 'epique',      nom: 'Épique',      seuil: 60000,  chance: 3,    chanceGarantie: 19,  chancePrestige: 6,    chancePrestigeGarantie: 94, chanceDuel: 12, revente: 40,  prix: 1500 },
-    { id: 'rare',        nom: 'Rare',        seuil: 12000,  chance: 6,    chanceGarantie: 30,  chancePrestige: 22.8, chancePrestigeGarantie: 0,  chanceDuel: 18, revente: 15,  prix: 600 },
-    { id: 'peu-commune', nom: 'Peu commune', seuil: 3000,   chance: 18,   chanceGarantie: 50,  chancePrestige: 70,   chancePrestigeGarantie: 0,  chanceDuel: 25, revente: 5,   prix: 250 },
-    { id: 'commune',     nom: 'Commune',     seuil: 0,      chance: 72.4, chanceGarantie: 0,   chancePrestige: 0,    chancePrestigeGarantie: 0,  chanceDuel: 35, revente: 2,   prix: 100 },
+    { id: 'mythique',    nom: 'Mythique',    quota: null, chance: 0.1,  chanceGarantie: 0.1, chancePrestige: 0.2,  chancePrestigeGarantie: 1,  chanceDuel: 3,  revente: 300, prix: 10000 },
+    { id: 'legendaire',  nom: 'Légendaire',  quota: 88,  chance: 0.5,  chanceGarantie: 0.9, chancePrestige: 1,    chancePrestigeGarantie: 5,  chanceDuel: 7,  revente: 100, prix: 4000 },
+    { id: 'epique',      nom: 'Épique',      quota: 284, chance: 3,    chanceGarantie: 19,  chancePrestige: 6,    chancePrestigeGarantie: 94, chanceDuel: 12, revente: 40,  prix: 1500 },
+    { id: 'rare',        nom: 'Rare',        quota: 1109, chance: 6,    chanceGarantie: 30,  chancePrestige: 22.8, chancePrestigeGarantie: 0,  chanceDuel: 18, revente: 15,  prix: 600 },
+    { id: 'peu-commune', nom: 'Peu commune', quota: 2257, chance: 18,   chanceGarantie: 50,  chancePrestige: 70,   chancePrestigeGarantie: 0,  chanceDuel: 25, revente: 5,   prix: 250 },
+    { id: 'commune',     nom: 'Commune',     quota: null, chance: 72.4, chanceGarantie: 0,   chancePrestige: 0,    chancePrestigeGarantie: 0,  chanceDuel: 35, revente: 2,   prix: 100 },
 ];
 const CHANCE_HOLO_PRESTIGE = 0.08; // contre 2 % dans un booster normal
 
@@ -76,6 +77,41 @@ const GOTY = {
     1903340: [2025, TGA],                                   // Clair Obscur: Expedition 33
 };
 const gotyDe = id => GOTY[id] && { annee: GOTY[id][0], ceremonie: GOTY[id][1] };
+
+// Les 22 Mythiques : les jeux les plus cultes et connus, choisis à la main (identifiant Steam)
+const MYTHIQUES = [
+    271590,  // Grand Theft Auto V
+    12210,   // Grand Theft Auto IV
+    1174180, // Red Dead Redemption 2
+    292030,  // The Witcher 3: Wild Hunt
+    1086940, // Baldur's Gate 3
+    1245620, // Elden Ring
+    814380,  // Sekiro: Shadows Die Twice
+    1903340, // Clair Obscur: Expedition 33
+    730,     // Counter-Strike 2
+    1091500, // Cyberpunk 2077
+    220,     // Half-Life 2
+    620,     // Portal 2
+    1593500, // God of War
+    391540,  // Undertale
+    489830,  // The Elder Scrolls V: Skyrim Special Edition
+    379720,  // DOOM
+    1222670, // Les Sims 4
+    254700,  // Resident Evil 4 (2005)
+    10180,   // Call of Duty: Modern Warfare 2 (2009)
+    33230,   // Assassin's Creed II
+    1328670, // Mass Effect Legendary Edition
+    39140,   // Final Fantasy VII
+];
+
+// Score de prestige des autres jeux : 85 % popularité + 15 % qualité + bonus
+//   popularité = 75 % avis Steam (1 → 0, 1 million → 100) + 25 % joueurs estimés (1 → 0, 100 millions → 100)
+//   qualité    = note public (corrigée pour les jeux à peu d'avis), moyennée avec Metacritic quand il y en a une
+const POIDS_POPULARITE = 0.85;
+const PART_JOUEURS = 0.25;
+const BONUS_PRESTIGE = { goty: 3, chefOeuvre: 2, adore: 1, malNote: -3 };
+// Ces jeux ne descendent jamais sous Légendaire : les GOTY, et les géants (750 000 avis ou plus)
+const AVIS_GEANT = 750000;
 const MANCHES_GAGNANTES = 3;
 const GAIN_DUEL = 30;
 const CARTES_PAR_PAGE = 60; // collection affichée par tranches
@@ -146,7 +182,6 @@ const $ = sel => document.querySelector(sel);
 const attendre = ms => new Promise(r => setTimeout(r, ms));
 const auHasard = liste => liste[Math.floor(Math.random() * liste.length)];
 const indexRarete = id => RARETES.findIndex(r => r.id === id);
-const rareteDe = avis => RARETES.find(r => (avis || 0) >= r.seuil);
 const nombre = n => n.toLocaleString('fr-FR');
 const PIECE = '<span class="piece" aria-hidden="true"></span>';
 
@@ -258,6 +293,63 @@ function calculerAnciennete() {
 
 const anciennete = annee => ancienneteParAnnee[annee] ?? 0;
 
+const echelleLog = (valeur, max) => Math.max(0, Math.min(100, Math.log10(Math.max(1, valeur)) * 100 / Math.log10(max)));
+
+// Nom simplifié pour reconnaître les éditions d'un même jeu (« GOTY Edition », « Remastered »…)
+const nomDeBase = nom => nom.toLowerCase()
+    .replace(/\(.*?\)/g, '')
+    .replace(/[®™:\-–]/g, ' ')
+    .replace(/\b(game of the year|goty|definitive|complete|deluxe|remastered|enhanced|legacy|special|edition)\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+// Calcule le score de prestige de chaque jeu, puis sa rareté (jeu.rarete) et la raison (jeu.raisons)
+function calculerRaretes() {
+    const mythiques = new Set(MYTHIQUES);
+    for (const jeu of tousLesJeux) {
+        const note = notePublic(jeu.note, jeu.avis);
+        const qualite = jeu.metacritic ? (note + jeu.metacritic) / 2 : note;
+        const pop = (1 - PART_JOUEURS) * echelleLog(jeu.avis, 1e6) + PART_JOUEURS * echelleLog(jeu.joueurs, 1e8);
+        jeu.raisons = [];
+        let bonus = 0;
+        const ajouter = (condition, points, raison) => {
+            if (!condition) return;
+            bonus += points;
+            jeu.raisons.push(raison);
+        };
+        ajouter(GOTY[jeu.id], BONUS_PRESTIGE.goty, 'GOTY');
+        ajouter(jeu.metacritic >= SEUIL_CHEF_OEUVRE, BONUS_PRESTIGE.chefOeuvre, 'chef-d’œuvre');
+        ajouter(note >= 95 && jeu.avis >= 1000, BONUS_PRESTIGE.adore, 'adoré des joueurs');
+        ajouter(jeu.note < 50 && jeu.avis >= 1000, BONUS_PRESTIGE.malNote, 'mal noté');
+        jeu.prestige = POIDS_POPULARITE * pop + (1 - POIDS_POPULARITE) * qualite + bonus;
+    }
+
+    // Les meilleurs scores remplissent les quotas, de Légendaire à Peu commune ;
+    // en Légendaire et Épique, une seule édition par jeu (les autres passent en dessous)
+    const classement = [...tousLesJeux].sort((a, b) => b.prestige - a.prestige);
+    const pris = RARETES.map(() => 0);
+    const vus = RARETES.map(() => new Set());
+    const indexLibre = (j) => {
+        let i = INDEX_LEGENDAIRE;
+        while (RARETES[i].quota && (pris[i] >= RARETES[i].quota || (i <= INDEX_EPIQUE && vus[i].has(j.base)))) i++;
+        return i;
+    };
+    let rang = 0;
+    for (const jeu of classement) {
+        if (mythiques.has(jeu.id)) {
+            jeu.rarete = 'mythique';
+            continue;
+        }
+        jeu.base = nomDeBase(jeu.nom);
+        let i = indexLibre(jeu);
+        if ((GOTY[jeu.id] || jeu.avis >= AVIS_GEANT) && i > INDEX_LEGENDAIRE) i = INDEX_LEGENDAIRE;
+        pris[i]++;
+        vus[i].add(jeu.base);
+        jeu.rarete = RARETES[i].id;
+        jeu.rang = ++rang;
+    }
+}
+
 function creerCarte(jeu) {
     return {
         id: jeu.id,
@@ -267,7 +359,7 @@ function creerCarte(jeu) {
         anciennete: anciennete(jeu.annee),
         popularite: popularite(jeu.avis),
         metacritic: jeu.metacritic,
-        rarete: rareteDe(jeu.avis).id,
+        rarete: jeu.rarete,
         annee: jeu.annee,
         genres: jeu.genres,
         tags: jeu.tags,
@@ -366,16 +458,17 @@ const aLeGenre = (carte, valeur) => DISTINCTIONS[valeur]
 // ---------- Données ----------
 
 async function chargerJeux() {
-    const reponse = await fetch('data/jeux.json?v=3');
+    const reponse = await fetch('data/jeux.json?v=4');
     if (!reponse.ok) throw new Error(`data/jeux.json introuvable (${reponse.status})`);
     // Format compact (voir outils/convertir-csv.js) : un tableau par jeu, genres et thèmes codés en caractères
     const { genres, tags, jeux, groupesTags: groupes } = await reponse.json();
     const decoder = (codes, liste) => [...codes].map(c => liste[ALPHABET_CODES.indexOf(c)]);
     for (const r of RARETES) jeuxParRarete[r.id] = [];
-    tousLesJeux = jeux.map(([id, nom, annee, avis, note, metacritic, codesGenres, codesTags, image]) =>
-        ({ id, nom, annee, avis, note, metacritic, genres: decoder(codesGenres, genres), tags: decoder(codesTags, tags), image }));
+    tousLesJeux = jeux.map(([id, nom, annee, avis, note, metacritic, joueurs, codesGenres, codesTags, image]) =>
+        ({ id, nom, annee, avis, note, metacritic, joueurs, genres: decoder(codesGenres, genres), tags: decoder(codesTags, tags), image }));
     groupesTags = groupes;
-    for (const jeu of tousLesJeux) jeuxParRarete[rareteDe(jeu.avis).id].push(jeu);
+    calculerRaretes();
+    for (const jeu of tousLesJeux) jeuxParRarete[jeu.rarete].push(jeu);
     jeuxParId = new Map(tousLesJeux.map(jeu => [jeu.id, jeu]));
     calculerAnciennete();
     genresCatalogue = genres;
@@ -1010,6 +1103,18 @@ function vendreTousLesDoublons() {
 
 // ---------- Fiche détaillée ----------
 
+// « 3,2 M », « 450 k »
+const formatJoueurs = n => n >= 1e6
+    ? `${(n / 1e6).toLocaleString('fr-FR', { maximumFractionDigits: n >= 1e7 ? 0 : 1 })} M`
+    : `${Math.round(n / 1e3).toLocaleString('fr-FR')} k`;
+
+// Pourquoi ce jeu a cette rareté, en une phrase
+function raisonRarete(jeu) {
+    if (jeu.rarete === 'mythique') return 'Mythique : l’un des 22 jeux les plus cultes du jeu vidéo';
+    const raisons = jeu.raisons.length ? ` · ${jeu.raisons.join(', ')}` : '';
+    return `Rang ${nombre(jeu.rang)} au score de prestige${raisons}`;
+}
+
 function afficherFiche(id) {
     const e = etat.collection[id];
     const jeu = jeuxParId.get(id);
@@ -1023,6 +1128,7 @@ function afficherFiche(id) {
             <span class="fiche-rarete">${rarete.nom}${e?.holos ? ' · ✨ Holo' : ''}</span>
             <h2>${echapper(carte.nom)}</h2>
             <p class="fiche-meta">${[carte.annee, ...carte.genres].filter(Boolean).map(echapper).join(' · ')}</p>
+            ${jeu ? `<p class="fiche-raison">${raisonRarete(jeu)}</p>` : ''}
             ${gotyDe(carte.id) || carte.metacritic >= SEUIL_CHEF_OEUVRE ? `<div class="fiche-distinctions">
                 ${gotyDe(carte.id) ? `<p class="fiche-distinction">${LAURIER}Jeu de l’année ${gotyDe(carte.id).annee}<span>${gotyDe(carte.id).ceremonie}</span></p>` : ''}
                 ${carte.metacritic >= SEUIL_CHEF_OEUVRE ? `<p class="fiche-distinction">${ICONES.medaille}Chef-d’œuvre<span>noté ${carte.metacritic}/100 par la presse (Metacritic)</span></p>` : ''}
@@ -1033,6 +1139,7 @@ function afficherFiche(id) {
                 <div><dt>${STATS.attaque.icone} Note public</dt><dd>${carte.attaque} %</dd></div>
                 <div><dt>${STATS.anciennete.icone} Ancienneté</dt><dd>${carte.anciennete} / 100 <span class="gris">· ${carte.annee}</span></dd></div>
                 <div><dt>★ Popularité</dt><dd>${carte.popularite} / 100</dd></div>
+                ${jeu?.joueurs > 1 ? `<div><dt>👥 Joueurs estimés</dt><dd>≈ ${formatJoueurs(jeu.joueurs)}</dd></div>` : ''}
                 <div><dt>📰 Metacritic</dt><dd>${carte.metacritic ?? '<span class="gris">aucune</span>'}</dd></div>
             </dl>
             <p class="fiche-exemplaires">
@@ -1059,6 +1166,8 @@ function afficherFiche(id) {
 // ---------- Écran catalogue ----------
 
 const TRIS_CATALOGUE = {
+    // Par défaut : de la plus rare à la plus commune, puis par score de prestige dans chaque rareté
+    rarete: (a, b) => indexRarete(a.rarete) - indexRarete(b.rarete) || b.prestige - a.prestige,
     popularite: null, // data/jeux.json est déjà trié du plus au moins populaire
     note: (a, b) => notePublic(b.note, b.avis) - notePublic(a.note, a.avis),
     metacritic: (a, b) => (b.metacritic ?? -1) - (a.metacritic ?? -1),
@@ -1146,7 +1255,7 @@ function afficherRegles() {
     $('#legende-raretes').innerHTML = RARETES.map((r, i) => `
         <tr class="rarete-${r.id}">
             <td><span class="pastille"></span>${r.nom}</td>
-            <td>${r.seuil ? `≥ ${nombre(r.seuil)}` : `< ${nombre(RARETES[i - 1].seuil)}`}</td>
+            <td>${r.id === 'mythique' ? 'choisis à la main' : r.quota ? `${nombre(r.quota)} suivants` : 'tous les autres'}</td>
             <td>${chanceRarete(r)}</td>
             <td>${r.chanceGarantie ? `${nombre(r.chanceGarantie)} %` : '—'}</td>
             <td>${nombre(r.chanceDuel)} %</td>

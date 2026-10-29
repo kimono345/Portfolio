@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=43">
+    <link rel="stylesheet" href="style.css?v=44">
 </head>
 <body>
 
@@ -200,6 +200,7 @@
                     <option value="">Tous les genres et thèmes</option>
                 </select>
                 <select id="catalogue-tri" aria-label="Trier">
+                    <option value="rarete" selected>Tri : rareté</option>
                     <option value="popularite">Tri : popularité</option>
                     <option value="note">Tri : note public</option>
                     <option value="metacritic">Tri : note Metacritic</option>
@@ -257,13 +258,16 @@
         <section class="ecran" id="ecran-regles" hidden>
             <div class="titre-ecran">
                 <h1>Règles</h1>
-                <p>Chaque carte est un vrai jeu Steam. Plus un jeu a d’avis, plus il est rare.</p>
+                <p>Chaque carte est un vrai jeu Steam. Les 22 Mythiques sont les jeux les plus cultes, choisis à la main.
+                   Les autres sont classés par score de prestige : 85 % popularité (avis Steam et joueurs estimés), 15 % qualité
+                   (note des joueurs et de la presse), plus des bonus (GOTY +3, chef-d’œuvre +2, adoré +1, mal noté −3).
+                   Les GOTY et les géants (750 000 avis ou plus) sont au moins Légendaires.</p>
             </div>
 
             <div class="tableau-defile">
                 <table class="legende">
                     <thead>
-                        <tr><th>Rareté</th><th>Avis Steam</th><th>Chance</th><th>5ᵉ carte</th><th>Duel</th><th>Revente</th><th>Achat</th><th>Possédées</th></tr>
+                        <tr><th>Rareté</th><th>Jeux</th><th>Chance</th><th>5ᵉ carte</th><th>Duel</th><th>Revente</th><th>Achat</th><th>Possédées</th></tr>
                     </thead>
                     <tbody id="legende-raretes"></tbody>
                 </table>
@@ -345,6 +349,6 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="script.js?v=46"></script>
+    <script src="script.js?v=48"></script>
 </body>
 </html>

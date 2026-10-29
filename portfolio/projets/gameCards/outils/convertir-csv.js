@@ -61,6 +61,13 @@ const ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
 const LOGICIELS = ['Utilities', 'Design & Illustration', 'Animation & Modeling', 'Video Production',
     'Audio Production', 'Photo Editing', 'Software Training', 'Web Publishing', 'Accounting', 'Game Development'];
 
+// Doublons du catalogue Steam (versions régionales ou packs) qui prêtent à confusion avec le vrai jeu
+const DOUBLONS = [
+    10190, // Call of Duty: Modern Warfare 2 (2009), seconde fiche
+    52003, // Portal 2, seconde fiche
+    48173, // Assassin's Creed II, seconde fiche
+];
+
 // Lecture CSV caractère par caractère : les descriptions contiennent des virgules,
 // des guillemets doublés et des retours à la ligne entre guillemets.
 function* lignesCsv(texte) {
@@ -101,7 +108,11 @@ for (const l of lignes) {
     if (genresSteam.some(g => LOGICIELS.includes(g))) continue;
 
     const id = Number(l[col.AppID]);
+    if (DOUBLONS.includes(id)) continue;
     const annee = (l[col['Release date']].match(/\d{4}/) || [])[0];
+    // Joueurs estimés : Steam donne une tranche ("2000000 - 5000000"), on garde son milieu (moyenne géométrique)
+    const [min, max] = (l[col['Estimated owners']] || '0 - 0').split(' - ').map(Number);
+    const joueurs = Math.round(Math.sqrt(Math.max(min, 1) * Math.max(max, 1)));
     // L'image vaut presque toujours .../apps/<id>/header.jpg : on ne stocke que les exceptions
     const image = l[col['Header image']].split('?')[0].split(`/apps/${id}/`)[1];
     const jeu = {
@@ -111,6 +122,7 @@ for (const l of lignes) {
         avis,
         note: Math.round((positifs / avis) * 100),
         metacritic: Number(l[col['Metacritic score']]) || null,
+        joueurs,
         genres: genresSteam.map(g => GENRES[g]).filter(Boolean),
         // Tags des joueurs + genres officiels "Violent", "Nudity"… ; rangés dans l'ordre de listeTags
         tags: [...new Set([...(l[col.Tags] ? l[col.Tags].split(',') : []), ...genresSteam]
@@ -127,7 +139,7 @@ const garde = jeux.slice(0, NOMBRE);
 
 // Format compact pour alléger le fichier : un tableau par jeu au lieu d'un objet,
 // et genres / thèmes codés par un caractère chacun (position dans ALPHABET).
-// [id, nom, année, avis, note, metacritic, "codes genres", "codes thèmes", image (seulement si spéciale)]
+// [id, nom, année, avis, note, metacritic, joueurs estimés, "codes genres", "codes thèmes", image (seulement si spéciale)]
 const listeGenres = Object.values(GENRES);
 const coder = (valeurs, liste) => valeurs.map(v => ALPHABET[liste.indexOf(v)]).join('');
 if (listeGenres.length > ALPHABET.length || listeTags.length > ALPHABET.length) throw new Error('trop de genres ou de thèmes');
@@ -136,7 +148,7 @@ const compact = {
     tags: listeTags,
     groupesTags: Object.fromEntries(Object.entries(GROUPES_TAGS).map(([nom, groupe]) => [nom, Object.keys(groupe)])),
     jeux: garde.map(j => {
-        const ligne = [j.id, j.nom, j.annee, j.avis, j.note, j.metacritic, coder(j.genres, listeGenres), coder(j.tags, listeTags)];
+        const ligne = [j.id, j.nom, j.annee, j.avis, j.note, j.metacritic, j.joueurs, coder(j.genres, listeGenres), coder(j.tags, listeTags)];
         if (j.image) ligne.push(j.image);
         return ligne;
     }),
