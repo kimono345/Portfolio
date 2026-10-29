@@ -97,13 +97,22 @@ const lignes = lignesCsv(fs.readFileSync(SOURCE, 'utf8'));
 const entete = lignes.next().value.flatMap(c => c === 'DiscountDLC count' ? ['Discount', 'DLC count'] : [c]);
 const col = Object.fromEntries(entete.map((nom, i) => [nom, i]));
 
+// Jeux sans avis dans le dataset alors qu'ils en ont sur Steam : vrais chiffres saisis à la main
+// (à lire sur la page Steam du jeu). Format : identifiant: { avis: total des avis, note: % d'avis positifs }
+const CORRECTIONS = {
+    // 1223750: { avis: 0, note: 0 }, // Cloud Meadow : à remplir avec les chiffres de sa page Steam
+};
+
+// Jeux sans avis : on écarte ce qui n'est pas un jeu complet (démos, playtests, bandes-son, serveurs…)
+const PAS_UN_JEU = /\b(playtest|demo|prologue|soundtrack|ost|dedicated server|server|beta|benchmark|sdk)\b|friend'?s pass/i;
+const NOTE_NEUTRE = 76;       // note moyenne des jeux, pour ceux dont on ne connaît pas la note
+const JOUEURS_PAR_AVIS = 50;  // estimation : environ 1 avis Steam pour 50 joueurs
+
 const jeux = [];
+const estimes = [];
 for (const l of lignes) {
     if (l.length < entete.length) continue;
-    const positifs = Number(l[col.Positive]) || 0;
-    const negatifs = Number(l[col.Negative]) || 0;
-    const avis = positifs + negatifs;
-    if (!avis || !l[col.Name] || !l[col['Header image']]) continue;
+    if (!l[col.Name] || !l[col['Header image']]) continue;
     const genresSteam = l[col.Genres] ? l[col.Genres].split(',') : [];
     if (genresSteam.some(g => LOGICIELS.includes(g))) continue;
 
@@ -113,6 +122,23 @@ for (const l of lignes) {
     // Joueurs estimés : Steam donne une tranche ("2000000 - 5000000"), on garde son milieu (moyenne géométrique)
     const [min, max] = (l[col['Estimated owners']] || '0 - 0').split(' - ').map(Number);
     const joueurs = Math.round(Math.sqrt(Math.max(min, 1) * Math.max(max, 1)));
+    const metacritic = Number(l[col['Metacritic score']]) || null;
+
+    const positifs = Number(l[col.Positive]) || 0;
+    const negatifs = Number(l[col.Negative]) || 0;
+    let avis = positifs + negatifs;
+    let note = avis ? Math.round((positifs / avis) * 100) : null;
+    let estime = false;
+    if (CORRECTIONS[id]) {
+        ({ avis, note } = CORRECTIONS[id]);
+    } else if (!avis) {
+        // Pas d'avis : on estime à partir des autres colonnes, sinon valeurs neutres
+        if (PAS_UN_JEU.test(l[col.Name])) continue;
+        estime = true;
+        const recommandations = Number(l[col.Recommendations]) || 0;
+        avis = recommandations || (max > 20000 ? Math.round(joueurs / JOUEURS_PAR_AVIS) : 0);
+        note = metacritic ?? NOTE_NEUTRE;
+    }
     // L'image vaut presque toujours .../apps/<id>/header.jpg : on ne stocke que les exceptions
     const image = l[col['Header image']].split('?')[0].split(`/apps/${id}/`)[1];
     const jeu = {
@@ -120,8 +146,8 @@ for (const l of lignes) {
         nom: l[col.Name].trim(),
         annee: annee ? Number(annee) : null,
         avis,
-        note: Math.round((positifs / avis) * 100),
-        metacritic: Number(l[col['Metacritic score']]) || null,
+        note,
+        metacritic,
         joueurs,
         genres: genresSteam.map(g => GENRES[g]).filter(Boolean),
         // Tags des joueurs + genres officiels "Violent", "Nudity"… ; rangés dans l'ordre de listeTags
@@ -130,6 +156,7 @@ for (const l of lignes) {
             .sort((a, b) => listeTags.indexOf(a) - listeTags.indexOf(b)),
     };
     if (image && image !== 'header.jpg') jeu.image = image;
+    if (estime) estimes.push(id);
     jeux.push(jeu);
 }
 
@@ -152,11 +179,13 @@ const compact = {
         if (j.image) ligne.push(j.image);
         return ligne;
     }),
+    // Jeux sans avis dans le dataset : avis et note estimés (affiché sur leur fiche)
+    estimes,
 };
 
 fs.mkdirSync(path.dirname(CIBLE), { recursive: true });
 fs.writeFileSync(CIBLE, JSON.stringify(compact));
 
 const rang = n => garde[Math.min(n, garde.length) - 1]?.avis;
-console.log(`${jeux.length} jeux avec avis, ${garde.length} gardés → ${path.relative(RACINE, CIBLE)} (${Math.round(fs.statSync(CIBLE).size / 1024)} Ko)`);
+console.log(`${jeux.length} jeux (dont ${estimes.length} aux avis estimés), ${garde.length} gardés → ${path.relative(RACINE, CIBLE)} (${Math.round(fs.statSync(CIBLE).size / 1024)} Ko)`);
 console.log('Nombre d’avis au rang :', [20, 100, 400, 1500, 4000, garde.length].map(n => `${n} → ${rang(n)}`).join(' · '));

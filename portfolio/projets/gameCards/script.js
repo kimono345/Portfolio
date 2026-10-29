@@ -407,7 +407,9 @@ function calculerRaretes() {
     for (const jeu of tousLesJeux) {
         const note = notePublic(jeu.note, jeu.avis);
         const qualite = jeu.metacritic ? (note + jeu.metacritic) / 2 : note;
-        const pop = (1 - PART_JOUEURS) * echelleLog(jeu.avis, 1e6) + PART_JOUEURS * echelleLog(jeu.joueurs, 1e8);
+        // Jeux estimés (souvent sortis après la collecte) : leur tranche de joueurs n'est pas fiable, on ne garde que les avis
+        const partJoueurs = jeu.estime ? 0 : PART_JOUEURS;
+        const pop = (1 - partJoueurs) * echelleLog(jeu.avis, 1e6) + partJoueurs * echelleLog(jeu.joueurs, 1e8);
         jeu.raisons = [];
         let bonus = 0;
         const ajouter = (condition, points, raison) => {
@@ -594,15 +596,18 @@ const aLeGenre = (carte, valeur) => DISTINCTIONS[valeur]
 // ---------- Données ----------
 
 async function chargerJeux() {
-    const reponse = await fetch('data/jeux.json?v=4');
+    const reponse = await fetch('data/jeux.json?v=6');
     if (!reponse.ok) throw new Error(`data/jeux.json introuvable (${reponse.status})`);
     // Format compact (voir outils/convertir-csv.js) : un tableau par jeu, genres et thèmes codés en caractères
-    const { genres, tags, jeux, groupesTags: groupes } = await reponse.json();
+    const { genres, tags, jeux, groupesTags: groupes, estimes = [] } = await reponse.json();
     const decoder = (codes, liste) => [...codes].map(c => liste[ALPHABET_CODES.indexOf(c)]);
     for (const r of RARETES) jeuxParRarete[r.id] = [];
     tousLesJeux = jeux.map(([id, nom, annee, avis, note, metacritic, joueurs, codesGenres, codesTags, image]) =>
         ({ id, nom, annee, avis, note, metacritic, joueurs, genres: decoder(codesGenres, genres), tags: decoder(codesTags, tags), image }));
     groupesTags = groupes;
+    // Jeux sans avis dans le dataset : avis et note estimés, signalé sur leur fiche
+    const ensembleEstimes = new Set(estimes);
+    for (const jeu of tousLesJeux) jeu.estime = ensembleEstimes.has(jeu.id);
     calculerRaretes();
     for (const jeu of tousLesJeux) jeuxParRarete[jeu.rarete].push(jeu);
     jeuxParId = new Map(tousLesJeux.map(jeu => [jeu.id, jeu]));
@@ -1272,8 +1277,10 @@ function afficherFiche(id) {
             ${carte.tags?.length ? `<p class="fiche-tags">${carte.tags.map(t => `<span${(groupesTags['Contenu sensible'] || []).includes(t)
                 ? ' class="tag-sensible"' : ''}>${echapper(t)}</span>`).join('')}</p>` : ''}
             <dl class="fiche-stats">
-                <div><dt>${STATS.attaque.icone} Qualité</dt><dd>${carte.attaque} <span class="gris">· ${carte.noteReelle ?? '?'} % d’avis positifs</span></dd></div>
-                <div><dt>★ Popularité</dt><dd>${carte.popularite} <span class="gris">· ${carte.avis ? nombre(carte.avis) : '?'} avis Steam</span></dd></div>
+                <div><dt>${STATS.attaque.icone} Qualité</dt><dd>${carte.attaque} <span class="gris">· ${jeu?.estime ? 'note estimée' : `${carte.noteReelle ?? '?'} % d’avis positifs`}</span></dd></div>
+                <div><dt>★ Popularité</dt><dd>${carte.popularite} <span class="gris">· ${jeu?.estime
+                    ? (carte.avis ? `≈ ${nombre(carte.avis)} avis (estimés)` : 'pas encore d’avis Steam')
+                    : `${carte.avis ? nombre(carte.avis) : '?'} avis Steam`}</span></dd></div>
                 <div><dt>${STATS.anciennete.icone} Ancienneté</dt><dd>${carte.anciennete} <span class="gris">· sorti en ${carte.annee}</span></dd></div>
                 ${jeu?.joueurs > 1 ? `<div><dt>👥 Joueurs estimés</dt><dd>≈ ${formatJoueurs(jeu.joueurs)}</dd></div>` : ''}
                 <div><dt>📰 Metacritic</dt><dd>${carte.metacritic ?? '<span class="gris">aucune</span>'}</dd></div>
