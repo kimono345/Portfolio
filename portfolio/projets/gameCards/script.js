@@ -422,6 +422,11 @@ function calculerAnciennete() {
 }
 
 const anciennete = annee => ancienneteParAnnee[annee] ?? 0;
+// Les rééditions lauréates d'un GOTY (GTA IV, Resident Evil 4, Skyrim SE…) comptent depuis l'année du prix,
+// pas depuis la sortie de leur version Steam
+// sauf les remakes, qui sont presque de nouveaux jeux
+const REMAKES_GOTY = [2623190]; // Oblivion Remastered
+const anneeOriginale = jeu => GOTY[jeu.id] && !REMAKES_GOTY.includes(jeu.id) ? Math.min(GOTY[jeu.id][0], jeu.annee ?? Infinity) : jeu.annee;
 
 const echelleLog = (valeur, max) => Math.max(0, Math.min(100, Math.log10(Math.max(1, valeur)) * 100 / Math.log10(max)));
 
@@ -523,7 +528,7 @@ function creerCarte(jeu) {
         image: `${URL_IMAGES}/${jeu.id}/${jeu.image || 'header.jpg'}`,
         attaque: STATS_FORCEES[jeu.id]?.attaque ?? statDeJeu(notePublic(jeu.note, jeu.avis), jeu.rarete, 50),
         // Stat « joker » : la vraie ancienneté, sans lien avec la rareté (une vieille Commune peut battre une Mythique récente)
-        anciennete: anciennete(jeu.annee),
+        anciennete: anciennete(anneeOriginale(jeu)),
         popularite: statPopularite(jeu),
         // Vraies données, affichées sur la fiche à côté des stats de jeu
         noteReelle: jeu.note,
@@ -1402,7 +1407,7 @@ function afficherFiche(id) {
                 <div><dt>★ Popularité</dt><dd>${carte.popularite} <span class="gris">· ${jeu?.estime
                     ? (carte.avis ? `≈ ${nombre(carte.avis)} avis (estimés)` : 'pas encore d’avis Steam')
                     : `${carte.avis ? nombre(carte.avis) : '?'} avis Steam`}</span></dd></div>
-                <div><dt>${STATS.anciennete.icone} Ancienneté</dt><dd>${carte.anciennete} <span class="gris">· sorti en ${carte.annee}</span></dd></div>
+                <div><dt>${STATS.anciennete.icone} Ancienneté</dt><dd>${carte.anciennete} <span class="gris">· sorti en ${jeu && anneeOriginale(jeu) !== carte.annee ? `${anneeOriginale(jeu)} (sur Steam en ${carte.annee})` : carte.annee}</span></dd></div>
                 ${jeu?.joueurs > 1 ? `<div><dt>👥 Joueurs estimés</dt><dd>≈ ${formatJoueurs(jeu.joueurs)}</dd></div>` : ''}
                 <div><dt>📰 Metacritic</dt><dd>${carte.metacritic ?? '<span class="gris">aucune</span>'}</dd></div>
                 <div><dt># ID Steam</dt><dd>${carte.id}</dd></div>
