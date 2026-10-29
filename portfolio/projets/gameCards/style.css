@@ -1108,10 +1108,9 @@ main {
 .carte.rarete-mythique::before, .carte.rarete-legendaire::before { z-index: 0; }
 .carte.rarete-mythique .carte-corps, .carte.rarete-legendaire .carte-corps { position: relative; z-index: 1; }
 
-/* ── Full Art : style « affiche ». La jaquette remplit toute la carte et déborde sur le cadre,
-   un fin liseré irisé en fait le tour, nom et stats se posent sur un dégradé sombre en bas ── */
-.carte.full-art { padding: 0; }
-.carte.full-art .carte-corps { justify-content: space-between; border-radius: inherit; background: #0b0d17; }
+/* ── Full Art : style « affiche ». La jaquette remplit toute la carte, dans le cadre de sa rareté
+   (or des Légendaires, prisme arc-en-ciel des Mythiques) ; nom et stats se posent sur un dégradé sombre en bas ── */
+.carte.full-art .carte-corps { justify-content: space-between; background: #0b0d17; }
 .carte.full-art .carte-corps > :not(.full-art-fond):not(.ruban-goty) { position: relative; z-index: 1; }
 .carte.full-art .carte-corps::before { display: none; } /* pas d'étoiles par-dessus l'illustration */
 .full-art-fond {
@@ -1138,19 +1137,6 @@ main {
     filter: blur(8px) brightness(0.55);
 }
 .full-art-fond.paysage img { object-fit: contain; object-position: 50% 28%; }
-.carte.full-art::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    padding: 2px;
-    border-radius: inherit;
-    background: linear-gradient(125deg, #ffa0d2, #aad7ff 30%, #bef5dc 55%, #ffe1a0 80%, #ffa0d2);
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-}
 .carte.full-art .carte-rarete { filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.9)); }
 .carte-bas { display: flex; flex-direction: column; gap: 1.4cqi; }
 .carte.full-art .plaque-chef { position: static; transform: none; align-self: center; margin-bottom: 0.8cqi; }
