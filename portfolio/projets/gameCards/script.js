@@ -80,7 +80,7 @@ const GOTY = {
 };
 const gotyDe = id => GOTY[id] && { annee: GOTY[id][0], ceremonie: GOTY[id][1] };
 
-// Les 22 Mythiques : les jeux les plus cultes et connus, choisis à la main (identifiant Steam)
+// Les Mythiques : les jeux les plus cultes et connus, choisis à la main (identifiant Steam)
 const MYTHIQUES = [
     271590,  // Grand Theft Auto V
     12210,   // Grand Theft Auto IV
@@ -98,12 +98,12 @@ const MYTHIQUES = [
     391540,  // Undertale
     489830,  // The Elder Scrolls V: Skyrim Special Edition
     379720,  // DOOM
-    1222670, // Les Sims 4
+    4000,    // Garry's Mod
     254700,  // Resident Evil 4 (2005)
     10180,   // Call of Duty: Modern Warfare 2 (2009)
     33230,   // Assassin's Creed II
-    1328670, // Mass Effect Legendary Edition
     39140,   // Final Fantasy VII
+    1328670, // Mass Effect Legendary Edition
 ];
 
 // Classiques cultes : leur notoriété dépasse leurs chiffres Steam (jeux anciens ou surtout joués sur console).
@@ -135,14 +135,15 @@ const CULTES_LEGENDAIRES = [
     1551360, // Forza Horizon 5
     2215430, // Ghost of Tsushima
     1817070, // Marvel's Spider-Man Remastered
-    239030,  // Papers, Please
+    2050650, // Resident Evil 4 (2023)
+    22330,   // The Elder Scrolls IV: Oblivion (GOTY Edition)
     268910,  // Cuphead
     646570,  // Slay the Spire
     883710,  // Resident Evil 2
     2379780, // Balatro
     294100,  // RimWorld
 ];
-// Jeux viraux (petit prix, succès porté par les streamers) : populaires sur Steam mais pas « légendaires ».
+// Jeux plafonnés à Épique : surtout des succès viraux (petit prix, portés par les streamers), populaires sur Steam mais pas « légendaires ».
 // Ils ne dépassent jamais Épique, leurs places en Légendaire reviennent aux suivants.
 const PLAFONNES_EPIQUE = [
     304930,  // Unturned
@@ -159,6 +160,9 @@ const PLAFONNES_EPIQUE = [
     251570,  // 7 Days to Die
     698780,  // Doki Doki Literature Club!
     960090,  // Bloons TD 6
+    322330,  // Don't Starve Together
+    700330,  // SCP: Secret Laboratory
+    239030,  // Papers, Please
 ];
 const CULTES_EPIQUES = [
     32360,   // The Secret of Monkey Island
@@ -446,7 +450,7 @@ function calculerRaretes() {
     }
 
     const plafonnes = new Set(PLAFONNES_EPIQUE);
-    for (const jeu of tousLesJeux) if (plafonnes.has(jeu.id)) jeu.raisons.push('plafonné à Épique (succès viral)');
+    for (const jeu of tousLesJeux) if (plafonnes.has(jeu.id)) jeu.raisons.push('plafonné à Épique');
 
     let rang = 0;
     for (const jeu of classement) {
