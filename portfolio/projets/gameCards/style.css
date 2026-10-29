@@ -36,12 +36,6 @@
         rgba(255, 255, 255, 0.09) 0 1px, rgba(0, 0, 0, 0.05) 1px 2px, transparent 2px 4px);
 }
 
-@property --angle-prisme {
-    syntax: '<angle>';
-    inherits: false;
-    initial-value: 0deg;
-}
-
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; }
@@ -747,6 +741,13 @@ main {
    CARTE
    ========================================================= */
 
+/* Effets animés en pause par défaut (grilles de cartes) : --effets est repris par chaque effet */
+.carte { --effets: paused; }
+.carte:hover,
+.fiche-visuel .carte,
+.pile-carte .carte,
+.duel-emplacement .carte { --effets: running; }
+
 .carte {
     container-type: inline-size;
     position: relative;
@@ -761,9 +762,24 @@ main {
 /* ── Mythique : prisme cosmique ── */
 .carte.rarete-mythique {
     padding: 6px;
-    background: conic-gradient(from var(--angle-prisme),
-        #ff4d8d, #ffb84d, #fff6c8, #7dffb0, #45d4ff, #8b5cff, #ff7ae0, #ff4d8d);
-    animation: tourne-prisme 6s linear infinite, aura-mythique 4s ease-in-out infinite alternate;
+    overflow: hidden; /* le prisme qui tourne ne dépasse pas des coins arrondis */
+    background: #8b5cff;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25), 0 0 28px rgba(139, 92, 255, 0.55),
+        0 0 62px rgba(255, 77, 141, 0.22), 0 10px 26px rgba(0, 0, 0, 0.5);
+}
+/* Carré plus grand que la diagonale de la carte : il couvre tout le cadre en tournant */
+.carte.rarete-mythique::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 180%;
+    aspect-ratio: 1;
+    background: conic-gradient(#ff4d8d, #ffb84d, #fff6c8, #7dffb0, #45d4ff, #8b5cff, #ff7ae0, #ff4d8d);
+    transform: translate(-50%, -50%);
+    animation: tourne-prisme 6s linear infinite;
+    animation-play-state: var(--effets);
+    will-change: transform;
 }
 .carte.rarete-mythique .carte-corps {
     isolation: isolate; /* les étoiles passent derrière le contenu */
@@ -791,6 +807,7 @@ main {
         radial-gradient(1.3px 1.3px at 47% 93%, #fff 60%, transparent),
         radial-gradient(1px 1px at 86% 82%, #d9ccff 60%, transparent);
     animation: scintille 2.6s ease-in-out infinite alternate;
+    animation-play-state: var(--effets);
 }
 .carte.rarete-mythique .carte-rarete {
     background: var(--prisme);
@@ -799,6 +816,7 @@ main {
     background-clip: text;
     color: transparent;
     animation: prisme-texte 4s linear infinite;
+    animation-play-state: var(--effets);
 }
 .carte.rarete-mythique .carte-nom { text-shadow: 0 0 12px rgba(190, 150, 255, 0.55); }
 .carte.rarete-mythique .carte-image {
@@ -824,15 +842,23 @@ main {
 /* ── Légendaire : or massif ── */
 .carte.rarete-legendaire {
     padding: 6px;
-    /* 3 couches : reflet qui balaie le cadre, métal brossé, dégradé d'or */
-    background:
-        linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.9) 50%, transparent 60%),
-        var(--or-brosse),
-        var(--or);
-    background-size: 300% 100%, 100% 100%, 250% 250%;
-    background-repeat: no-repeat;
-    animation: or-ondule 6s ease-in-out infinite;
+    overflow: hidden; /* le reflet ne sort pas de la carte */
+    /* Métal brossé sur dégradé d'or, figé à un endroit flatteur du dégradé */
+    background: var(--or-brosse), var(--or);
+    background-size: 100% 100%, 250% 250%;
+    background-position: 0 0, 30% 50%;
     box-shadow: 0 0 0 1px rgba(110, 74, 12, 0.6), 0 0 22px rgba(230, 170, 50, 0.45), 0 10px 26px rgba(0, 0, 0, 0.5);
+}
+/* Reflet de lumière : bande claire qui traverse la carte ; le contenu le cache, on ne le voit que sur le cadre */
+.carte.rarete-legendaire::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 38%, rgba(255, 250, 225, 0.85) 50%, transparent 62%);
+    transform: translateX(-110%);
+    animation: reflet-or 6s ease-in-out infinite;
+    animation-play-state: var(--effets);
+    will-change: transform;
 }
 .carte.rarete-legendaire .carte-corps {
     background:
@@ -940,15 +966,19 @@ main {
 /* Le second brin, après le texte, est retourné pour pointer vers l'autre bout */
 .ruban-goty .brin:last-child { transform: scaleX(-1); }
 /* Reflet qui traverse le bandeau toutes les 4 secondes */
+.ruban-goty span { overflow: hidden; }
 .ruban-goty span::after {
     content: '';
     position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, transparent 30%, rgba(255, 255, 255, 0.85) 50%, transparent 70%);
-    background-size: 250% 100%;
-    background-position: 150% 0;
-    mix-blend-mode: overlay;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 40%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+    transform: translateX(-100%);
     animation: reflet-ruban 4s ease-in-out infinite;
+    animation-play-state: var(--effets);
+    will-change: transform;
 }
 /* Grande couronne de laurier en filigrane, derrière le nom et les stats */
 .carte.goty .carte-corps { isolation: isolate; }
@@ -1075,14 +1105,18 @@ main {
 .carte.holo .carte-corps::after {
     content: '';
     position: absolute;
-    inset: 0;
+    top: 0;
+    bottom: 0;
+    left: -100%;
+    width: 300%;
     pointer-events: none;
     background: linear-gradient(115deg,
-        transparent 20%, rgba(255, 0, 150, 0.3) 35%, rgba(0, 255, 255, 0.3) 50%,
-        rgba(255, 255, 0, 0.3) 65%, transparent 80%);
-    background-size: 250% 250%;
-    mix-blend-mode: color-dodge;
+        transparent 32%, rgba(255, 70, 190, 0.22) 41%, rgba(80, 255, 255, 0.26) 50%,
+        rgba(255, 255, 110, 0.22) 59%, transparent 68%);
     animation: holo 4s linear infinite;
+    animation-delay: -2s; /* en pause, le reflet reste au milieu de la carte */
+    animation-play-state: var(--effets);
+    will-change: transform;
 }
 
 /* ── Carte retournable ── */
@@ -1129,8 +1163,8 @@ main {
 
 /* Éclat quand une carte rare se retourne */
 .flip.retournee[data-rarete="epique"] .carte     { animation: eclat-epique 1s ease-out; }
-.flip.retournee[data-rarete="legendaire"] .carte { animation: eclat-legendaire 1.2s ease-out, or-ondule 8s ease-in-out infinite; }
-.flip.retournee[data-rarete="mythique"] .carte   { animation: tourne-prisme 6s linear infinite, aura-mythique 4s ease-in-out infinite alternate, eclat-mythique 1.5s ease-out; }
+.flip.retournee[data-rarete="legendaire"] .carte { animation: eclat-legendaire 1.2s ease-out; }
+.flip.retournee[data-rarete="mythique"] .carte   { animation: eclat-mythique 1.5s ease-out; }
 
 .badge-nouvelle {
     position: absolute;
@@ -1550,27 +1584,21 @@ main {
     100% { transform: translate(-50%, -50%) scale(1.25); opacity: 0; }
 }
 @keyframes reflet-ruban {
-    0%, 60% { background-position: 150% 0; }
-    100% { background-position: -50% 0; }
+    0%, 60% { transform: translateX(-100%); }
+    100% { transform: translateX(260%); }
 }
-@keyframes tourne-prisme { to { --angle-prisme: 360deg; } }
-@keyframes aura-mythique {
-    from { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25), 0 0 26px rgba(139, 92, 255, 0.6), 0 0 60px rgba(255, 77, 141, 0.2), 0 10px 26px rgba(0, 0, 0, 0.5); }
-    to   { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25), 0 0 30px rgba(255, 77, 141, 0.6), 0 0 64px rgba(69, 212, 255, 0.25), 0 10px 26px rgba(0, 0, 0, 0.5); }
-}
+@keyframes tourne-prisme { to { transform: translate(-50%, -50%) rotate(360deg); } }
 @keyframes scintille {
     from { opacity: 0.35; }
     to   { opacity: 1; }
 }
 @keyframes prisme-texte { to { background-position: 200% 0; } }
 /* Le dégradé d'or ondule lentement, et un reflet traverse le cadre en fin de cycle */
-@keyframes or-ondule {
-    0% { background-position: 150% 0, 0 0, 0% 50%; }
-    50% { background-position: 150% 0, 0 0, 100% 50%; }
-    75% { background-position: 150% 0, 0 0, 50% 50%; }
-    100% { background-position: -50% 0, 0 0, 0% 50%; }
+@keyframes reflet-or {
+    0%, 55% { transform: translateX(-110%); }
+    100% { transform: translateX(110%); }
 }
-@keyframes holo { from { background-position: 0% 0%; } to { background-position: 250% 250%; } }
+@keyframes holo { from { transform: translateX(-33.4%); } to { transform: translateX(33.4%); } }
 @keyframes pulse { 50% { transform: scale(1.4); opacity: 0.6; } }
 @keyframes flotte { 50% { translate: 0 -10px; } }
 @keyframes secoue {
