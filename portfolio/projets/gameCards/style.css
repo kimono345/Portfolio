@@ -818,9 +818,14 @@ main {
     animation: prisme-texte 4s linear infinite;
     animation-play-state: var(--effets);
 }
-.carte.rarete-mythique .carte-nom { text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 12px rgba(190, 150, 255, 0.55); }
+.carte.rarete-mythique .carte-nom { text-shadow: 0 0 12px rgba(190, 150, 255, 0.55); }
+.carte.rarete-mythique .carte-image {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3), 0 0 16px rgba(139, 92, 255, 0.45);
+}
 .carte.rarete-mythique .carte-compteur { background: var(--prisme); color: #1a0f2e; }
-.carte.rarete-mythique .stat-icone { color: #d9b8ff; }
+.carte.rarete-mythique .carte-stats i {
+    background: var(--prisme) 0 0 / var(--v) 100% no-repeat, rgba(255, 255, 255, 0.08);
+}
 .carte.rarete-mythique .carte-stats li.stat-choisie { outline-color: #d9b8ff; }
 
 /* Le nom de la rareté en prisme partout ailleurs */
@@ -868,8 +873,11 @@ main {
     color: transparent;
 }
 .carte.rarete-legendaire .carte-compteur { background: var(--or); color: #2a1a00; }
-.carte.rarete-legendaire .stat-icone { color: #f1cf6f; }
+.carte.rarete-legendaire .carte-stats i {
+    background: var(--or) 0 0 / var(--v) 100% no-repeat, rgba(255, 255, 255, 0.08);
+}
 .carte.rarete-legendaire .carte-stats li.stat-choisie { outline-color: #f1cf6f; }
+.carte.rarete-legendaire .carte-image { box-shadow: inset 0 0 0 1px rgba(255, 220, 130, 0.35); }
 
 /* Le nom de la rareté en or partout ailleurs (fiche, tableau des règles, bilan) */
 .fiche-infos.rarete-legendaire .fiche-rarete,
@@ -881,53 +889,25 @@ main {
     color: transparent;
 }
 
-/* ── Carte « affiche » : la jaquette du jeu remplit la carte, le texte se pose sur un dégradé sombre en bas ── */
 .carte-corps {
     position: relative;
-    isolation: isolate; /* la jaquette (z-index -1) reste dans la carte, sous le texte */
     height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    gap: 2.5cqi;
     padding: 4cqi;
     border-radius: 10px;
     background: linear-gradient(180deg, var(--fond-3), var(--fond-2));
     overflow: hidden;
 }
 
-.carte-affiche {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    overflow: hidden;
-    background: linear-gradient(135deg, var(--fond-3), #2a2f55); /* le temps que l'image charge */
-}
-.carte-affiche img { position: relative; width: 100%; height: 100%; object-fit: cover; }
-/* Assombri en haut (rareté) et en bas (nom et stats) pour que le texte reste lisible */
-.carte-affiche::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(8, 6, 20, 0.6) 0%, transparent 17%, transparent 42%, rgba(8, 6, 20, 0.92) 70%);
-}
-/* Pas de jaquette verticale : l'image horizontale entière, sur un fond fait d'elle-même agrandie et floutée */
-.carte-affiche.paysage::before {
-    content: '';
-    position: absolute;
-    inset: -10%;
-    background: var(--secours) center / cover;
-    filter: blur(8px) brightness(0.55);
-}
-.carte-affiche.paysage img { object-fit: contain; object-position: 50% 28%; }
-
 .carte-haut { display: flex; justify-content: space-between; align-items: center; gap: 2cqi; }
 .carte-rarete {
-    font-size: 5cqi;
+    font-size: 5.5cqi;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--rar);
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.9)); /* lisible sur la jaquette, même en texte dégradé */
 }
 .carte-compteur {
     font-family: 'Space Mono', monospace;
@@ -938,6 +918,15 @@ main {
     color: var(--fond);
 }
 
+.carte-image {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    border-radius: 7px;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--fond-3), #2a2f55);
+}
+.carte-image img { width: 100%; height: 100%; object-fit: cover; }
 
 /* ── GOTY : bandeau doré en diagonale sur le coin haut droit (coupé par l'arrondi de la carte) ── */
 .ruban-goty {
@@ -991,6 +980,22 @@ main {
     animation-play-state: var(--effets);
     will-change: transform;
 }
+/* Grande couronne de laurier en filigrane, derrière le nom et les stats */
+.carte.goty .carte-corps { isolation: isolate; }
+.filigrane-goty {
+    position: absolute;
+    left: 50%;
+    bottom: -1cqi;
+    z-index: -1;
+    width: 96cqi;
+    transform: translateX(-50%);
+    color: #f6dc8a;
+    opacity: 0.3;
+    pointer-events: none;
+}
+/* Dessin au trait : contour doré fin, feuilles à peine teintées (la nouvelle forme garde ce rendu) */
+.filigrane-goty .laurier { display: block; width: 100%; height: auto; fill: rgba(246, 220, 138, 0.18); stroke: currentColor; stroke-width: 0.6; }
+.filigrane-goty .laurier path[fill="none"] { stroke: currentColor; }
 /* Le badge ×N du compteur ne passe pas sous le bandeau */
 .carte.goty .carte-haut { padding-right: 21cqi; }
 
@@ -1015,19 +1020,27 @@ main {
 
 /* ── Chef-d'œuvre (Metacritic 90+) : présentation « pièce de musée », quelle que soit la rareté ── */
 .carte.chef-oeuvre { --champagne: #f3e3b5; }
-/* Filet champagne à l'intérieur du cadre de rareté (un contour passe au-dessus de la jaquette) */
-.carte.chef-oeuvre .carte-corps { outline: 1px solid rgba(243, 227, 181, 0.7); outline-offset: -3px; }
+/* Double filet champagne à l'intérieur du cadre de rareté */
+.carte.chef-oeuvre .carte-corps {
+    box-shadow:
+        inset 0 0 0 1px rgba(243, 227, 181, 0.7),
+        inset 0 0 0 3.5px rgba(10, 8, 20, 0.55),
+        inset 0 0 0 4.5px rgba(243, 227, 181, 0.35);
+}
+.carte.chef-oeuvre .carte-image { box-shadow: inset 0 0 0 1px rgba(243, 227, 181, 0.5); }
 .carte.chef-oeuvre .carte-nom {
     font-family: 'Cinzel', Georgia, serif;
     font-size: 6.6cqi;
     letter-spacing: 0.01em;
     color: #fbf3dc;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 10px rgba(243, 227, 181, 0.25);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5), 0 0 10px rgba(243, 227, 181, 0.25);
 }
-/* Plaque dorée en ruban, juste au-dessus du nom */
+/* Plaque dorée en ruban, posée en bas de l'image */
 .plaque-chef {
-    align-self: center;
-    margin-bottom: 0.8cqi;
+    position: absolute;
+    left: 50%;
+    bottom: 2.4cqi;
+    transform: translateX(-50%);
     display: flex;
     align-items: center;
     gap: 1.4cqi;
@@ -1044,7 +1057,6 @@ main {
 }
 .plaque-chef .bi { width: 4.6cqi; height: 4.6cqi; color: #7a1f1f; }
 
-.carte-bas { display: flex; flex-direction: column; gap: 1.4cqi; }
 .carte-nom {
     font-size: 7.5cqi;
     font-weight: 800;
@@ -1053,37 +1065,42 @@ main {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+    min-height: 2.3em;
 }
 .carte-infos {
-    font-size: 4.8cqi;
-    color: rgba(238, 240, 255, 0.75);
-    margin-top: -0.6cqi;
+    font-size: 5cqi;
+    color: var(--texte-doux);
+    margin-top: -1.5cqi;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
-/* Les 3 stats côte à côte, en gros chiffres : c'est ce qu'on compare en duel */
-.carte-stats { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6cqi; margin-top: 1cqi; }
+.carte-stats { list-style: none; display: flex; flex-direction: column; gap: 1.8cqi; }
 .carte-stats li {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto;
     align-items: center;
-    justify-content: center;
-    gap: 1.2cqi;
-    padding: 1.4cqi 0;
-    border-radius: 2.4cqi;
-    border: 1px solid color-mix(in srgb, var(--rar) 45%, transparent);
-    background: rgba(8, 6, 20, 0.55);
+    column-gap: 2cqi;
+    font-size: 5.5cqi;
+    border-radius: 4px;
     transition: background 0.3s;
 }
-.stat-icone { display: flex; font-size: 4.6cqi; color: var(--rar); }
-.carte-stats b { font-family: 'Space Mono', monospace; font-size: 7cqi; line-height: 1; color: #fff; }
-.carte-stats li.stat-choisie { background: rgba(255, 255, 255, 0.2); outline: 2px solid var(--rar); outline-offset: 0.6cqi; }
+.carte-stats span { color: var(--texte-doux); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.carte-stats b { font-family: 'Space Mono', monospace; }
+.carte-stats i {
+    grid-column: 1 / -1;
+    height: 1.4cqi;
+    min-height: 3px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--rar) var(--v), rgba(255, 255, 255, 0.08) var(--v));
+}
+.carte-stats li.stat-choisie { background: rgba(255, 255, 255, 0.1); outline: 2px solid var(--rar); outline-offset: 1cqi; }
+.carte-stats li.stat-choisie span { color: var(--texte); }
 
 /* Carte adverse en duel : le jeu est visible, ses stats sont cachées */
 .carte.stats-cachees .carte-stats b { color: var(--texte-doux); animation: mystere 1.6s ease-in-out infinite; }
+.carte.stats-cachees .carte-stats i { background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.12) 0 6px, transparent 6px 10px); }
 .carte.revelation .carte-stats b { animation: revele 0.6s cubic-bezier(0.2, 0.8, 0.3, 1.4); }
 
 /* Le contenu des cartes passe toujours au-dessus des calques décoratifs du cadre
@@ -1091,9 +1108,36 @@ main {
 .carte.rarete-mythique::before, .carte.rarete-legendaire::before { z-index: 0; }
 .carte.rarete-mythique .carte-corps, .carte.rarete-legendaire .carte-corps { position: relative; z-index: 1; }
 
-/* ── Full Art : la jaquette déborde sur le cadre de rareté, bordée d'un fin liseré irisé ── */
+/* ── Full Art : style « affiche ». La jaquette remplit toute la carte et déborde sur le cadre,
+   un fin liseré irisé en fait le tour, nom et stats se posent sur un dégradé sombre en bas ── */
 .carte.full-art { padding: 0; }
-.carte.full-art .carte-corps { border-radius: inherit; }
+.carte.full-art .carte-corps { justify-content: space-between; border-radius: inherit; background: #0b0d17; }
+.carte.full-art .carte-corps > :not(.full-art-fond):not(.ruban-goty) { position: relative; z-index: 1; }
+.carte.full-art .carte-corps::before { display: none; } /* pas d'étoiles par-dessus l'illustration */
+.full-art-fond {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    background: linear-gradient(135deg, var(--fond-3), #2a2f55); /* le temps que l'image charge */
+}
+.full-art-fond img { position: relative; width: 100%; height: 100%; object-fit: cover; }
+.full-art-fond::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(8, 6, 20, 0.6) 0%, transparent 17%, transparent 45%, rgba(8, 6, 20, 0.92) 72%);
+}
+/* Pas de jaquette verticale : l'image horizontale entière, sur un fond fait d'elle-même agrandie et floutée */
+.full-art-fond.paysage::before {
+    content: '';
+    position: absolute;
+    inset: -10%;
+    background: var(--secours) center / cover;
+    filter: blur(8px) brightness(0.55);
+}
+.full-art-fond.paysage img { object-fit: contain; object-position: 50% 28%; }
 .carte.full-art::after {
     content: '';
     position: absolute;
@@ -1107,7 +1151,17 @@ main {
     mask-composite: exclude;
     pointer-events: none;
 }
-.carte.full-art .carte-nom { font-size: 8.5cqi; }
+.carte.full-art .carte-rarete { filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.9)); }
+.carte-bas { display: flex; flex-direction: column; gap: 1.4cqi; }
+.carte.full-art .plaque-chef { position: static; transform: none; align-self: center; margin-bottom: 0.8cqi; }
+.carte.full-art .carte-nom { font-size: 8.5cqi; min-height: 0; }
+.carte.full-art .carte-infos { margin-top: -0.6cqi; color: rgba(238, 240, 255, 0.8); }
+.carte.full-art .carte-nom, .carte.full-art .carte-infos { text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); }
+/* Stats : trois chiffres côte à côte, sans cadre ni barre */
+.carte.full-art .carte-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6cqi; margin-top: 0.6cqi; }
+.carte.full-art .carte-stats li { display: flex; align-items: center; justify-content: center; gap: 1.2cqi; padding: 0.8cqi 0; }
+.carte.full-art .carte-stats span { display: flex; overflow: visible; font-size: 4.8cqi; color: var(--rar); filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.9)); }
+.carte.full-art .carte-stats b { font-size: 7.4cqi; line-height: 1; color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); }
 .pile-carte.apparition-full-art { animation: apparition-full-art 1s cubic-bezier(0.2, 0.8, 0.3, 1.2); }
 .bilan .bilan-full-art b { background: linear-gradient(90deg, #ffa0d2, #aad7ff, #bef5dc, #ffe1a0); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
@@ -1523,8 +1577,9 @@ main {
 .carte.stats-cachees::before,
 .carte.stats-cachees .carte-rarete,
 .carte.stats-cachees .ruban-goty,
+.carte.stats-cachees .filigrane-goty,
 .carte.stats-cachees .carte-corps::before { display: none; }
-.carte.stats-cachees .carte-corps { outline: none; }
+.carte.stats-cachees .carte-image { box-shadow: none; }
 .carte.stats-cachees .carte-corps { background: linear-gradient(180deg, var(--fond-3), var(--fond-2)); box-shadow: none; }
 .carte.stats-cachees .carte-nom { font-family: inherit; color: var(--texte); text-shadow: none; }
 .pom-choix.bonne .carte { box-shadow: 0 0 0 3px var(--vert), 0 0 30px rgba(63, 191, 111, 0.55); }
