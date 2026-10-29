@@ -161,7 +161,7 @@
                 <select id="tri" aria-label="Trier">
                     <option value="rarete">Tri : rareté</option>
                     <option value="recent">Tri : obtenues récemment</option>
-                    <option value="attaque">Tri : note public</option>
+                    <option value="attaque">Tri : qualité</option>
                     <option value="anciennete">Tri : ancienneté</option>
                     <option value="popularite">Tri : popularité</option>
                     <option value="annee">Tri : année</option>
@@ -202,7 +202,7 @@
                 <select id="catalogue-tri" aria-label="Trier">
                     <option value="rarete" selected>Tri : rareté</option>
                     <option value="popularite">Tri : popularité</option>
-                    <option value="note">Tri : note public</option>
+                    <option value="note">Tri : note des joueurs</option>
                     <option value="metacritic">Tri : note Metacritic</option>
                     <option value="recent">Tri : plus récents</option>
                     <option value="ancien">Tri : plus anciens</option>
@@ -275,7 +275,7 @@
 
             <div class="regles">
                 <article>
-                    <h3><svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.956 1.745C7.021.81 7.908.087 8.864.325l.261.066c.463.116.874.456 1.012.965.22.816.533 2.511.062 4.51a10 10 0 0 1 .443-.051c.713-.065 1.669-.072 2.516.21.518.173.994.681 1.2 1.273.184.532.16 1.162-.234 1.733q.086.18.138.363c.077.27.113.567.113.856s-.036.586-.113.856c-.039.135-.09.273-.16.404.169.387.107.819-.003 1.148a3.2 3.2 0 0 1-.488.901c.054.152.076.312.076.465 0 .305-.089.625-.253.912C13.1 15.522 12.437 16 11.5 16H8c-.605 0-1.07-.081-1.466-.218a4.8 4.8 0 0 1-.97-.484l-.048-.03c-.504-.307-.999-.609-2.068-.722C2.682 14.464 2 13.846 2 13V9c0-.85.685-1.432 1.357-1.615.849-.232 1.574-.787 2.132-1.41.56-.627.914-1.28 1.039-1.639.199-.575.356-1.539.428-2.59z"/></svg> Note public</h3>
+                    <h3><svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.956 1.745C7.021.81 7.908.087 8.864.325l.261.066c.463.116.874.456 1.012.965.22.816.533 2.511.062 4.51a10 10 0 0 1 .443-.051c.713-.065 1.669-.072 2.516.21.518.173.994.681 1.2 1.273.184.532.16 1.162-.234 1.733q.086.18.138.363c.077.27.113.567.113.856s-.036.586-.113.856c-.039.135-.09.273-.16.404.169.387.107.819-.003 1.148a3.2 3.2 0 0 1-.488.901c.054.152.076.312.076.465 0 .305-.089.625-.253.912C13.1 15.522 12.437 16 11.5 16H8c-.605 0-1.07-.081-1.466-.218a4.8 4.8 0 0 1-.97-.484l-.048-.03c-.504-.307-.999-.609-2.068-.722C2.682 14.464 2 13.846 2 13V9c0-.85.685-1.432 1.357-1.615.849-.232 1.574-.787 2.132-1.41.56-.627.914-1.28 1.039-1.639.199-.575.356-1.539.428-2.59z"/></svg> Qualité</h3>
                     <p>Vient du pourcentage d’avis positifs sur Steam (rapproché de la moyenne pour les jeux à peu d’avis : 1 avis à 100 % ne vaut pas 10 000 avis à 95 %).</p>
                 </article>
                 <article>
@@ -288,7 +288,7 @@
                 </article>
                 <article>
                     <h3>📊 Stats et rareté</h3>
-                    <p>Les vraies données placent la Note public et la Popularité dans la fourchette de leur rareté : Commune 10–55, Peu commune 20–63, Rare 30–71, Épique 40–79, Légendaire 50–89, Mythique 62–100. Une carte rare est donc presque toujours plus forte. Les vraies valeurs restent affichées sur la fiche.</p>
+                    <p>Les vraies données placent la Qualité et la Popularité dans la fourchette de leur rareté : Commune 10–55, Peu commune 20–63, Rare 30–71, Épique 40–79, Légendaire 50–89, Mythique 62–100. Une carte rare est donc presque toujours plus forte. Les vraies valeurs restent affichées sur la fiche.</p>
                 </article>
                 <article>
                     <h3>Boosters</h3>
@@ -353,6 +353,6 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="script.js?v=55"></script>
+    <script src="script.js?v=56"></script>
 </body>
 </html>

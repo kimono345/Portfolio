@@ -264,7 +264,7 @@ const BRIN_LAURIER = brinLaurierSVG();
 
 // Ordre d'affichage : l'Ancienneté, stat « joker » souvent plus basse, en dernier
 const STATS = {
-    attaque:    { nom: 'Note public',     icone: ICONES.pouce },
+    attaque:    { nom: 'Qualité',         icone: ICONES.pouce },
     popularite: { nom: 'Popularité',      icone: '★' },
     anciennete: { nom: 'Ancienneté',      icone: ICONES.sablier },
 };
@@ -1264,7 +1264,7 @@ function afficherFiche(id) {
             ${carte.tags?.length ? `<p class="fiche-tags">${carte.tags.map(t => `<span${(groupesTags['Contenu sensible'] || []).includes(t)
                 ? ' class="tag-sensible"' : ''}>${echapper(t)}</span>`).join('')}</p>` : ''}
             <dl class="fiche-stats">
-                <div><dt>${STATS.attaque.icone} Note public</dt><dd>${carte.attaque} <span class="gris">· ${carte.noteReelle ?? '?'} % d’avis positifs</span></dd></div>
+                <div><dt>${STATS.attaque.icone} Qualité</dt><dd>${carte.attaque} <span class="gris">· ${carte.noteReelle ?? '?'} % d’avis positifs</span></dd></div>
                 <div><dt>★ Popularité</dt><dd>${carte.popularite} <span class="gris">· ${carte.avis ? nombre(carte.avis) : '?'} avis Steam</span></dd></div>
                 <div><dt>${STATS.anciennete.icone} Ancienneté</dt><dd>${carte.anciennete} <span class="gris">· sorti en ${carte.annee}</span></dd></div>
                 ${jeu?.joueurs > 1 ? `<div><dt>👥 Joueurs estimés</dt><dd>≈ ${formatJoueurs(jeu.joueurs)}</dd></div>` : ''}
