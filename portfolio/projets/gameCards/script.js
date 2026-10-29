@@ -31,7 +31,7 @@ const RARETES = [
 const CHANCE_HOLO_PRESTIGE = 0.08; // contre 2 % dans un booster normal
 
 // Full Art : variante des Légendaires et Mythiques (illustration sur toute la carte). Jamais holo en même temps.
-const CHANCE_FULL_ART = 0.10;
+const CHANCE_FULL_ART = 0.01;
 const CHANCE_FULL_ART_GOD_PACK = 0.30;
 const MULTIPLICATEUR_FULL_ART = 5; // revente
 
@@ -1405,6 +1405,7 @@ function afficherFiche(id) {
                 <div><dt>${STATS.anciennete.icone} Ancienneté</dt><dd>${carte.anciennete} <span class="gris">· sorti en ${carte.annee}</span></dd></div>
                 ${jeu?.joueurs > 1 ? `<div><dt>👥 Joueurs estimés</dt><dd>≈ ${formatJoueurs(jeu.joueurs)}</dd></div>` : ''}
                 <div><dt>📰 Metacritic</dt><dd>${carte.metacritic ?? '<span class="gris">aucune</span>'}</dd></div>
+                <div><dt># ID Steam</dt><dd>${carte.id}</dd></div>
             </dl>
             <p class="fiche-exemplaires">
                 ${e
