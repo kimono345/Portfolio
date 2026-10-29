@@ -7,13 +7,13 @@
 
 const LANGUES = { fr: 'Français', en: 'English' };
 
-// Langue choisie dans le profil (réglages sauvegardés), sinon celle du navigateur
+// Langue choisie dans le profil (réglages sauvegardés), sinon l'anglais, langue par défaut du jeu
 function langueDeDepart() {
     try {
         const choisie = JSON.parse(localStorage.getItem('gameCards.reglages'))?.langue;
         if (LANGUES[choisie]) return choisie;
-    } catch { /* réglages illisibles : on garde la langue du navigateur */ }
-    return (navigator.language || 'fr').toLowerCase().startsWith('fr') ? 'fr' : 'en';
+    } catch { /* réglages illisibles : on garde la langue par défaut */ }
+    return 'en';
 }
 const LANGUE = langueDeDepart();
 const LOCALE = LANGUE === 'en' ? 'en-US' : 'fr-FR';
