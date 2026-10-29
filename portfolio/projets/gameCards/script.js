@@ -148,6 +148,9 @@ const CULTES_LEGENDAIRES = [
     2050650, // Resident Evil 4 (2023)
     22330,   // The Elder Scrolls IV: Oblivion (GOTY Edition)
     268910,  // Cuphead
+    2357570, // Overwatch 2
+    620980,  // Beat Saber
+    698780,  // Doki Doki Literature Club!
     646570,  // Slay the Spire
     883710,  // Resident Evil 2
     2379780, // Balatro
@@ -168,7 +171,8 @@ const PLAFONNES_EPIQUE = [
     291550,  // Brawlhalla
     284160,  // BeamNG.drive
     251570,  // 7 Days to Die
-    698780,  // Doki Doki Literature Club!
+    990080,  // Hogwarts Legacy
+    1063730, // New World: Aeternum
     960090,  // Bloons TD 6
     322330,  // Don't Starve Together
     700330,  // SCP: Secret Laboratory
@@ -208,7 +212,13 @@ const CULTES_EPIQUES = [
     221910,  // The Stanley Parable
     1693980, // Dead Space (2023)
     2252570, // Football Manager 2024
+    1388880, // Doki Doki Literature Club Plus!
 ];
+
+// Stats réglées à la main, quand les données Steam ne reflètent pas le jeu
+const STATS_FORCEES = {
+    2357570: { attaque: 75, popularite: 88 }, // Overwatch 2 : le CSV date d'avant sa sortie sur Steam
+};
 
 // Score de prestige des autres jeux : 85 % popularité + 15 % qualité + bonus
 //   popularité = 75 % avis Steam (1 → 0, 1 million → 100) + 25 % joueurs estimés (1 → 0, 100 millions → 100)
@@ -381,7 +391,7 @@ function sauvegarder() {
 // Popularité sur une échelle logarithmique : 1 avis → 0, 1 000 → 50, 1 million → 100
 const popularite = avis => Math.max(0, Math.min(100, Math.round(Math.log10(Math.max(1, avis)) * 100 / 6)));
 // Stat Popularité d'une carte, gardée en mémoire sur le jeu (le tri du catalogue la demande pour 115 000 jeux)
-const statPopularite = jeu => (jeu.statPopularite ??= statDeJeu(popularite(jeu.avis), jeu.rarete));
+const statPopularite = jeu => (jeu.statPopularite ??= STATS_FORCEES[jeu.id]?.popularite ?? statDeJeu(popularite(jeu.avis), jeu.rarete));
 
 // Note public lissée : on fait comme si chaque jeu avait déjà 10 avis à la note moyenne (76 %).
 // 1 avis à 100 % donne 78, mais 10 000 avis à 95 % gardent 95.
@@ -510,7 +520,7 @@ function creerCarte(jeu) {
         id: jeu.id,
         nom: jeu.nom,
         image: `${URL_IMAGES}/${jeu.id}/${jeu.image || 'header.jpg'}`,
-        attaque: statDeJeu(notePublic(jeu.note, jeu.avis), jeu.rarete, 50),
+        attaque: STATS_FORCEES[jeu.id]?.attaque ?? statDeJeu(notePublic(jeu.note, jeu.avis), jeu.rarete, 50),
         // Stat « joker » : la vraie ancienneté, sans lien avec la rareté (une vieille Commune peut battre une Mythique récente)
         anciennete: anciennete(jeu.annee),
         popularite: statPopularite(jeu),
@@ -698,22 +708,39 @@ function prochaineVente(entree) {
     return entree.holos > 0 ? 'holo' : 'fullArt';
 }
 
-function prixRevente(entree) {
-    const base = RARETES[indexRarete(entree.rarete)].revente;
-    return base * { normale: 1, holo: MULTIPLICATEUR_HOLO, fullArt: MULTIPLICATEUR_FULL_ART }[prochaineVente(entree)];
+const VARIANTES = {
+    normale: { nom: 'Normale', multiplicateur: 1 },
+    holo: { nom: 'Holo', multiplicateur: MULTIPLICATEUR_HOLO },
+    fullArt: { nom: 'Full Art', multiplicateur: MULTIPLICATEUR_FULL_ART },
+};
+
+// Nombre d'exemplaires de chaque variante possédés
+function exemplairesParVariante(entree) {
+    const fullArt = entree.fullArts || 0;
+    return { normale: entree.exemplaires - entree.holos - fullArt, holo: entree.holos, fullArt };
 }
 
-function vendreDoublon(id) {
+const prixVariante = (entree, variante) => RARETES[indexRarete(entree.rarete)].revente * VARIANTES[variante].multiplicateur;
+const prixRevente = entree => prixVariante(entree, prochaineVente(entree));
+
+// Vend un exemplaire de la variante choisie ; le dernier exemplaire fait sortir la carte de la collection
+function vendreExemplaire(id, variante) {
     const entree = etat.collection[id];
-    if (!entree || entree.exemplaires < 2) return 0;
-    const prix = prixRevente(entree);
-    const vendue = prochaineVente(entree);
-    if (vendue === 'holo') entree.holos--;
-    if (vendue === 'fullArt') entree.fullArts--;
-    entree.exemplaires--;
+    if (!entree || exemplairesParVariante(entree)[variante] < 1) return 0;
+    const prix = prixVariante(entree, variante);
+    if (variante === 'holo') entree.holos--;
+    if (variante === 'fullArt') entree.fullArts--;
+    if (--entree.exemplaires === 0) delete etat.collection[id];
     etat.pieces += prix;
     etat.stats.ventes++;
     return prix;
+}
+
+// Revente groupée : on garde toujours un exemplaire
+function vendreDoublon(id) {
+    const entree = etat.collection[id];
+    if (!entree || entree.exemplaires < 2) return 0;
+    return vendreExemplaire(id, prochaineVente(entree));
 }
 
 // Valeur de tous les doublons : on simule les ventes sur une copie
@@ -1231,9 +1258,6 @@ function caseCollectionHTML(entree) {
             <button class="case-carte" data-fiche="${entree.id}" aria-label="Voir ${echapper(entree.nom)}">
                 ${carteHTML(entree, { holo: entree.holos > 0, compteur: entree.exemplaires })}
             </button>
-            ${entree.exemplaires > 1
-                ? `<button class="btn-vendre" data-vendre="${entree.id}">Revendre · +${prixRevente(entree)} ${PIECE}</button>`
-                : ''}
         </div>`;
 }
 
@@ -1287,17 +1311,23 @@ function majResumeCollection() {
     bouton.innerHTML = valeur ? `Revendre les doublons · +${nombre(valeur)} ${PIECE}` : 'Aucun doublon';
 }
 
-function vendreDepuisCollection(id) {
-    const prix = vendreDoublon(id);
+function vendreDepuisFiche(id, variante) {
+    const entree = etat.collection[id];
+    if (!entree) return;
+    if (entree.exemplaires === 1
+        && !confirm(`C’est ton seul exemplaire de « ${entree.nom} » : la carte quittera ta collection. La vendre quand même ?`)) return;
+    const prix = vendreExemplaire(id, variante);
     if (!prix) return;
     sauvegarder();
     majEntete();
+    const reste = etat.collection[id];
     const caseCarte = document.querySelector(`.case[data-id="${id}"]`);
     if (caseCarte) {
-        if ($('#filtre-doublons').checked && etat.collection[id].exemplaires < 2) caseCarte.remove();
-        else caseCarte.outerHTML = caseCollectionHTML(etat.collection[id]);
+        if (!reste || ($('#filtre-doublons').checked && reste.exemplaires < 2) || ($('#filtre-fullart').checked && !reste.fullArts)) caseCarte.remove();
+        else caseCarte.outerHTML = caseCollectionHTML(reste);
         majResumeCollection();
     }
+    if (!$('#ecran-catalogue').hidden) afficherCatalogue();
     toast(`+${prix} pièces`, 'gain');
     verifierSucces();
 }
@@ -1326,6 +1356,24 @@ function raisonRarete(jeu) {
     if (jeu.rarete === 'mythique') return 'Mythique : l’un des 22 jeux les plus cultes du jeu vidéo';
     const raisons = jeu.raisons.length ? ` · ${jeu.raisons.join(', ')}` : '';
     return `Rang ${nombre(jeu.rang)} au score de prestige${raisons}`;
+}
+
+// Une seule variante : vente directe. Plusieurs : « Vendre » ouvre le choix de l'exemplaire
+function boutonsVenteHTML(e) {
+    const variantes = Object.entries(exemplairesParVariante(e)).filter(([, n]) => n > 0);
+    if (variantes.length === 1) {
+        const [variante] = variantes[0];
+        return `<button class="btn btn-or" data-vendre="${e.id}" data-variante="${variante}">Vendre · +${prixVariante(e, variante)} ${PIECE}</button>`;
+    }
+    return `<button class="btn btn-or" data-choix-vente>Vendre…</button>
+        <div class="fiche-vente" hidden>
+            <p>Quel exemplaire veux-tu vendre ?</p>
+            ${variantes.map(([variante, n]) => `
+                <button class="btn" data-vendre="${e.id}" data-variante="${variante}">
+                    ${VARIANTES[variante].nom} <span class="gris">×${n}</span> · +${prixVariante(e, variante)} ${PIECE}
+                </button>`).join('')}
+            <button class="btn" data-annuler-vente>Annuler</button>
+        </div>`;
 }
 
 function afficherFiche(id) {
@@ -1364,9 +1412,7 @@ function afficherFiche(id) {
                     : 'Pas encore dans ta collection.'}
             </p>
             <div class="fiche-actions">
-                ${e && e.exemplaires > 1
-                    ? `<button class="btn btn-or" data-vendre="${e.id}">Revendre un doublon · +${prixRevente(e)} ${PIECE}</button>`
-                    : ''}
+                ${e ? boutonsVenteHTML(e) : ''}
                 ${!e
                     ? `<button class="btn btn-principal" data-acheter="${carte.id}"${manque > 0 ? ` disabled title="Il te manque ${nombre(manque)} pièces"` : ''}>
                            Acheter · ${nombre(rarete.prix)} ${PIECE}</button>`
@@ -1398,15 +1444,12 @@ let limiteCatalogue = CARTES_PAR_PAGE;
 function caseCatalogueHTML(jeu) {
     const carte = creerCarte(jeu);
     const entree = etat.collection[jeu.id];
-    const prix = RARETES[indexRarete(carte.rarete)].prix;
     return `
         <div class="case">
-            <button class="case-carte${entree ? '' : ' non-possedee'}" data-fiche="${jeu.id}" aria-label="Voir ${echapper(jeu.nom)}">
+            <button class="case-carte${entree ? '' : ' non-possedee'}" data-fiche="${jeu.id}" aria-label="Voir ${echapper(jeu.nom)}${entree ? ' (dans ta collection)' : ''}">
                 ${carteHTML(carte, { holo: entree?.holos > 0, fullArt: entree?.fullArts > 0, compteur: entree?.exemplaires || 0 })}
+                ${entree ? '<span class="badge-possedee" title="Dans ta collection">✓</span>' : ''}
             </button>
-            ${entree
-                ? `<span class="etiquette-possedee">✓ Dans ta collection</span>`
-                : `<button class="btn-acheter" data-acheter="${jeu.id}"${etat.pieces < prix ? ' disabled' : ''}>Acheter · ${nombre(prix)} ${PIECE}</button>`}
         </div>`;
 }
 
@@ -2025,15 +2068,22 @@ function init() {
         afficherCatalogue();
     });
 
-    // Clics partagés : ouvrir une fiche, acheter une carte, revendre un doublon
+    // Clics partagés : ouvrir une fiche, acheter une carte, vendre un exemplaire
     document.addEventListener('click', e => {
         const acheter = e.target.closest('[data-acheter]');
         if (acheter) return acheterCarte(Number(acheter.dataset.acheter));
         const vendre = e.target.closest('[data-vendre]');
         if (vendre) {
             const id = Number(vendre.dataset.vendre);
-            vendreDepuisCollection(id);
+            vendreDepuisFiche(id, vendre.dataset.variante);
             if ($('#modale').open) afficherFiche(id);
+            return;
+        }
+        const choixVente = e.target.closest('[data-choix-vente], [data-annuler-vente]');
+        if (choixVente) {
+            const choisir = choixVente.matches('[data-choix-vente]');
+            $('#modale [data-choix-vente]').hidden = choisir;
+            $('#modale .fiche-vente').hidden = !choisir;
             return;
         }
         const fiche = e.target.closest('[data-fiche]');

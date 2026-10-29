@@ -101,6 +101,7 @@ const col = Object.fromEntries(entete.map((nom, i) => [nom, i]));
 // (à lire sur la page Steam du jeu). Format : identifiant: { avis: total des avis, note: % d'avis positifs }
 const CORRECTIONS = {
     // 1223750: { avis: 0, note: 0 }, // Cloud Meadow : à remplir avec les chiffres de sa page Steam
+    2357570: { avis: 5523, note: 57 },
 };
 
 // Jeux sans avis : on écarte ce qui n'est pas un jeu complet (démos, playtests, bandes-son, serveurs…)

@@ -1301,20 +1301,6 @@ main {
 .case { display: flex; flex-direction: column; gap: 0.5rem; }
 .case-carte { border-radius: 14px; transition: transform 0.2s; }
 .case-carte:hover { transform: translateY(-5px); }
-.btn-vendre {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    padding: 0.45rem;
-    border-radius: 9px;
-    border: 1px dashed var(--bord-fort);
-    color: var(--texte-doux);
-    font-size: 0.85rem;
-    font-weight: 600;
-    transition: color 0.2s, border-color 0.2s, background 0.2s;
-}
-.btn-vendre:hover { color: var(--accent); border-color: var(--accent); background: rgba(255, 184, 0, 0.06); }
 
 .plus { display: flex; justify-content: center; margin-top: 2rem; }
 
@@ -1332,23 +1318,25 @@ main {
 .intro-catalogue { color: var(--texte-doux); margin: -0.6rem 0 1.2rem; max-width: 720px; }
 .case-carte.non-possedee .carte { filter: saturate(0.75) brightness(0.92); }
 .case-carte.non-possedee:hover .carte { filter: none; }
-.btn-acheter {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    padding: 0.45rem;
-    border-radius: 9px;
-    border: 1px solid rgba(255, 184, 0, 0.35);
-    background: rgba(255, 184, 0, 0.08);
-    color: var(--accent);
-    font-size: 0.85rem;
-    font-weight: 700;
-    transition: background 0.2s, opacity 0.2s;
+/* Badge des cartes déjà dans la collection, posé sur le coin haut gauche */
+#grille-catalogue .case-carte { position: relative; }
+.badge-possedee {
+    position: absolute;
+    top: -7px;
+    left: -7px;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--vert);
+    color: #08140d;
+    font-size: 0.8rem;
+    font-weight: 800;
+    box-shadow: 0 0 0 2px var(--fond), 0 3px 8px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
 }
-.btn-acheter:hover:not(:disabled) { background: rgba(255, 184, 0, 0.18); }
-.btn-acheter:disabled { opacity: 0.4; }
-.etiquette-possedee { padding: 0.45rem; text-align: center; color: var(--vert); font-size: 0.85rem; font-weight: 700; }
 .fiche-note { margin-top: 0.6rem; color: var(--texte-doux); font-size: 0.88rem; }
 
 /* ── Fiche détaillée ── */
@@ -1413,6 +1401,11 @@ main {
 .gris { color: var(--texte-doux); font-style: italic; }
 .fiche-exemplaires { color: var(--texte-doux); font-size: 0.92rem; }
 .fiche-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.2rem; }
+/* Choix de l'exemplaire à vendre quand on a plusieurs variantes */
+.fiche-vente { display: flex; flex-wrap: wrap; gap: 0.5rem; width: 100%; padding: 0.8rem; border: 1px solid var(--bord-fort); border-radius: 12px; }
+.fiche-vente[hidden] { display: none; }
+.fiche-vente p { width: 100%; margin: 0; color: var(--texte-doux); font-size: 0.9rem; }
+.fiche-vente .gris { font-style: normal; }
 
 /* =========================================================
    DUEL
