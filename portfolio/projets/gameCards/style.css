@@ -1644,7 +1644,19 @@ main {
 .niveau-deck .niveau-gain { display: flex; align-items: center; gap: 0.3rem; color: var(--accent); font-family: 'Space Mono', monospace; font-weight: 700; }
 .niveau-deck small { color: var(--rouge); font-size: 0.78rem; }
 .niveau-deck:disabled { opacity: 0.5; cursor: not-allowed; }
-.deck-recherche { max-width: 420px; margin: 1.2rem auto; }
+/* Composition du deck : recherche et tri */
+.deck-outils { display: flex; flex-wrap: wrap; gap: 0.6rem; max-width: 640px; margin: 1.2rem auto; }
+.deck-outils .recherche { flex: 1 1 240px; }
+.deck-outils select {
+    padding: 0.62rem 0.8rem;
+    border-radius: 10px;
+    border: 1px solid var(--bord);
+    background: var(--fond-3);
+    color: var(--texte);
+    font: inherit;
+    cursor: pointer;
+}
+.deck-outils select option { background: var(--fond-2); }
 .carte-choix, .carte-main { border-radius: 14px; transition: transform 0.15s, box-shadow 0.15s; }
 .carte-choix.choisie, .carte-main.choisie { transform: translateY(-6px); box-shadow: 0 0 0 3px var(--accent), 0 0 24px rgba(255, 184, 0, 0.45); }
 .carte-main:not(:disabled):hover { transform: translateY(-4px); }
@@ -1667,6 +1679,60 @@ main {
 }
 .dos-carte span { font-weight: 900; font-size: 0.8rem; color: var(--accent); padding: 0.1rem 0.4rem; border: 2px solid var(--accent); border-radius: 6px; }
 .decks-combat .dos-carte span { font-size: 1.5rem; padding: 0.3rem 0.7rem; border-width: 3px; }
+
+/* Animations du combat */
+/* Pile ou face : la pièce monte en tournant et retombe */
+.pile-ou-face { display: grid; place-items: center; height: 240px; perspective: 600px; }
+.pile-ou-face .piece { font-size: 5rem; animation: pile-ou-face 1.2s cubic-bezier(0.3, 0.7, 0.4, 1) forwards; }
+@keyframes pile-ou-face {
+    0% { transform: translateY(50px) rotateY(0) scale(0.6); }
+    50% { transform: translateY(-60px) rotateY(900deg) scale(1.1); }
+    100% { transform: translateY(0) rotateY(1800deg) scale(1); }
+}
+/* Cartes posées : la tienne monte depuis ta main, celle de l'ordinateur descend de la sienne */
+.decks-combat .arrivee-moi > :first-child { animation: pose-moi 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.2) both; }
+.decks-combat .arrivee-ordi > :first-child { animation: pose-ordi 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.2) both; }
+@keyframes pose-moi { from { transform: translateY(140px) scale(0.8); opacity: 0; } }
+@keyframes pose-ordi { from { transform: translateY(-140px) scale(0.8); opacity: 0; } }
+/* La stat comparée s'allume */
+.decks-combat .carte-stats li.stat-choisie { animation: stat-allumee 0.7s ease-out; }
+@keyframes stat-allumee { from { background: rgba(255, 255, 255, 0.55); } }
+/* Manche décisive : le total de chaque carte apparaît sous elle */
+.total-deck {
+    position: absolute;
+    left: 50%;
+    bottom: -14px;
+    z-index: 3;
+    padding: 0.2rem 0.8rem;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #1a1200;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    opacity: 0;
+    transform: translateX(-50%) scale(0.5);
+    transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.3, 1.5), opacity 0.3s;
+}
+.decks-combat.compare .total-deck { opacity: 1; transform: translateX(-50%) scale(1); }
+/* Résultat : le gagnant bondit, le perdant tremble */
+.decks-combat .duel-emplacement.gagne { animation: manche-gagnee 0.6s cubic-bezier(0.2, 0.8, 0.3, 1.4); }
+.decks-combat .duel-emplacement.perd { animation: manche-perdue 0.5s ease-in-out; }
+@keyframes manche-gagnee {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.12) translateY(-10px); }
+    100% { transform: scale(1.04); }
+}
+@keyframes manche-perdue {
+    0%, 100% { transform: scale(0.96) translateX(0); }
+    20%, 60% { transform: scale(0.96) translateX(-8px); }
+    40%, 80% { transform: scale(0.96) translateX(8px); }
+}
+/* Le point marqué apparaît dans le score */
+.pips i.nouveau { animation: point-marque 0.6s cubic-bezier(0.2, 0.8, 0.3, 1.6); }
+@keyframes point-marque { 0% { transform: scale(0); } 60% { transform: scale(1.7); } 100% { transform: scale(1); } }
+/* Résultat de la partie */
+.duel-message.resultat-final { animation: resultat-final 0.6s cubic-bezier(0.2, 0.8, 0.3, 1.4); }
+@keyframes resultat-final { from { transform: scale(0.7); opacity: 0; } }
 
 /* ── Plus ou moins ── */
 .pom-question { text-align: center; font-size: clamp(1.2rem, 3vw, 1.6rem); font-weight: 800; margin-bottom: 1.4rem; }

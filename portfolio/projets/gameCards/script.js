@@ -2045,14 +2045,26 @@ const NIVEAUX_DECK = [
 ];
 const CARTES_CHOIX_DECK = 40; // cartes affichées à la fois pendant la composition du deck
 const STATS_DECK = Object.keys(STATS);
+// Tris de la composition du deck : une stat de la carte, ou le total des trois
+const TRIS_DECK = {
+    total: t('Tri : total des stats'),
+    attaque: t('Tri : qualité'),
+    popularite: t('Tri : popularité'),
+    anciennete: t('Tri : ancienneté'),
+};
 
 const deckDuel = {
-    etape: 'niveau', niveau: null, choix: [], recherche: '', limite: CARTES_CHOIX_DECK,
+    etape: 'niveau', niveau: null, choix: [], recherche: '', tri: 'total', limite: CARTES_CHOIX_DECK,
     moi: [], ordi: [], score: { moi: 0, ordi: 0 }, attaquant: 'moi',
     attente: null,   // 'attaque' (choisir une carte puis une stat), 'defense' (choisir une carte), ou rien
     carte: null,     // index de la carte choisie pour attaquer
-    combat: null,    // { moi, ordi, stat, ecart, cache } : les cartes posées sur la table
+    // Cartes posées sur la table : { moi, ordi, stat, ecart, cache (carte de l'ordi face cachée),
+    // revele (elle se retourne pendant l'animation), arrivee (elle vient d'être posée) }
+    combat: null,
     actions: null,   // boutons du moment : 'suivante', 'decisive' ou 'fin'
+    lancer: false,   // pièce de pile ou face en l'air
+    pointMarque: null, // 'moi' ou 'ordi' : le point qui vient d'être marqué (petite animation)
+    verrou: false,   // animation en cours, les clics attendent
     message: '',
 };
 
@@ -2124,9 +2136,10 @@ function niveauxDeckHTML() {
 function choixDeckHTML() {
     const d = deckDuel;
     const recherche = d.recherche.trim().toLowerCase();
+    const valeur = c => (d.tri === 'total' ? totalStats(c) : c[d.tri]);
     const cartes = cartesDuNiveau(d.niveau)
         .filter(e => !recherche || e.nom.toLowerCase().includes(recherche))
-        .sort((a, b) => totalStats(b) - totalStats(a));
+        .sort((a, b) => valeur(b) - valeur(a) || totalStats(b) - totalStats(a));
     return `
         <p class="duel-message">${t('Niveau {niveau} : choisis {n} cartes de ta collection ({choisies} / {n}).',
             { niveau: d.niveau.nom, n: TAILLE_DECK, choisies: d.choix.length })}</p>
@@ -2134,10 +2147,15 @@ function choixDeckHTML() {
             <button class="btn" data-deck-action="niveaux">${t('Changer de difficulté')}</button>
             <button class="btn btn-principal" data-deck-action="lancer"${d.choix.length === TAILLE_DECK ? '' : ' disabled'}>${t('Lancer la partie')}</button>
         </div>
-        <label class="recherche deck-recherche">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-            <input type="search" id="deck-recherche" value="${echapper(d.recherche)}" placeholder="${t('Rechercher un jeu…')}" aria-label="${t('Rechercher un jeu')}">
-        </label>
+        <div class="deck-outils">
+            <label class="recherche">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <input type="search" id="deck-recherche" value="${echapper(d.recherche)}" placeholder="${t('Rechercher un jeu…')}" aria-label="${t('Rechercher un jeu')}">
+            </label>
+            <select id="deck-tri" aria-label="${t('Trier')}">
+                ${Object.entries(TRIS_DECK).map(([cle, nom]) => `<option value="${cle}"${cle === d.tri ? ' selected' : ''}>${nom}</option>`).join('')}
+            </select>
+        </div>
         <div class="grille">${cartes.slice(0, d.limite).map(e => `
             <button class="carte-choix${d.choix.includes(e.id) ? ' choisie' : ''}" data-choix-deck="${e.id}" aria-pressed="${d.choix.includes(e.id)}">
                 ${carteHTML(e, { holo: e.holos > 0 })}
@@ -2147,6 +2165,7 @@ function choixDeckHTML() {
 
 function actionsDeckHTML() {
     const d = deckDuel;
+    if (d.verrou) return '';
     if (d.attente === 'attaque' && d.carte !== null) {
         const carte = d.moi[d.carte];
         return STATS_DECK.map(s => `
@@ -2163,31 +2182,41 @@ function actionsDeckHTML() {
 
 function plateauDeckHTML() {
     const d = deckDuel;
-    const pips = n => Array.from({ length: POINTS_VICTOIRE_DECK }, (_, i) => `<i${i < n ? ' class="plein"' : ''}></i>`).join('');
+    const c = d.combat;
+    const pips = qui => Array.from({ length: POINTS_VICTOIRE_DECK }, (_, i) => {
+        const plein = i < d.score[qui];
+        const nouveau = plein && d.pointMarque === qui && i === d.score[qui] - 1;
+        return `<i class="${plein ? 'plein' : ''}${nouveau ? ' nouveau' : ''}"></i>`;
+    }).join('');
     const dos = '<div class="dos-carte" aria-hidden="true"><span>GC</span></div>';
-    const resultat = qui => (!d.combat || d.combat.ecart === undefined || !d.combat.ecart ? ''
-        : (qui === 'moi') === (d.combat.ecart > 0) ? ' gagne' : ' perd');
-    const mainOrdi = d.ordi.filter(c => c !== d.combat?.ordi);
+    const resultat = qui => (!c || !c.ecart ? '' : (qui === 'moi') === (c.ecart > 0) ? ' gagne' : ' perd');
+    // Manche décisive : le total des stats s'affiche sur chaque carte
+    const total = carte => (c && c.stat === null && carte ? `<span class="total-deck">Σ ${totalStats(carte)}</span>` : '');
+    const carteOrdi = !c?.ordi ? '' : c.revele ? flipHTML(c.ordi) : c.cache ? dos : carteHTML(c.ordi);
+    const mainOrdi = d.ordi.filter(carte => carte !== c?.ordi);
+    const table = d.lancer
+        ? `<div class="pile-ou-face" aria-hidden="true">${PIECE}</div>`
+        : `<div class="decks-combat${c?.ecart !== undefined ? ' compare' : ''}">
+            <div class="duel-emplacement${resultat('ordi')}${['ordi', 'les-deux'].includes(c?.arrivee) ? ' arrivee-ordi' : ''}" data-titre="${t('Ordinateur')}">
+                ${carteOrdi}${total(c?.ordi)}
+            </div>
+            <div class="duel-emplacement${resultat('moi')}${['moi', 'les-deux'].includes(c?.arrivee) ? ' arrivee-moi' : ''}" data-titre="${t('Ta carte')}">
+                ${c?.moi ? carteHTML(c.moi, { holo: c.moi.holos > 0 }) : ''}${total(c?.moi)}
+            </div>
+        </div>`;
     return `
         <div class="duel-score">
-            <div class="duel-joueur-score"><span>${t('Toi')}</span><div class="pips">${pips(d.score.moi)}</div></div>
+            <div class="duel-joueur-score"><span>${t('Toi')}</span><div class="pips">${pips('moi')}</div></div>
             <div class="duel-infos"><div class="duel-vs">VS</div><span>${d.niveau.nom}</span></div>
-            <div class="duel-joueur-score"><span>${t('Ordi')}</span><div class="pips">${pips(d.score.ordi)}</div></div>
+            <div class="duel-joueur-score"><span>${t('Ordi')}</span><div class="pips">${pips('ordi')}</div></div>
         </div>
         <div class="decks-main decks-ordi">${mainOrdi.map(() => dos).join('')}</div>
-        <div class="decks-combat">
-            <div class="duel-emplacement${resultat('ordi')}" data-titre="${t('Ordinateur')}">
-                ${d.combat?.ordi ? (d.combat.cache ? dos : carteHTML(d.combat.ordi)) : ''}
-            </div>
-            <div class="duel-emplacement${resultat('moi')}" data-titre="${t('Ta carte')}">
-                ${d.combat?.moi ? carteHTML(d.combat.moi, { holo: d.combat.moi.holos > 0 }) : ''}
-            </div>
-        </div>
-        <p class="duel-message">${d.message}</p>
+        ${table}
+        <p class="duel-message${d.actions === 'fin' ? ' resultat-final' : ''}">${d.message}</p>
         <div class="duel-actions">${actionsDeckHTML()}</div>
-        <div class="decks-main">${d.moi.map((c, i) => `
-            <button class="carte-main${d.carte === i ? ' choisie' : ''}" data-carte-main="${i}"${d.attente ? '' : ' disabled'}>
-                ${carteHTML(c, { holo: c.holos > 0 })}
+        <div class="decks-main">${d.moi.map((carte, i) => `
+            <button class="carte-main${d.carte === i ? ' choisie' : ''}" data-carte-main="${i}"${d.attente && !d.verrou ? '' : ' disabled'}>
+                ${carteHTML(carte, { holo: carte.holos > 0 })}
             </button>`).join('')}</div>`;
 }
 
@@ -2199,27 +2228,35 @@ function afficherDuelDecks() {
     else {
         zone.innerHTML = plateauDeckHTML();
         // La stat comparée ressort sur les deux cartes de la table
-        if (d.combat?.stat && d.combat.ecart !== undefined) {
-            zone.querySelectorAll(`.decks-combat li[data-stat="${d.combat.stat}"]`).forEach(li => li.classList.add('stat-choisie'));
-        }
+        if (d.combat?.stat && d.combat.ecart !== undefined) surlignerStatDeck(d.combat.stat);
     }
 }
 
-function lancerPartieDecks() {
+const surlignerStatDeck = stat => document.querySelectorAll(`#mode-decks .decks-combat li[data-stat="${stat}"]`)
+    .forEach(li => li.classList.add('stat-choisie'));
+
+async function lancerPartieDecks() {
     const d = deckDuel;
     d.choix = d.choix.filter(id => etat.collection[id]);
     if (!donneesPretes() || d.choix.length < TAILLE_DECK) return afficherDuelDecks();
-    d.moi = d.choix.map(id => ({ ...etat.collection[id] }));
-    d.ordi = deckOrdinateur(d.niveau);
-    d.score = { moi: 0, ordi: 0 };
-    d.attaquant = Math.random() < 0.5 ? 'moi' : 'ordi';
-    d.etape = 'partie';
+    Object.assign(d, {
+        moi: d.choix.map(id => ({ ...etat.collection[id] })),
+        ordi: deckOrdinateur(d.niveau),
+        score: { moi: 0, ordi: 0 },
+        attaquant: Math.random() < 0.5 ? 'moi' : 'ordi',
+        etape: 'partie', combat: null, actions: null, attente: null, pointMarque: null,
+    });
+    // Pile ou face : la pièce tourne en l'air, puis on annonce qui commence
+    Object.assign(d, { lancer: true, verrou: true, message: t('Pile ou face…') });
+    afficherDuelDecks();
+    await attendre(1300);
+    Object.assign(d, { lancer: false, verrou: false });
     mancheDecks(d.attaquant === 'moi' ? t('Pile ou face : c’est toi qui commences !') : t('Pile ou face : l’ordinateur commence.'));
 }
 
 function mancheDecks(annonce = '') {
     const d = deckDuel;
-    Object.assign(d, { carte: null, combat: null, actions: null, attente: null });
+    Object.assign(d, { carte: null, combat: null, actions: null, attente: null, pointMarque: null });
     const avant = annonce ? `${annonce} ` : '';
     if (d.moi.length === 1 && d.score.moi === d.score.ordi) {
         d.actions = 'decisive';
@@ -2229,26 +2266,54 @@ function mancheDecks(annonce = '') {
         d.message = avant + t('À toi d’attaquer : choisis une carte, puis la stat sur laquelle tu l’engages.');
     } else {
         const coup = coupOrdi('attaque');
-        d.combat = { ordi: coup.carte, stat: coup.stat, cache: true };
+        d.combat = { ordi: coup.carte, stat: coup.stat, cache: true, arrivee: 'ordi' };
         d.attente = 'defense';
         d.message = avant + t('L’ordinateur pose une carte face cachée et attaque en {stat}. Choisis ta carte pour défendre.', { stat: STATS[coup.stat].nom });
+        jouerSon('carte');
     }
     afficherDuelDecks();
 }
 
-// `stat` vide : manche décisive, au total des stats
-function resoudreMancheDecks(carteMoi, carteOrdi, stat) {
+// Une manche en quatre temps : les cartes se posent, celle de l'ordinateur se retourne,
+// la stat comparée s'allume, puis le résultat. `stat` vide : manche décisive, au total des stats.
+async function resoudreMancheDecks(carteMoi, carteOrdi, stat) {
     const d = deckDuel;
+    if (d.verrou) return;
+    d.verrou = true;
+    d.moi = d.moi.filter(c => c !== carteMoi);
+    d.ordi = d.ordi.filter(c => c !== carteOrdi);
+    const nomStat = stat ? `${STATS[stat].icone} ${STATS[stat].nom}` : t('Total des stats');
+    Object.assign(d, {
+        combat: { moi: carteMoi, ordi: carteOrdi, stat, revele: true, arrivee: d.combat?.cache ? 'moi' : 'les-deux' },
+        attente: null, carte: null, actions: null, pointMarque: null,
+        message: t('{stat} : qui l’emporte ?', { stat: nomStat }),
+    });
+    afficherDuelDecks();
+    jouerSon('carte');
+    await attendre(550);
+
+    // La carte de l'ordinateur se retourne
+    $('#mode-decks .decks-combat .flip')?.classList.add('retournee');
+    jouerSon('carte');
+    await attendre(800);
+
+    // La stat comparée (ou le total) s'allume sur les deux cartes
+    if (stat) surlignerStatDeck(stat);
+    $('#mode-decks .decks-combat').classList.add('compare');
+    await attendre(600);
+
+    // Résultat
     const valeur = c => (stat ? c[stat] : totalStats(c));
     const ecart = valeur(carteMoi) - valeur(carteOrdi);
     if (ecart > 0) d.score.moi++;
     else if (ecart < 0) d.score.ordi++;
-    d.moi = d.moi.filter(c => c !== carteMoi);
-    d.ordi = d.ordi.filter(c => c !== carteOrdi);
-    Object.assign(d, { combat: { moi: carteMoi, ordi: carteOrdi, stat, ecart }, attente: null, carte: null });
-    const nomStat = stat ? `${STATS[stat].icone} ${STATS[stat].nom}` : t('Total des stats');
     const resultat = ecart > 0 ? t('Manche gagnée !') : ecart < 0 ? t('Manche perdue.') : t('Égalité parfaite, personne ne marque.');
-    d.message = `${t('{stat} : <b>{a}</b> contre <b>{b}</b>.', { stat: nomStat, a: valeur(carteMoi), b: valeur(carteOrdi) })} <b>${resultat}</b>`;
+    Object.assign(d, {
+        combat: { moi: carteMoi, ordi: carteOrdi, stat, ecart },
+        pointMarque: ecart > 0 ? 'moi' : ecart < 0 ? 'ordi' : null,
+        message: `${t('{stat} : <b>{a}</b> contre <b>{b}</b>.', { stat: nomStat, a: valeur(carteMoi), b: valeur(carteOrdi) })} <b>${resultat}</b>`,
+        verrou: false,
+    });
     jouerSon(ecart > 0 ? 'bonne' : ecart < 0 ? 'mauvaise' : 'carte');
     if (d.score.moi >= POINTS_VICTOIRE_DECK || d.score.ordi >= POINTS_VICTOIRE_DECK || !d.moi.length) {
         finPartieDecks(carteMoi, carteOrdi, stat);
@@ -2289,6 +2354,7 @@ function finPartieDecks(carteMoi, carteOrdi, stat) {
 
 function actionDuelDecks(element) {
     const d = deckDuel;
+    if (d.verrou) return;
     const { niveau, choixDeck, carteMain, statDeck, deckAction } = element.dataset;
     if (niveau) {
         Object.assign(d, { niveau: NIVEAUX_DECK.find(n => n.id === niveau), choix: [], recherche: '', limite: CARTES_CHOIX_DECK, etape: 'deck' });
@@ -2318,7 +2384,6 @@ function actionDuelDecks(element) {
     }
     afficherDuelDecks();
 }
-
 
 // ---------- Sons (synthétisés avec Web Audio, coupés par défaut) ----------
 
@@ -2586,6 +2651,11 @@ function init() {
         if (element && !element.disabled) actionDuelDecks(element);
     });
     // Recherche pendant la composition du deck : on garde le curseur dans le champ
+    $('#mode-decks').addEventListener('change', e => {
+        if (e.target.id !== 'deck-tri') return;
+        Object.assign(deckDuel, { tri: e.target.value, limite: CARTES_CHOIX_DECK });
+        afficherDuelDecks();
+    });
     $('#mode-decks').addEventListener('input', e => {
         if (e.target.id !== 'deck-recherche') return;
         Object.assign(deckDuel, { recherche: e.target.value, limite: CARTES_CHOIX_DECK });
