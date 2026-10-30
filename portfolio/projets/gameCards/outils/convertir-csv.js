@@ -64,7 +64,7 @@ const LOGICIELS = ['Utilities', 'Design & Illustration', 'Animation & Modeling',
 // Doublons du catalogue Steam (versions régionales ou packs) qui prêtent à confusion avec le vrai jeu
 const DOUBLONS = [
     10190, // Call of Duty: Modern Warfare 2 (2009), seconde fiche
-    52003, // Portal 2, seconde fiche
+    52003, // Portal, seconde fiche
     48173, // Assassin's Creed II, seconde fiche
 ];
 

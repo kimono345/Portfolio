@@ -1218,26 +1218,27 @@ main {
 .pile-carte.apparition-full-art { animation: apparition-full-art 1s cubic-bezier(0.2, 0.8, 0.3, 1.2); }
 .bilan .bilan-full-art b { background: linear-gradient(90deg, #ffa0d2, #aad7ff, #bef5dc, #ffe1a0); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
-/* ── EX : jeu adoré mais peu connu. Logo « EX » chromé sur l'image, halo argenté ── */
+/* ── EX : jeu adoré mais peu connu. Pastille « EX » chromée après le nom (comme les cartes « ex » de Pokémon), halo argenté ── */
 .carte.ex { box-shadow: 0 0 0 1px rgba(235, 242, 255, 0.55), 0 0 18px rgba(200, 215, 240, 0.45), 0 8px 24px rgba(0, 0, 0, 0.4); }
-.carte.ex .carte-image::after {
-    content: 'EX';
-    position: absolute;
-    top: 2cqi;
-    left: 3cqi;
-    font-size: 13cqi;
+/* Le nom garde sa coupure sur deux lignes, la pastille reste toujours visible à côté */
+.carte-titre { display: flex; align-items: flex-start; gap: 1.5cqi; }
+.carte-titre .carte-nom { flex: 1; min-width: 0; }
+.badge-ex {
+    flex-shrink: 0;
+    margin-top: 0.4cqi;
+    padding: 0.5cqi 1.9cqi 0.5cqi 1.5cqi;
+    border-radius: 1.6cqi;
+    font-size: 5.4cqi;
     font-weight: 900;
     font-style: italic;
-    line-height: 1;
-    letter-spacing: -0.04em;
-    background: linear-gradient(180deg, #fff 0%, #dfe6f1 40%, #8d99ad 55%, #f4f7fb 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.65)) drop-shadow(0 0 6px rgba(255, 255, 255, 0.45));
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: #1c2333;
+    background: linear-gradient(180deg, #fff 0%, #dfe6f1 45%, #9aa6ba 55%, #eef2f8 100%);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6), 0 2px 6px rgba(0, 0, 0, 0.45), 0 0 8px rgba(220, 230, 245, 0.35);
 }
-/* Carte adverse cachée : le logo EX serait un indice */
-.carte.stats-cachees .carte-image::after { display: none; }
+/* Carte adverse cachée : la pastille EX serait un indice */
+.carte.stats-cachees .badge-ex { display: none; }
 .bilan .bilan-ex b, .fiche-ex { background: linear-gradient(90deg, #fff, #c9d3e3 50%, #fff); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .fiche-ex { margin-top: 0.4rem; font-size: 0.88rem; font-weight: 600; }
 

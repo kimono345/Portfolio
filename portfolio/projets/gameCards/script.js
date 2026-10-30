@@ -614,7 +614,10 @@ function carteHTML(carte, { holo = false, compteur = 0, cachee = false, fullArt 
     const goty = gotyDe(carte.id);
     const plaque = chef ? `<span class="plaque-chef" title="${t('Metacritic : {n} / 100', { n: carte.metacritic })}">${ICONES.medaille}<span>${t('Chef-d’œuvre')}</span></span>` : '';
     const texte = `
-                <h3 class="carte-nom">${echapper(carte.nom)}</h3>
+                <div class="carte-titre">
+                    <h3 class="carte-nom">${echapper(carte.nom)}</h3>
+                    ${ex ? '<span class="badge-ex">EX</span>' : ''}
+                </div>
                 <p class="carte-infos">${echapper(infos) || '&nbsp;'}</p>
                 <ul class="carte-stats">
                     ${Object.entries(STATS).map(([cle, stat]) => fullArt
@@ -636,7 +639,7 @@ function carteHTML(carte, { holo = false, compteur = 0, cachee = false, fullArt 
                 ${goty ? `<span class="ruban-goty" title="${t('Jeu de l’année {annee}', { annee: goty.annee })} · ${goty.ceremonie}"><span>${BRIN_LAURIER}GOTY ${goty.annee}${BRIN_LAURIER}</span></span>` : ''}
                 ${goty && !fullArt ? `<span class="filigrane-goty" aria-hidden="true">${LAURIER}</span>` : ''}
                 <header class="carte-haut">
-                    <span class="carte-rarete">${rarete.nom}${ex ? ' EX' : ''}${fullArt ? ' · Full Art' : holo ? ' · Holo' : ''}</span>
+                    <span class="carte-rarete">${rarete.nom}${fullArt ? ' · Full Art' : holo ? ' · Holo' : ''}</span>
                     ${compteur > 1 ? `<span class="carte-compteur">×${compteur}</span>` : ''}
                 </header>
                 ${fullArt
@@ -708,7 +711,7 @@ const aLeGenre = (carte, valeur) => DISTINCTIONS[valeur]
 // ---------- Données ----------
 
 async function chargerJeux() {
-    const reponse = await fetch('data/jeux.json?v=12');
+    const reponse = await fetch('data/jeux.json?v=14');
     if (!reponse.ok) throw new Error(`data/jeux.json introuvable (${reponse.status})`);
     // Format compact (voir outils/convertir-csv.js) : un tableau par jeu, genres et thèmes codés en caractères
     const { genres: genresFr, tags: tagsFr, jeux, groupesTags: groupesFr, estimes = [] } = await reponse.json();
