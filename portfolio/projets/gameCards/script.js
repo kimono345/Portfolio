@@ -35,6 +35,13 @@ const CHANCE_FULL_ART = 0.05;
 const CHANCE_FULL_ART_GOD_PACK = 0.30;
 const MULTIPLICATEUR_FULL_ART = 5; // revente
 
+// EX : version des jeux adorés des joueurs mais peu connus (Rare ou en dessous). Sa Qualité est calculée
+// comme une rareté au-dessus. Jamais holo ni Full Art en même temps.
+const SEUIL_EX_NOTE = 93;   // % d'avis positifs
+const SEUIL_EX_AVIS = 1000; // vrais avis Steam (pas estimés)
+const CHANCE_EX = 0.05;     // quand un jeu éligible est tiré
+const MULTIPLICATEUR_EX = 4; // revente
+
 const INDEX_RARE = RARETES.findIndex(r => r.id === 'rare');
 const INDEX_EPIQUE = RARETES.findIndex(r => r.id === 'epique');
 const INDEX_LEGENDAIRE = RARETES.findIndex(r => r.id === 'legendaire');
@@ -554,12 +561,20 @@ function statDeJeu(valeur, rarete, bas = 0) {
     return Math.round(min + position * (max - min));
 }
 
-function creerCarte(jeu) {
+// Un jeu a une version EX s'il est adoré des joueurs (sur de vrais avis) mais classé Rare ou en dessous
+const aUneVersionEX = jeu => Boolean(jeu) && !jeu.estime && jeu.note >= SEUIL_EX_NOTE && jeu.avis >= SEUIL_EX_AVIS
+    && indexRarete(jeu.rarete) >= INDEX_RARE;
+
+// `ex` : version EX, la Qualité est placée dans la fourchette de la rareté au-dessus
+function creerCarte(jeu, { ex = false } = {}) {
     return {
         id: jeu.id,
         nom: jeu.nom,
         image: `${URL_IMAGES}/${jeu.id}/${jeu.image || 'header.jpg'}`,
-        attaque: statQualite(jeu),
+        attaque: ex
+            ? STATS_FORCEES[jeu.id]?.attaque ?? statDeJeu(notePublic(jeu.note, jeu.avis), RARETES[indexRarete(jeu.rarete) - 1].id, 50)
+            : statQualite(jeu),
+        ex,
         // Stat « joker » : la vraie ancienneté, sans lien avec la rareté (une vieille Commune peut battre une Mythique récente)
         anciennete: anciennete(anneeOriginale(jeu)),
         popularite: statPopularite(jeu),
@@ -578,7 +593,7 @@ function creerCarte(jeu) {
 // Jaquette verticale Steam (600 × 900) pour les Full Art ; à défaut, l'image horizontale
 const imagePortrait = carte => `${URL_IMAGES}/${carte.id}/library_600x900.jpg`;
 
-function carteHTML(carte, { holo = false, compteur = 0, cachee = false, fullArt = (carte.fullArts || 0) > 0 } = {}) {
+function carteHTML(carte, { holo = false, compteur = 0, cachee = false, fullArt = (carte.fullArts || 0) > 0, ex = Boolean(carte.ex) } = {}) {
     if (fullArt) holo = false;
     const rarete = RARETES[indexRarete(carte.rarete)];
     // Sur la carte adverse du duel, l'année trahirait l'Ancienneté : on la cache aussi
@@ -602,14 +617,14 @@ function carteHTML(carte, { holo = false, compteur = 0, cachee = false, fullArt 
                 </ul>`;
     const secours = echapper(carte.image);
     return `
-        <article class="carte rarete-${rarete.id}${holo ? ' holo' : ''}${cachee ? ' stats-cachees' : ''}${chef ? ' chef-oeuvre' : ''}${goty ? ' goty' : ''}${fullArt ? ' full-art' : ''}">
+        <article class="carte rarete-${rarete.id}${holo ? ' holo' : ''}${cachee ? ' stats-cachees' : ''}${chef ? ' chef-oeuvre' : ''}${goty ? ' goty' : ''}${fullArt ? ' full-art' : ''}${ex ? ' ex' : ''}">
             <div class="carte-corps">
                 ${fullArt ? `<div class="full-art-fond" style="--secours: url('${secours}')" aria-hidden="true"><img src="${imagePortrait(carte)}" alt="" loading="lazy"
                     onerror="this.onerror=null; this.src='${secours}'; this.parentNode.classList.add('paysage')"></div>` : ''}
                 ${goty ? `<span class="ruban-goty" title="${t('Jeu de l’année {annee}', { annee: goty.annee })} · ${goty.ceremonie}"><span>${BRIN_LAURIER}GOTY ${goty.annee}${BRIN_LAURIER}</span></span>` : ''}
                 ${goty && !fullArt ? `<span class="filigrane-goty" aria-hidden="true">${LAURIER}</span>` : ''}
                 <header class="carte-haut">
-                    <span class="carte-rarete">${rarete.nom}${fullArt ? ' · Full Art' : holo ? ' · Holo' : ''}</span>
+                    <span class="carte-rarete">${rarete.nom}${ex ? ' EX' : ''}${fullArt ? ' · Full Art' : holo ? ' · Holo' : ''}</span>
                     ${compteur > 1 ? `<span class="carte-compteur">×${compteur}</span>` : ''}
                 </header>
                 ${fullArt
@@ -711,7 +726,7 @@ function majCollectionDepuisDonnees() {
     for (const entree of Object.values(etat.collection)) {
         const jeu = jeuxParId.get(entree.id);
         if (!jeu) continue;
-        Object.assign(entree, creerCarte(jeu));
+        Object.assign(entree, creerCarte(jeu, { ex: entree.exs > 0 }));
         delete entree.defense; // ancienne stat Note Metacritic
     }
     sauvegarder();
@@ -741,35 +756,42 @@ function piocher(index, exclus = new Set()) {
 
 // ---------- Collection et monnaie ----------
 
-function ajouterACollection(carte, holo, fullArt = false) {
+function ajouterACollection(carte, holo, fullArt = false, ex = false) {
     const entree = etat.collection[carte.id];
     if (entree) {
         entree.exemplaires++;
         if (holo) entree.holos++;
         if (fullArt) entree.fullArts = (entree.fullArts || 0) + 1;
+        if (ex) {
+            entree.exs = (entree.exs || 0) + 1;
+            Object.assign(entree, carte); // la carte prend les stats de sa version EX
+        }
         return false;
     }
-    etat.collection[carte.id] = { ...carte, exemplaires: 1, holos: holo ? 1 : 0, fullArts: fullArt ? 1 : 0, obtenue: Date.now() };
+    etat.collection[carte.id] = { ...carte, exemplaires: 1, holos: holo ? 1 : 0, fullArts: fullArt ? 1 : 0, exs: ex ? 1 : 0, obtenue: Date.now() };
     return true;
 }
 
-// Ordre de revente : d'abord les exemplaires normaux, puis les holos, et le Full Art en dernier (gardé en priorité)
+// Ordre de revente : d'abord les exemplaires normaux, puis les holos, les EX, et le Full Art en dernier (gardé en priorité)
 function prochaineVente(entree) {
-    const fullArts = entree.fullArts || 0;
-    if (entree.exemplaires - entree.holos - fullArts > 0) return 'normale';
-    return entree.holos > 0 ? 'holo' : 'fullArt';
+    const { normale, holo, ex } = exemplairesParVariante(entree);
+    if (normale > 0) return 'normale';
+    if (holo > 0) return 'holo';
+    return ex > 0 ? 'ex' : 'fullArt';
 }
 
 const VARIANTES = {
     normale: { nom: t('Normale'), multiplicateur: 1 },
     holo: { nom: 'Holo', multiplicateur: MULTIPLICATEUR_HOLO },
+    ex: { nom: 'EX', multiplicateur: MULTIPLICATEUR_EX },
     fullArt: { nom: 'Full Art', multiplicateur: MULTIPLICATEUR_FULL_ART },
 };
 
 // Nombre d'exemplaires de chaque variante possédés
 function exemplairesParVariante(entree) {
     const fullArt = entree.fullArts || 0;
-    return { normale: entree.exemplaires - entree.holos - fullArt, holo: entree.holos, fullArt };
+    const ex = entree.exs || 0;
+    return { normale: entree.exemplaires - entree.holos - ex - fullArt, holo: entree.holos, ex, fullArt };
 }
 
 const prixVariante = (entree, variante) => RARETES[indexRarete(entree.rarete)].revente * VARIANTES[variante].multiplicateur;
@@ -782,6 +804,12 @@ function vendreExemplaire(id, variante) {
     const prix = prixVariante(entree, variante);
     if (variante === 'holo') entree.holos--;
     if (variante === 'fullArt') entree.fullArts--;
+    if (variante === 'ex') {
+        entree.exs--;
+        // Plus aucun exemplaire EX : la carte reprend ses stats normales
+        const jeu = jeuxParId.get(id);
+        if (!entree.exs && jeu) Object.assign(entree, creerCarte(jeu));
+    }
     if (--entree.exemplaires === 0) delete etat.collection[id];
     etat.pieces += prix;
     etat.stats.ventes++;
@@ -797,13 +825,14 @@ function vendreDoublon(id) {
 
 // Valeur de tous les doublons : on simule les ventes sur une copie
 function valeurDoublons(entree) {
-    const copie = { ...entree, fullArts: entree.fullArts || 0 };
+    const copie = { ...entree, fullArts: entree.fullArts || 0, exs: entree.exs || 0 };
     let total = 0;
     while (copie.exemplaires > 1) {
         total += prixRevente(copie);
         const vendue = prochaineVente(copie);
         if (vendue === 'holo') copie.holos--;
         if (vendue === 'fullArt') copie.fullArts--;
+        if (vendue === 'ex') copie.exs--;
         copie.exemplaires--;
     }
     return total;
@@ -909,10 +938,12 @@ window.forcerGodPack = () => {
     return 'Le prochain booster ouvert sera un god pack ✨';
 };
 
-// Holo ou Full Art pour une carte tirée (les deux ne se cumulent pas)
+// Holo, Full Art ou EX pour une carte tirée (elles ne se cumulent pas)
 function variante(carte, chanceHolo, chanceFullArt) {
     const fullArt = indexRarete(carte.rarete) <= INDEX_LEGENDAIRE && Math.random() < chanceFullArt;
-    return { carte, fullArt, holo: !fullArt && Math.random() < chanceHolo };
+    const jeu = jeuxParId.get(carte.id);
+    const ex = !fullArt && aUneVersionEX(jeu) && Math.random() < CHANCE_EX;
+    return { carte: ex ? creerCarte(jeu, { ex }) : carte, fullArt, ex, holo: !fullArt && !ex && Math.random() < chanceHolo };
 }
 
 // God pack : une Mythique garantie, puis des Légendaires (et parfois d'autres Mythiques), une chance sur 4 d'être holo
@@ -977,7 +1008,7 @@ async function ouvrirBooster(mode, nombreBoosters = 1, type = TYPES_BOOSTER.stan
         etat.godPacks.nombre += godPacks;
         etat.godPacks.premier ??= Date.now();
     }
-    for (const t of tirage) t.nouvelle = ajouterACollection(t.carte, t.holo, t.fullArt);
+    for (const t of tirage) t.nouvelle = ajouterACollection(t.carte, t.holo, t.fullArt, t.ex);
     sauvegarder();
     majEntete();
 
@@ -1186,8 +1217,8 @@ async function defilerPile(cartes, rang) {
     for (let i = 0; i < elements.length && !seance.passer; i++) {
         elements.forEach((element, k) => element.style.setProperty('--rang', k - i));
         const dessus = elements[i];
-        if (indexRarete(cartes[i].carte.rarete) <= INDEX_LEGENDAIRE) dessus.classList.add(cartes[i].fullArt ? 'apparition-full-art' : 'apparition-rare');
-        jouerSonRarete(cartes[i].carte.rarete);
+        if (indexRarete(cartes[i].carte.rarete) <= INDEX_LEGENDAIRE || cartes[i].ex) dessus.classList.add(cartes[i].fullArt ? 'apparition-full-art' : 'apparition-rare');
+        jouerSonRarete(cartes[i].ex ? 'epique' : cartes[i].carte.rarete);
 
         // Si la carte suivante est Épique ou mieux, la pile brille de sa couleur : suspense
         const suivante = cartes[i + 1];
@@ -1248,6 +1279,7 @@ function finTirage() {
     const meilleure = RARETES[Math.min(...dernierTirage.map(t => indexRarete(t.carte.rarete)))];
     const holos = dernierTirage.filter(t => t.holo).length;
     const fullArts = dernierTirage.filter(t => t.fullArt).length;
+    const exs = dernierTirage.filter(t => t.ex).length;
     $('#ouverture-aide').hidden = true;
     const divines = dernierTirage.filter(t => t.godPack);
     const mythiques = divines.filter(t => t.carte.rarete === 'mythique').length;
@@ -1260,6 +1292,7 @@ function finTirage() {
         <span class="rarete-${meilleure.id}">${t('Meilleure :')} <b class="texte-rarete">${meilleure.nom}</b></span>
         ${holos ? `<span>✨ ${tn(holos, '<b>{n}</b> holo', '<b>{n}</b> holos')}</span>` : ''}
         ${fullArts ? `<span class="bilan-full-art"><b>${fullArts}</b> Full Art</span>` : ''}
+        ${exs ? `<span class="bilan-ex"><b>${exs}</b> EX</span>` : ''}
         <span class="bilan-gain">+<b>${nombre(dernierGain)}</b> ${PIECE}</span>`;
     majPaquets();
     for (const id of ['#bilan', '#btn-retour', '#btn-voir-collection']) $(id).hidden = false;
@@ -1330,12 +1363,14 @@ function afficherCollection() {
     const recherche = $('#filtre-nom').value.trim().toLowerCase();
     const doublons = $('#filtre-doublons').checked;
     const seulementFullArt = $('#filtre-fullart').checked;
+    const seulementEX = $('#filtre-ex').checked;
     const visibles = entrees
         .filter(e => !recherche || e.nom.toLowerCase().includes(recherche))
         .filter(e => !filtreRarete || e.rarete === filtreRarete)
         .filter(e => !genreChoisi || aLeGenre(e, genreChoisi))
         .filter(e => !doublons || e.exemplaires > 1)
         .filter(e => !seulementFullArt || e.fullArts > 0)
+        .filter(e => !seulementEX || e.exs > 0)
         .sort(TRIS[$('#tri').value]);
 
     const grille = $('#grille-collection');
@@ -1380,7 +1415,8 @@ function vendreDepuisFiche(id, variante) {
     const reste = etat.collection[id];
     const caseCarte = document.querySelector(`.case[data-id="${id}"]`);
     if (caseCarte) {
-        if (!reste || ($('#filtre-doublons').checked && reste.exemplaires < 2) || ($('#filtre-fullart').checked && !reste.fullArts)) caseCarte.remove();
+        if (!reste || ($('#filtre-doublons').checked && reste.exemplaires < 2) || ($('#filtre-fullart').checked && !reste.fullArts)
+            || ($('#filtre-ex').checked && !reste.exs)) caseCarte.remove();
         else caseCarte.outerHTML = caseCollectionHTML(reste);
         majResumeCollection();
     }
@@ -1443,10 +1479,13 @@ function afficherFiche(id) {
     $('#modale-contenu').innerHTML = `
         <div class="fiche-visuel" data-incline>${carteHTML(carte, { holo: e?.holos > 0 })}</div>
         <div class="fiche-infos rarete-${rarete.id}">
-            <span class="fiche-rarete">${rarete.nom}${e?.holos ? ' · ✨ Holo' : ''}</span>
+            <span class="fiche-rarete">${rarete.nom}${carte.ex ? ' EX' : ''}${e?.holos ? ' · ✨ Holo' : ''}</span>
             <h2>${echapper(carte.nom)}</h2>
             <p class="fiche-meta">${[carte.annee, ...carte.genres].filter(Boolean).map(echapper).join(' · ')}</p>
             ${jeu ? `<p class="fiche-raison">${raisonRarete(jeu)}</p>` : ''}
+            ${aUneVersionEX(jeu) ? `<p class="fiche-ex">${carte.ex
+                ? t('Version EX : jeu adoré des joueurs mais peu connu, sa Qualité est calculée comme une rareté au-dessus.')
+                : t('Ce jeu existe en version EX (5 % de chance quand il est tiré) : sa Qualité y est calculée comme une rareté au-dessus.')}</p>` : ''}
             ${gotyDe(carte.id) || carte.metacritic >= SEUIL_CHEF_OEUVRE ? `<div class="fiche-distinctions">
                 ${gotyDe(carte.id) ? `<p class="fiche-distinction">${LAURIER}${t('Jeu de l’année {annee}', { annee: gotyDe(carte.id).annee })}<span>${gotyDe(carte.id).ceremonie}</span></p>` : ''}
                 ${carte.metacritic >= SEUIL_CHEF_OEUVRE ? `<p class="fiche-distinction">${ICONES.medaille}${t('Chef-d’œuvre')}<span>${t('noté {n}/100 par la presse (Metacritic)', { n: carte.metacritic })}</span></p>` : ''}
@@ -1466,7 +1505,7 @@ function afficherFiche(id) {
             </dl>
             <p class="fiche-exemplaires">
                 ${e
-                    ? `${tn(e.exemplaires, '{n} exemplaire', '{n} exemplaires')}${[e.holos ? `${e.holos} holo` : '', e.fullArts ? `${e.fullArts} Full Art` : ''].filter(Boolean).map(v => ` · ${v}`).join('')}
+                    ? `${tn(e.exemplaires, '{n} exemplaire', '{n} exemplaires')}${[e.holos ? `${e.holos} holo` : '', e.exs ? `${e.exs} EX` : '', e.fullArts ? `${e.fullArts} Full Art` : ''].filter(Boolean).map(v => ` · ${v}`).join('')}
                        · ${t('obtenue le {date}', { date: new Date(e.obtenue).toLocaleDateString(LOCALE) })}`
                     : t('Pas encore dans ta collection.')}
             </p>
@@ -1502,8 +1541,8 @@ let filtreRareteCatalogue = '';
 let limiteCatalogue = CARTES_PAR_PAGE;
 
 function caseCatalogueHTML(jeu) {
-    const carte = creerCarte(jeu);
     const entree = etat.collection[jeu.id];
+    const carte = creerCarte(jeu, { ex: entree?.exs > 0 });
     return `
         <div class="case">
             <button class="case-carte${entree ? '' : ' non-possedee'}" data-fiche="${jeu.id}" aria-label="${t('Voir {nom}', { nom: echapper(jeu.nom) })}${entree ? ` ${t('(dans ta collection)')}` : ''}">
@@ -1610,7 +1649,12 @@ function tirerCarteJoueur() {
     const rarete = RARETES[tirerRarete('chanceDuel', RARETES.filter(r => parRarete[r.id]))];
     return auHasard(parRarete[rarete.id]);
 }
-const tirerCarteOrdi = exclus => piocher(tirerRarete('chanceDuel'), exclus);
+// L'ordinateur peut aussi tomber sur une version EX
+function tirerCarteOrdi(exclus) {
+    const carte = piocher(tirerRarete('chanceDuel'), exclus);
+    const jeu = jeuxParId.get(carte.id);
+    return aUneVersionEX(jeu) && Math.random() < CHANCE_EX ? creerCarte(jeu, { ex: true }) : carte;
+}
 
 const duel = { joueur: 0, ordi: 0, carteJoueur: null, carteOrdi: null, verrou: false };
 
@@ -1760,6 +1804,8 @@ const SUCCES = [
     { id: 'brillant', nom: t('Tout ce qui brille'), description: t('Obtenir une carte holo'), cible: 1, recompense: { pieces: 50 }, valeur: () => possedees().filter(e => e.holos > 0).length },
     { id: 'galerie-holo', nom: t('Galerie des glaces'), description: t('Posséder 10 cartes holo différentes'), cible: 10, recompense: { prestiges: 1 }, valeur: () => possedees().filter(e => e.holos > 0).length },
     { id: 'oeuvre-art', nom: t('Œuvre d’art'), description: t('Obtenir une carte Full Art'), cible: 1, recompense: { pieces: 100 }, valeur: () => possedees().filter(e => e.fullArts > 0).length },
+    { id: 'premiere-ex', nom: t('Pépite dénichée'), description: t('Obtenir une carte EX'), cible: 1, recompense: { pieces: 50 }, valeur: () => possedees().filter(e => e.exs > 0).length },
+    { id: 'chercheur-pepites', nom: t('Chercheur de pépites'), description: t('Posséder 10 cartes EX différentes'), cible: 10, recompense: { boosters: 10 }, valeur: () => possedees().filter(e => e.exs > 0).length },
     { id: 'galerie-privee', nom: t('Galerie privée'), description: t('Posséder 5 cartes Full Art différentes'), cible: 5, recompense: { pieces: 500 }, valeur: () => possedees().filter(e => e.fullArts > 0).length },
     { id: 'divin', nom: t('Intervention divine'), description: t('Ouvrir un god pack'), cible: 1, recompense: { prestiges: 2 }, valeur: () => etat.godPacks.nombre },
     // Boosters
@@ -2153,7 +2199,7 @@ function init() {
         filtreRarete = puce.dataset.rarete;
         filtrerCollection();
     });
-    for (const id of ['#filtre-genre', '#tri', '#filtre-doublons', '#filtre-fullart']) $(id).addEventListener('change', filtrerCollection);
+    for (const id of ['#filtre-genre', '#tri', '#filtre-doublons', '#filtre-fullart', '#filtre-ex']) $(id).addEventListener('change', filtrerCollection);
     $('#filtre-nom').addEventListener('input', filtrerCollection);
     $('#btn-plus').addEventListener('click', () => {
         limiteCollection += CARTES_PAR_PAGE;
