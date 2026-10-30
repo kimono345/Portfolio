@@ -267,6 +267,7 @@ const STATS_FORCEES = {
     10180: { popularite: 94 },                // Call of Duty: Modern Warfare 2 (2009)
     39140: { popularite: 92 },                // Final Fantasy VII
     1328670: { attaque: 95 },                  // mass effect
+    304240: { popularite: 92 },               // Resident Evil (1996) : le fondateur du survival horror
 };
 
 // Score de prestige des autres jeux : 85 % popularité + 15 % qualité + bonus
@@ -442,7 +443,7 @@ let tousLesJeux = [];
 let jeuxParId = new Map();
 let genresCatalogue = [];
 let groupesTags = {};       // { "Gameplay": ["Réflexion", …], …, "Contenu sensible": […] }
-const ALPHABET_CODES = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const ALPHABET_CODES = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'; 
 const jeuxParRarete = {};
 
 function sauvegarder() {
