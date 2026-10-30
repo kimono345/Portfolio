@@ -22,11 +22,11 @@
 // peut dépasser une Mythique moyenne sur son point fort.
 const RARETES = [
     { id: 'mythique',    nom: t('Mythique'),    quota: null, stats: [55, 100], chance: 0.1, chanceGarantie: 0.1, chancePrestige: 0.2,  chancePrestigeGarantie: 1,  chanceDuel: 3,  revente: 300, prix: 10000 },
-    { id: 'legendaire',  nom: t('Légendaire'),  quota: 110,  stats: [45, 95],  chance: 0.5, chanceGarantie: 0.9, chancePrestige: 1,    chancePrestigeGarantie: 5,  chanceDuel: 7,  revente: 100, prix: 4000 },
-    { id: 'epique',      nom: t('Épique'),      quota: 284,  stats: [35, 84],  chance: 3, chanceGarantie: 19,  chancePrestige: 6,    chancePrestigeGarantie: 94, chanceDuel: 12, revente: 40,  prix: 1500 },
-    { id: 'rare',        nom: t('Rare'),        quota: 1109, stats: [25, 76],  chance: 6, chanceGarantie: 30,  chancePrestige: 22.8, chancePrestigeGarantie: 0,  chanceDuel: 18, revente: 15,  prix: 600 },
-    { id: 'peu-commune', nom: t('Peu commune'), quota: 2257, stats: [15, 68],  chance: 18, chanceGarantie: 50,  chancePrestige: 70,   chancePrestigeGarantie: 0,  chanceDuel: 25, revente: 5,   prix: 250 },
-    { id: 'commune',     nom: t('Commune'),     quota: null, stats: [5, 60],   chance: 72.4, chanceGarantie: 0,   chancePrestige: 0,    chancePrestigeGarantie: 0,  chanceDuel: 35, revente: 2,   prix: 100 },
+    { id: 'legendaire',  nom: t('Légendaire'),  quota: 110,  stats: [45, 97],  chance: 0.5, chanceGarantie: 0.9, chancePrestige: 1,    chancePrestigeGarantie: 5,  chanceDuel: 7,  revente: 100, prix: 4000 },
+    { id: 'epique',      nom: t('Épique'),      quota: 600,  stats: [35, 94],  chance: 2, chanceGarantie: 12,  chancePrestige: 6,    chancePrestigeGarantie: 94, chanceDuel: 12, revente: 40,  prix: 1500 },
+    { id: 'rare',        nom: t('Rare'),        quota: 1109, stats: [30, 91],  chance: 6, chanceGarantie: 30,  chancePrestige: 22.8, chancePrestigeGarantie: 0,  chanceDuel: 18, revente: 15,  prix: 600 },
+    { id: 'peu-commune', nom: t('Peu commune'), quota: 2257, stats: [25, 88],  chance: 18, chanceGarantie: 57,  chancePrestige: 70,   chancePrestigeGarantie: 0,  chanceDuel: 25, revente: 5,   prix: 250 },
+    { id: 'commune',     nom: t('Commune'),     quota: null, stats: [20, 85],  chance: 73.4, chanceGarantie: 0,   chancePrestige: 0,    chancePrestigeGarantie: 0,  chanceDuel: 35, revente: 2,   prix: 100 },
 ];
 const CHANCE_HOLO_PRESTIGE = 0.08; // contre 2 % dans un booster normal
 
@@ -175,8 +175,6 @@ const PLAFONNES_EPIQUE = [
     251570,  // 7 Days to Die
     990080,  // Hogwarts Legacy
     1063730, // New World: Aeternum
-    2669320, // EA SPORTS FC 25
-    3405690, // EA SPORTS FC 26
     960090,  // Bloons TD 6
     322330,  // Don't Starve Together
     700330,  // SCP: Secret Laboratory
@@ -217,6 +215,18 @@ const CULTES_EPIQUES = [
     1693980, // Dead Space (2023)
     2252570, // Football Manager 2024
     1388880, // Doki Doki Literature Club Plus!
+    521890,  // Hello Neighbor
+    859570,  // Secret Neighbor
+    1002300, // Fear & Hunger
+    2171440, // Fear & Hunger 2: Termina
+];
+
+// Ces jeux ne montent jamais au-dessus de Rare
+const PLAFONNES_RARE = [
+    2669320, // EA SPORTS FC 25
+    3405690, // EA SPORTS FC 26
+    2195250, // EA SPORTS FC 24
+    924970,  // Back 4 Blood
 ];
 
 // Stats réglées à la main, quand les données Steam ne reflètent pas le jeu
@@ -501,7 +511,11 @@ function calculerRaretes() {
     }
 
     const plafonnes = new Set(PLAFONNES_EPIQUE);
-    for (const jeu of tousLesJeux) if (plafonnes.has(jeu.id)) jeu.raisons.push(t('plafonné à Épique'));
+    const plafonnesRare = new Set(PLAFONNES_RARE);
+    for (const jeu of tousLesJeux) {
+        if (plafonnes.has(jeu.id)) jeu.raisons.push(t('plafonné à Épique'));
+        if (plafonnesRare.has(jeu.id)) jeu.raisons.push(t('plafonné à Rare'));
+    }
 
     let rang = 0;
     for (const jeu of classement) {
@@ -512,8 +526,9 @@ function calculerRaretes() {
         jeu.rang = ++rang;
         if (cultes.has(jeu.id)) continue;
         const editionMythique = basesMythiques.has(jeu.base);
-        const plafonne = plafonnes.has(jeu.id);
-        let i = indexLibre(jeu, editionMythique || plafonne ? INDEX_EPIQUE : INDEX_LEGENDAIRE);
+        const plafonneRare = plafonnesRare.has(jeu.id);
+        const plafonne = plafonnes.has(jeu.id) || plafonneRare;
+        let i = indexLibre(jeu, plafonneRare ? INDEX_RARE : editionMythique || plafonne ? INDEX_EPIQUE : INDEX_LEGENDAIRE);
         // GOTY et géants : au moins Légendaire, sauf si une autre édition du jeu y est déjà
         const garanti = (GOTY[jeu.id] || jeu.avis >= AVIS_GEANT) && !editionMythique && !plafonne && !vus[INDEX_LEGENDAIRE].has(jeu.base);
         if (garanti && i > INDEX_LEGENDAIRE) i = INDEX_LEGENDAIRE;
