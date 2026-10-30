@@ -39,7 +39,7 @@ const MULTIPLICATEUR_FULL_ART = 5; // revente
 // comme une rareté au-dessus. Jamais holo ni Full Art en même temps.
 const SEUIL_EX_NOTE = 93;   // % d'avis positifs
 const SEUIL_EX_AVIS = 1000; // vrais avis Steam (pas estimés)
-const CHANCE_EX = 1;     // quand un jeu éligible est tiré
+const CHANCE_EX = 0.05;     // quand un jeu éligible est tiré
 const MULTIPLICATEUR_EX = 4; // revente
 
 const INDEX_RARE = RARETES.findIndex(r => r.id === 'rare');
