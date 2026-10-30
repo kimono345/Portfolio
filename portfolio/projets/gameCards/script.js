@@ -1380,13 +1380,19 @@ function afficherAccueil() {
 
 // ---------- Écran collection ----------
 
+// Année qui fait l'Ancienneté d'une carte de la collection (sortie d'origine, année du GOTY)
+const anneeDeCarte = carte => {
+    const jeu = jeuxParId.get(carte.id);
+    return jeu ? anneeOriginale(jeu) : carte.annee;
+};
+
 const TRIS = {
     rarete: (a, b) => indexRarete(a.rarete) - indexRarete(b.rarete) || b.popularite - a.popularite,
     recent: (a, b) => b.obtenue - a.obtenue,
     attaque: (a, b) => b.attaque - a.attaque,
     anciennete: (a, b) => b.anciennete - a.anciennete,
     popularite: (a, b) => b.popularite - a.popularite,
-    annee: (a, b) => (b.annee || 0) - (a.annee || 0),
+    annee: (a, b) => (anneeDeCarte(b) || 0) - (anneeDeCarte(a) || 0),
     nom: (a, b) => a.nom.localeCompare(b.nom, LOCALE),
     exemplaires: (a, b) => b.exemplaires - a.exemplaires,
 };
@@ -1584,8 +1590,9 @@ const TRIS_CATALOGUE = {
     // Stat Qualité de la carte (dans la fourchette de sa rareté), pas la note Steam brute
     qualite: (a, b) => statQualite(b) - statQualite(a) || notePublic(b.note, b.avis) - notePublic(a.note, a.avis),
     metacritic: (a, b) => (b.metacritic ?? -1) - (a.metacritic ?? -1),
-    recent: (a, b) => (b.annee || 0) - (a.annee || 0),
-    ancien: (a, b) => (a.annee || 9999) - (b.annee || 9999),
+    // Année qui fait l'Ancienneté (sortie d'origine, année du GOTY), pas celle de la version Steam
+    recent: (a, b) => (anneeOriginale(b) || 0) - (anneeOriginale(a) || 0),
+    ancien: (a, b) => (anneeOriginale(a) || 9999) - (anneeOriginale(b) || 9999),
     nom: (a, b) => a.nom.localeCompare(b.nom, LOCALE),
 };
 
