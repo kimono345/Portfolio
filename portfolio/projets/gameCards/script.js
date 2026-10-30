@@ -22,11 +22,11 @@
 // peut dépasser une Mythique moyenne sur son point fort.
 const RARETES = [
     { id: 'mythique',    nom: t('Mythique'),    quota: null, stats: [55, 100], chance: 0.1, chanceGarantie: 0.1, chancePrestige: 0.2,  chancePrestigeGarantie: 1,  chanceDuel: 3,  revente: 300, prix: 10000 },
-    { id: 'legendaire',  nom: t('Légendaire'),  quota: 110,  stats: [45, 97],  chance: 0.5, chanceGarantie: 0.9, chancePrestige: 1,    chancePrestigeGarantie: 5,  chanceDuel: 7,  revente: 100, prix: 4000 },
-    { id: 'epique',      nom: t('Épique'),      quota: 600,  stats: [35, 94],  chance: 2, chanceGarantie: 12,  chancePrestige: 6,    chancePrestigeGarantie: 94, chanceDuel: 12, revente: 40,  prix: 1500 },
-    { id: 'rare',        nom: t('Rare'),        quota: 1109, stats: [30, 91],  chance: 6, chanceGarantie: 30,  chancePrestige: 22.8, chancePrestigeGarantie: 0,  chanceDuel: 18, revente: 15,  prix: 600 },
-    { id: 'peu-commune', nom: t('Peu commune'), quota: 2257, stats: [25, 88],  chance: 18, chanceGarantie: 57,  chancePrestige: 70,   chancePrestigeGarantie: 0,  chanceDuel: 25, revente: 5,   prix: 250 },
-    { id: 'commune',     nom: t('Commune'),     quota: null, stats: [20, 85],  chance: 73.4, chanceGarantie: 0,   chancePrestige: 0,    chancePrestigeGarantie: 0,  chanceDuel: 35, revente: 2,   prix: 100 },
+    { id: 'legendaire',  nom: t('Légendaire'),  quota: 110,  stats: [45, 95],  chance: 0.5, chanceGarantie: 0.9, chancePrestige: 1,    chancePrestigeGarantie: 5,  chanceDuel: 7,  revente: 100, prix: 4000 },
+    { id: 'epique',      nom: t('Épique'),      quota: 600,  stats: [35, 90],  chance: 2, chanceGarantie: 12,  chancePrestige: 6,    chancePrestigeGarantie: 94, chanceDuel: 12, revente: 40,  prix: 1500 },
+    { id: 'rare',        nom: t('Rare'),        quota: 1109, stats: [25, 85],  chance: 6, chanceGarantie: 30,  chancePrestige: 22.8, chancePrestigeGarantie: 0,  chanceDuel: 18, revente: 15,  prix: 600 },
+    { id: 'peu-commune', nom: t('Peu commune'), quota: 2257, stats: [15, 80],  chance: 18, chanceGarantie: 57,  chancePrestige: 70,   chancePrestigeGarantie: 0,  chanceDuel: 25, revente: 5,   prix: 250 },
+    { id: 'commune',     nom: t('Commune'),     quota: null, stats: [5, 75],   chance: 73.4, chanceGarantie: 0,   chancePrestige: 0,    chancePrestigeGarantie: 0,  chanceDuel: 35, revente: 2,   prix: 100 },
 ];
 const CHANCE_HOLO_PRESTIGE = 0.08; // contre 2 % dans un booster normal
 
@@ -407,6 +407,8 @@ function sauvegarder() {
 const popularite = avis => Math.max(0, Math.min(100, Math.round(Math.log10(Math.max(1, avis)) * 100 / 6)));
 // Stat Popularité d'une carte, gardée en mémoire sur le jeu (le tri du catalogue la demande pour 115 000 jeux)
 const statPopularite = jeu => (jeu.statPopularite ??= STATS_FORCEES[jeu.id]?.popularite ?? statDeJeu(popularite(jeu.avis), jeu.rarete));
+// Stat Qualité d'une carte, gardée en mémoire de la même façon (tri du catalogue)
+const statQualite = jeu => (jeu.statQualite ??= STATS_FORCEES[jeu.id]?.attaque ?? statDeJeu(notePublic(jeu.note, jeu.avis), jeu.rarete, 50));
 
 // Note public lissée : on fait comme si chaque jeu avait déjà 10 avis à la note moyenne (76 %).
 // 1 avis à 100 % donne 78, mais 10 000 avis à 95 % gardent 95.
@@ -552,7 +554,7 @@ function creerCarte(jeu) {
         id: jeu.id,
         nom: jeu.nom,
         image: `${URL_IMAGES}/${jeu.id}/${jeu.image || 'header.jpg'}`,
-        attaque: STATS_FORCEES[jeu.id]?.attaque ?? statDeJeu(notePublic(jeu.note, jeu.avis), jeu.rarete, 50),
+        attaque: statQualite(jeu),
         // Stat « joker » : la vraie ancienneté, sans lien avec la rareté (une vieille Commune peut battre une Mythique récente)
         anciennete: anciennete(anneeOriginale(jeu)),
         popularite: statPopularite(jeu),
@@ -1478,7 +1480,8 @@ const TRIS_CATALOGUE = {
     rarete: (a, b) => indexRarete(a.rarete) - indexRarete(b.rarete) || b.prestige - a.prestige,
     // Stat Popularité de la carte (dans la fourchette de sa rareté), pas le nombre d'avis brut
     popularite: (a, b) => statPopularite(b) - statPopularite(a) || b.avis - a.avis,
-    note: (a, b) => notePublic(b.note, b.avis) - notePublic(a.note, a.avis),
+    // Stat Qualité de la carte (dans la fourchette de sa rareté), pas la note Steam brute
+    qualite: (a, b) => statQualite(b) - statQualite(a) || notePublic(b.note, b.avis) - notePublic(a.note, a.avis),
     metacritic: (a, b) => (b.metacritic ?? -1) - (a.metacritic ?? -1),
     recent: (a, b) => (b.annee || 0) - (a.annee || 0),
     ancien: (a, b) => (a.annee || 9999) - (b.annee || 9999),
