@@ -266,6 +266,7 @@ const STATS_FORCEES = {
     33230: { popularite: 96 },                // Assassin's Creed II
     10180: { popularite: 94 },                // Call of Duty: Modern Warfare 2 (2009)
     39140: { popularite: 92 },                // Final Fantasy VII
+    1328670: { attaque: 95 },                  // mass effect
 };
 
 // Score de prestige des autres jeux : 85 % popularité + 15 % qualité + bonus
