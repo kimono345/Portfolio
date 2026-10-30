@@ -103,7 +103,7 @@ const gotyDe = id => GOTY[id] && { annee: GOTY[id][0], ceremonie: GOTY[id][1] };
 // Les Mythiques : les jeux les plus cultes et connus, choisis à la main (identifiant Steam)
 const MYTHIQUES = [
     271590,  // Grand Theft Auto V
-    105600,  // Terraria
+    319510,  // Five Nights at Freddy's
     1174180, // Red Dead Redemption 2
     292030,  // The Witcher 3: Wild Hunt
     1086940, // Baldur's Gate 3
@@ -256,6 +256,7 @@ const STATS_FORCEES = {
     //2357570: { attaque: 75, popularite: 88 }, // Overwatch 2 : le CSV date d'avant sa sortie sur Steam
     72850: { attaque: 84 },                   // The Elder Scrolls V: Skyrim (2011)
     12210: { attaque: 91 },                   // GTA IV : note Steam plombée par le portage PC (98 sur Metacritic)
+    319510: { attaque: 97, popularite: 99 },             // Five Nights at Freddy's : phénomène bien au-delà de ses avis Steam
 };
 
 // Score de prestige des autres jeux : 85 % popularité + 15 % qualité + bonus
