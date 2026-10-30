@@ -1691,6 +1691,12 @@ main {
 }
 .succes-gain { display: flex; align-items: center; gap: 0.3rem; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 0.85rem; color: var(--accent); white-space: nowrap; }
 .succes:not(.obtenu) .succes-gain { opacity: 0.6; }
+/* Récompense qui attend d'être récupérée */
+.succes.a-recuperer { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 20px rgba(255, 184, 0, 0.22); }
+.succes-recuperer { margin-top: 0.4rem; padding: 0.3rem 0.9rem; font-size: 0.82rem; }
+.succes.obtenu:not(.a-recuperer) .succes-gain { opacity: 0.55; }
+.succes-gain.gain-full-art { background: linear-gradient(90deg, #ffa0d2, #aad7ff, #bef5dc, #ffe1a0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+#btn-tout-recuperer { margin-left: auto; padding: 0.4rem 0.9rem; font-size: 0.85rem; }
 
 .profil-bloc {
     padding: 1.1rem 1.3rem;

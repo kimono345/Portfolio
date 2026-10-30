@@ -351,6 +351,7 @@ const CLES = {
     godPacks: 'gameCards.godPacks',
     stats: 'gameCards.stats',
     succes: 'gameCards.succes',
+    succesRecuperes: 'gameCards.succesRecuperes',
     malchance: 'gameCards.malchance',
     reglages: 'gameCards.reglages',
 };
@@ -385,6 +386,9 @@ const etat = {
     godPacks: lire(CLES.godPacks, { nombre: 0, premier: null }), // trophée : combien, et la date du premier
     stats: { boosters: 0, prestiges: 0, duelsGagnes: 0, duelsParfaits: 0, ventes: 0, recordPom: 0, ...lire(CLES.stats, {}) },
     succes: lire(CLES.succes, {}),        // { id du succès: date d'obtention }
+    // { id du succès: date de récupération de la récompense }. Les anciennes sauvegardes avaient reçu
+    // leurs récompenses tout de suite : leurs succès déjà obtenus comptent comme récupérés.
+    succesRecuperes: lire(CLES.succesRecuperes, null) ?? { ...lire(CLES.succes, {}) },
     malchance: lire(CLES.malchance, 0),   // boosters ouverts depuis la dernière Légendaire ou Mythique
     reglages: { sons: false, ...lire(CLES.reglages, {}) },
 };
@@ -1729,65 +1733,110 @@ const nombreDeRarete = id => possedees().filter(e => e.rarete === id).length;
 const anneesGotyPossedees = () => new Set(possedees().filter(e => GOTY[e.id]).map(e => GOTY[e.id][0])).size;
 const ANNEES_GOTY = new Set(Object.values(GOTY).map(g => g[0])).size;
 
-// Chaque succès se débloque quand valeur() atteint cible ; la récompense est en pièces
+// Chaque succès se débloque quand valeur() atteint cible ; sa récompense se récupère ensuite dans le profil :
+// { pieces }, { boosters } (classiques, ajoutés à la réserve), { prestiges } ou { fullArt } (une Légendaire ou Mythique au hasard)
 const SUCCES = [
     // Collection
-    { id: 'premier-pas', nom: t('Premier pas'), description: t('Obtenir ta première carte'), cible: 1, recompense: 10, valeur: () => possedees().length },
-    { id: 'collectionneur', nom: t('Collectionneur'), description: t('Posséder 100 jeux différents'), cible: 100, recompense: 50, valeur: () => possedees().length },
-    { id: 'archiviste', nom: t('Archiviste'), description: t('Posséder 500 jeux différents'), cible: 500, recompense: 150, valeur: () => possedees().length },
-    { id: 'conservateur', nom: t('Conservateur de musée'), description: t('Posséder 1 000 jeux différents'), cible: 1000, recompense: 400, valeur: () => possedees().length },
-    { id: 'premiere-rare', nom: t('Ça devient rare'), description: t('Obtenir une carte Rare'), cible: 1, recompense: 10, valeur: () => nombreDeRarete('rare') },
-    { id: 'premiere-epique', nom: t('Épique !'), description: t('Obtenir une carte Épique'), cible: 1, recompense: 25, valeur: () => nombreDeRarete('epique') },
-    { id: 'premiere-legendaire', nom: t('Une légende'), description: t('Obtenir une carte Légendaire'), cible: 1, recompense: 75, valeur: () => nombreDeRarete('legendaire') },
-    { id: 'premiere-mythique', nom: t('Mythe vivant'), description: t('Obtenir une carte Mythique'), cible: 1, recompense: 250, valeur: () => nombreDeRarete('mythique') },
-    { id: 'pantheon', nom: t('Panthéon'), description: t('Posséder 5 Mythiques différentes'), cible: 5, recompense: 500, valeur: () => nombreDeRarete('mythique') },
-    { id: 'olympe', nom: t('Olympe'), description: t('Posséder toutes les Mythiques'), cible: MYTHIQUES.length, recompense: 2000, valeur: () => nombreDeRarete('mythique') },
-    { id: 'palmares', nom: t('Palmarès'), description: t('Posséder 5 jeux de l’année (années différentes)'), cible: 5, recompense: 150, valeur: anneesGotyPossedees },
-    { id: 'tous-goty', nom: t('Toutes les cérémonies'), description: t('Posséder un jeu de l’année pour chaque année'), cible: ANNEES_GOTY, recompense: 1000, valeur: anneesGotyPossedees },
-    { id: 'critique', nom: t('Critique avisé'), description: t('Posséder 10 chefs-d’œuvre (Metacritic 90+)'), cible: 10, recompense: 100, valeur: () => possedees().filter(e => e.metacritic >= SEUIL_CHEF_OEUVRE).length },
-    { id: 'brillant', nom: t('Tout ce qui brille'), description: t('Obtenir une carte holo'), cible: 1, recompense: 50, valeur: () => possedees().filter(e => e.holos > 0).length },
-    { id: 'galerie-holo', nom: t('Galerie des glaces'), description: t('Posséder 10 cartes holo différentes'), cible: 10, recompense: 200, valeur: () => possedees().filter(e => e.holos > 0).length },
-    { id: 'oeuvre-art', nom: t('Œuvre d’art'), description: t('Obtenir une carte Full Art'), cible: 1, recompense: 100, valeur: () => possedees().filter(e => e.fullArts > 0).length },
-    { id: 'galerie-privee', nom: t('Galerie privée'), description: t('Posséder 5 cartes Full Art différentes'), cible: 5, recompense: 500, valeur: () => possedees().filter(e => e.fullArts > 0).length },
-    { id: 'divin', nom: t('Intervention divine'), description: t('Ouvrir un god pack'), cible: 1, recompense: 500, valeur: () => etat.godPacks.nombre },
+    { id: 'premier-pas', nom: t('Premier pas'), description: t('Obtenir ta première carte'), cible: 1, recompense: { boosters: 10 }, valeur: () => possedees().length },
+    { id: 'collectionneur', nom: t('Collectionneur'), description: t('Posséder 100 jeux différents'), cible: 100, recompense: { pieces: 50 }, valeur: () => possedees().length },
+    { id: 'archiviste', nom: t('Archiviste'), description: t('Posséder 500 jeux différents'), cible: 500, recompense: { prestiges: 1 }, valeur: () => possedees().length },
+    { id: 'conservateur', nom: t('Conservateur de musée'), description: t('Posséder 1 000 jeux différents'), cible: 1000, recompense: { prestiges: 2 }, valeur: () => possedees().length },
+    { id: 'premiere-rare', nom: t('Ça devient rare'), description: t('Obtenir une carte Rare'), cible: 1, recompense: { pieces: 10 }, valeur: () => nombreDeRarete('rare') },
+    { id: 'premiere-epique', nom: t('Épique !'), description: t('Obtenir une carte Épique'), cible: 1, recompense: { boosters: 10 }, valeur: () => nombreDeRarete('epique') },
+    { id: 'premiere-legendaire', nom: t('Une légende'), description: t('Obtenir une carte Légendaire'), cible: 1, recompense: { pieces: 75 }, valeur: () => nombreDeRarete('legendaire') },
+    { id: 'premiere-mythique', nom: t('Mythe vivant'), description: t('Obtenir une carte Mythique'), cible: 1, recompense: { prestiges: 1 }, valeur: () => nombreDeRarete('mythique') },
+    { id: 'salle-legendes', nom: t('Salle des légendes'), description: t('Posséder 25 Légendaires différentes'), cible: 25, recompense: { fullArt: 1 }, valeur: () => nombreDeRarete('legendaire') },
+    { id: 'pantheon', nom: t('Panthéon'), description: t('Posséder 5 Mythiques différentes'), cible: 5, recompense: { pieces: 500 }, valeur: () => nombreDeRarete('mythique') },
+    { id: 'olympe', nom: t('Olympe'), description: t('Posséder toutes les Mythiques'), cible: MYTHIQUES.length, recompense: { pieces: 2000 }, valeur: () => nombreDeRarete('mythique') },
+    { id: 'palmares', nom: t('Palmarès'), description: t('Posséder 5 jeux de l’année (années différentes)'), cible: 5, recompense: { prestiges: 1 }, valeur: anneesGotyPossedees },
+    { id: 'tous-goty', nom: t('Toutes les cérémonies'), description: t('Posséder un jeu de l’année pour chaque année'), cible: ANNEES_GOTY, recompense: { pieces: 1000 }, valeur: anneesGotyPossedees },
+    { id: 'critique', nom: t('Critique avisé'), description: t('Posséder 10 chefs-d’œuvre (Metacritic 90+)'), cible: 10, recompense: { boosters: 10 }, valeur: () => possedees().filter(e => e.metacritic >= SEUIL_CHEF_OEUVRE).length },
+    { id: 'brillant', nom: t('Tout ce qui brille'), description: t('Obtenir une carte holo'), cible: 1, recompense: { pieces: 50 }, valeur: () => possedees().filter(e => e.holos > 0).length },
+    { id: 'galerie-holo', nom: t('Galerie des glaces'), description: t('Posséder 10 cartes holo différentes'), cible: 10, recompense: { prestiges: 1 }, valeur: () => possedees().filter(e => e.holos > 0).length },
+    { id: 'oeuvre-art', nom: t('Œuvre d’art'), description: t('Obtenir une carte Full Art'), cible: 1, recompense: { pieces: 100 }, valeur: () => possedees().filter(e => e.fullArts > 0).length },
+    { id: 'galerie-privee', nom: t('Galerie privée'), description: t('Posséder 5 cartes Full Art différentes'), cible: 5, recompense: { pieces: 500 }, valeur: () => possedees().filter(e => e.fullArts > 0).length },
+    { id: 'divin', nom: t('Intervention divine'), description: t('Ouvrir un god pack'), cible: 1, recompense: { prestiges: 2 }, valeur: () => etat.godPacks.nombre },
     // Boosters
-    { id: 'boosters-10', nom: t('Déchireur'), description: t('Ouvrir 10 boosters'), cible: 10, recompense: 20, valeur: () => etat.stats.boosters },
-    { id: 'boosters-100', nom: t('Accro aux boosters'), description: t('Ouvrir 100 boosters'), cible: 100, recompense: 100, valeur: () => etat.stats.boosters },
-    { id: 'boosters-500', nom: t('Usine à cartes'), description: t('Ouvrir 500 boosters'), cible: 500, recompense: 300, valeur: () => etat.stats.boosters },
-    { id: 'boosters-1000', nom: t('Mille paquets'), description: t('Ouvrir 1 000 boosters'), cible: 1000, recompense: 600, valeur: () => etat.stats.boosters },
-    { id: 'grand-luxe', nom: t('Grand luxe'), description: t('Ouvrir un booster Prestige'), cible: 1, recompense: 30, valeur: () => etat.stats.prestiges },
-    { id: 'habitue-prestige', nom: t('Habitué du Prestige'), description: t('Ouvrir 30 boosters Prestige'), cible: 30, recompense: 200, valeur: () => etat.stats.prestiges },
+    { id: 'boosters-10', nom: t('Déchireur'), description: t('Ouvrir 10 boosters'), cible: 10, recompense: { boosters: 10 }, valeur: () => etat.stats.boosters },
+    { id: 'boosters-100', nom: t('Accro aux boosters'), description: t('Ouvrir 100 boosters'), cible: 100, recompense: { pieces: 100 }, valeur: () => etat.stats.boosters },
+    { id: 'boosters-500', nom: t('Usine à cartes'), description: t('Ouvrir 500 boosters'), cible: 500, recompense: { prestiges: 2 }, valeur: () => etat.stats.boosters },
+    { id: 'boosters-1000', nom: t('Mille paquets'), description: t('Ouvrir 1 000 boosters'), cible: 1000, recompense: { pieces: 600 }, valeur: () => etat.stats.boosters },
+    { id: 'grand-luxe', nom: t('Grand luxe'), description: t('Ouvrir un booster Prestige'), cible: 1, recompense: { pieces: 30 }, valeur: () => etat.stats.prestiges },
+    { id: 'habitue-prestige', nom: t('Habitué du Prestige'), description: t('Ouvrir 30 boosters Prestige'), cible: 30, recompense: { pieces: 200 }, valeur: () => etat.stats.prestiges },
     // Jeux
-    { id: 'premier-sang', nom: t('Premier sang'), description: t('Gagner un duel'), cible: 1, recompense: 20, valeur: () => etat.stats.duelsGagnes },
-    { id: 'duelliste', nom: t('Duelliste'), description: t('Gagner 10 duels'), cible: 10, recompense: 100, valeur: () => etat.stats.duelsGagnes },
-    { id: 'champion', nom: t('Champion'), description: t('Gagner 50 duels'), cible: 50, recompense: 300, valeur: () => etat.stats.duelsGagnes },
-    { id: 'sans-appel', nom: t('Sans appel'), description: t('Gagner un duel 3 à 0'), cible: 1, recompense: 50, valeur: () => etat.stats.duelsParfaits },
-    { id: 'bon-instinct', nom: t('Bon instinct'), description: t('Enchaîner 5 bonnes réponses au Plus ou moins'), cible: 5, recompense: 20, valeur: () => etat.stats.recordPom },
-    { id: 'encyclopedie', nom: t('Encyclopédie'), description: t('Enchaîner 15 bonnes réponses au Plus ou moins'), cible: 15, recompense: 100, valeur: () => etat.stats.recordPom },
-    { id: 'oracle', nom: t('Oracle'), description: t('Enchaîner 30 bonnes réponses au Plus ou moins'), cible: 30, recompense: 300, valeur: () => etat.stats.recordPom },
+    { id: 'premier-sang', nom: t('Premier sang'), description: t('Gagner un duel'), cible: 1, recompense: { boosters: 10 }, valeur: () => etat.stats.duelsGagnes },
+    { id: 'duelliste', nom: t('Duelliste'), description: t('Gagner 10 duels'), cible: 10, recompense: { pieces: 100 }, valeur: () => etat.stats.duelsGagnes },
+    { id: 'champion', nom: t('Champion'), description: t('Gagner 50 duels'), cible: 50, recompense: { prestiges: 1 }, valeur: () => etat.stats.duelsGagnes },
+    { id: 'sans-appel', nom: t('Sans appel'), description: t('Gagner un duel 3 à 0'), cible: 1, recompense: { pieces: 50 }, valeur: () => etat.stats.duelsParfaits },
+    { id: 'bon-instinct', nom: t('Bon instinct'), description: t('Enchaîner 5 bonnes réponses au Plus ou moins'), cible: 5, recompense: { boosters: 10 }, valeur: () => etat.stats.recordPom },
+    { id: 'encyclopedie', nom: t('Encyclopédie'), description: t('Enchaîner 15 bonnes réponses au Plus ou moins'), cible: 15, recompense: { pieces: 100 }, valeur: () => etat.stats.recordPom },
+    { id: 'oracle', nom: t('Oracle'), description: t('Enchaîner 30 bonnes réponses au Plus ou moins'), cible: 30, recompense: { prestiges: 1 }, valeur: () => etat.stats.recordPom },
     // Commerce
-    { id: 'marchand', nom: t('Marchand'), description: t('Revendre un doublon'), cible: 1, recompense: 10, valeur: () => etat.stats.ventes },
-    { id: 'grossiste', nom: t('Grossiste'), description: t('Revendre 100 doublons'), cible: 100, recompense: 100, valeur: () => etat.stats.ventes },
+    { id: 'marchand', nom: t('Marchand'), description: t('Revendre un doublon'), cible: 1, recompense: { pieces: 10 }, valeur: () => etat.stats.ventes },
+    { id: 'grossiste', nom: t('Grossiste'), description: t('Revendre 100 doublons'), cible: 100, recompense: { pieces: 100 }, valeur: () => etat.stats.ventes },
 ];
 
-// Débloque les succès atteints, verse leurs récompenses et les annonce
+// Débloque les succès atteints et les annonce ; leurs récompenses attendent d'être récupérées dans le profil
 function verifierSucces() {
     const nouveaux = SUCCES.filter(s => !etat.succes[s.id] && s.valeur() >= s.cible);
     if (!nouveaux.length) return;
-    for (const s of nouveaux) {
-        etat.succes[s.id] = Date.now();
-        etat.pieces += s.recompense;
+    for (const s of nouveaux) etat.succes[s.id] = Date.now();
+    sauvegarder();
+    jouerSon('succes');
+    if (nouveaux.length > 3) {
+        toast(t('{n} succès débloqués ! Récupère tes récompenses dans le Profil', { n: nouveaux.length }), 'gain');
+    } else {
+        for (const s of nouveaux) toast(t('Succès « {nom} » débloqué ! Récupère ta récompense dans le Profil', { nom: s.nom }), 'gain');
+    }
+    majBadgeSucces();
+    if (!$('#ecran-profil').hidden) afficherProfil();
+}
+
+const succesARecuperer = () => SUCCES.filter(s => etat.succes[s.id] && !etat.succesRecuperes[s.id]);
+
+// Pastille sur le menu Profil tant qu'une récompense attend
+function majBadgeSucces() {
+    $('#lien-profil').classList.toggle('pret', succesARecuperer().length > 0);
+}
+
+// « +50 pièces », « +2 boosters », « Carte Full Art » : texte de la récompense, avec la pièce dessinée si piece est vrai
+function texteRecompense(r, piece = true) {
+    if (r.pieces) return piece ? `+${nombre(r.pieces)} ${PIECE}` : t('+{n} pièces', { n: nombre(r.pieces) });
+    if (r.boosters) return tn(r.boosters, '+{n} booster', '+{n} boosters');
+    if (r.prestiges) return tn(r.prestiges, '+{n} Prestige', '+{n} Prestiges');
+    return t('Carte Full Art');
+}
+
+// Verse la récompense d'un succès obtenu (une seule fois)
+function recupererSucces(id) {
+    const succes = SUCCES.find(s => s.id === id);
+    if (!succes || !etat.succes[id] || etat.succesRecuperes[id] || !donneesPretes()) return;
+    const r = succes.recompense;
+    etat.succesRecuperes[id] = Date.now();
+    let carte = null;
+    if (r.pieces) etat.pieces += r.pieces;
+    // Les boosters gagnés s'ajoutent à la réserve, même au-delà de son maximum
+    if (r.boosters) etat.charges.standard.charges += r.boosters;
+    if (r.prestiges) etat.charges.prestige.charges += r.prestiges;
+    if (r.fullArt) {
+        carte = piocher(tirerRarete('chance', RARETES.slice(0, INDEX_LEGENDAIRE + 1)));
+        ajouterACollection(carte, false, true);
     }
     sauvegarder();
     majEntete();
+    majBadgeSucces();
     jouerSon('succes');
-    if (nouveaux.length > 3) {
-        const total = nouveaux.reduce((n, s) => n + s.recompense, 0);
-        toast(t('{n} succès débloqués ! +{total} pièces', { n: nouveaux.length, total: nombre(total) }), 'gain');
-    } else {
-        for (const s of nouveaux) toast(t('Succès « {nom} » ! +{n} pièces', { nom: s.nom, n: nombre(s.recompense) }), 'gain');
-    }
-    if (!$('#ecran-profil').hidden) afficherProfil();
+    if (r.pieces) toast(texteRecompense(r, false), 'gain');
+    if (r.boosters) toast(tn(r.boosters, '+{n} booster ajouté à ta réserve', '+{n} boosters ajoutés à ta réserve'), 'gain');
+    if (r.prestiges) toast(tn(r.prestiges, '+{n} Prestige ajouté à ta réserve', '+{n} Prestiges ajoutés à ta réserve'), 'gain');
+    if (carte) toast(t('{nom} en Full Art rejoint ta collection !', { nom: carte.nom }), 'gain');
+    afficherProfil();
+    verifierSucces(); // la carte gagnée peut débloquer d'autres succès
+    if (carte) afficherFiche(carte.id);
+}
+
+function toutRecuperer() {
+    for (const s of succesARecuperer()) recupererSucces(s.id);
 }
 
 // ---------- Écran profil ----------
@@ -1800,20 +1849,24 @@ function afficherProfil() {
     $('#succes-compte').textContent = `${faits} / ${SUCCES.length}`;
     $('#succes-grille').innerHTML = SUCCES.map(succes => {
         const obtenu = etat.succes[succes.id];
+        const aRecuperer = obtenu && !etat.succesRecuperes[succes.id];
         const valeur = Math.min(succes.valeur(), succes.cible);
         return `
-            <article class="succes${obtenu ? ' obtenu' : ''}">
+            <article class="succes${obtenu ? ' obtenu' : ''}${aRecuperer ? ' a-recuperer' : ''}">
                 ${ICONES.trophee}
                 <div class="succes-texte">
                     <h3>${succes.nom}</h3>
                     <p>${succes.description}</p>
-                    ${obtenu
-                        ? `<span class="succes-date">${t('Obtenu le {date}', { date: new Date(obtenu).toLocaleDateString(LOCALE) })}</span>`
-                        : `<span class="succes-progres"><i style="--v: ${(valeur / succes.cible) * 100}%"></i>${nombre(valeur)} / ${nombre(succes.cible)}</span>`}
+                    ${aRecuperer
+                        ? `<button class="btn btn-or succes-recuperer" data-recuperer="${succes.id}">${t('Récupérer')}</button>`
+                        : obtenu
+                            ? `<span class="succes-date">${t('Obtenu le {date}', { date: new Date(obtenu).toLocaleDateString(LOCALE) })}</span>`
+                            : `<span class="succes-progres"><i style="--v: ${(valeur / succes.cible) * 100}%"></i>${nombre(valeur)} / ${nombre(succes.cible)}</span>`}
                 </div>
-                <span class="succes-gain">+${nombre(succes.recompense)} ${PIECE}</span>
+                <span class="succes-gain${succes.recompense.fullArt ? ' gain-full-art' : ''}">${texteRecompense(succes.recompense)}</span>
             </article>`;
     }).join('');
+    $('#btn-tout-recuperer').hidden = succesARecuperer().length < 2;
     $('#reglage-sons').checked = etat.reglages.sons;
     $('#reglage-langue').value = LANGUE;
 }
@@ -2185,6 +2238,11 @@ function init() {
         sauvegarder();
         location.reload();
     });
+    $('#succes-grille').addEventListener('click', e => {
+        const bouton = e.target.closest('[data-recuperer]');
+        if (bouton) recupererSucces(bouton.dataset.recuperer);
+    });
+    $('#btn-tout-recuperer').addEventListener('click', toutRecuperer);
     $('#btn-exporter').addEventListener('click', exporterSauvegarde);
     $('#btn-importer').addEventListener('click', () => $('#fichier-import').click());
     $('#fichier-import').addEventListener('change', e => {
@@ -2226,6 +2284,7 @@ function init() {
             if (ecran === 'profil') afficherProfil();
             if (!$('#mode-pom').hidden) nouvelleQuestionPom();
             verifierSucces(); // succès déjà atteints par une collection existante
+            majBadgeSucces();
         })
         .catch(e => {
             console.error(e);

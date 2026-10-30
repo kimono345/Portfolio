@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=59">
+    <link rel="stylesheet" href="style.css?v=60">
 </head>
 <body>
 
@@ -55,7 +55,7 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg>
                 <span data-i18n>Règles</span>
             </a>
-            <a href="#profil" data-ecran="profil">
+            <a href="#profil" data-ecran="profil" id="lien-profil">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
                 <span data-i18n>Profil</span>
             </a>
@@ -358,7 +358,7 @@
                 </article>
                 <article>
                     <h3 data-i18n>🏆 Succès</h3>
-                    <p data-i18n="regle-succes">Une trentaine d’objectifs (collection, boosters, duels, Plus ou moins) qui rapportent des pièces. Ils sont tous dans l’onglet Profil.</p>
+                    <p data-i18n="regle-succes">Une trentaine d’objectifs (collection, boosters, duels, Plus ou moins). Quand un succès est atteint, va dans l’onglet Profil pour récupérer sa récompense : des pièces, des boosters, des Prestiges, et même une carte Full Art au hasard.</p>
                 </article>
                 <article>
                     <h3 data-i18n>🍀 Compteur de malchance</h3>
@@ -382,7 +382,8 @@
                 <p id="resume-profil"></p>
             </div>
 
-            <h2 class="profil-titre" data-i18n-texte>Succès <span id="succes-compte"></span></h2>
+            <h2 class="profil-titre" data-i18n-texte>Succès <span id="succes-compte"></span>
+                <button class="btn btn-or" id="btn-tout-recuperer" hidden data-i18n>Tout récupérer</button></h2>
             <div class="succes-grille" id="succes-grille"></div>
 
             <h2 class="profil-titre" data-i18n>Réglages</h2>
@@ -432,7 +433,7 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="i18n.js?v=7"></script>
-    <script src="script.js?v=89"></script>
+    <script src="i18n.js?v=8"></script>
+    <script src="script.js?v=91"></script>
 </body>
 </html>
