@@ -916,6 +916,14 @@ main {
    CARTE
    ========================================================= */
 
+/* Cartes et boosters : texte non sélectionnable et images non déplaçables (clics répétés, glisser sur mobile) */
+.carte, .flip, .paquet, .dos-carte, .vente-option, .deck-slot {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+.carte img, .paquet img { -webkit-user-drag: none; }
+
 /* Effets animés en pause par défaut (grilles de cartes) : --effets est repris par chaque effet */
 .carte { --effets: paused; }
 .carte:hover,
