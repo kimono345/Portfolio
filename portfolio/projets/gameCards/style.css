@@ -1658,7 +1658,43 @@ main {
 }
 .deck-outils select option { background: var(--fond-2); }
 .carte-choix, .carte-main { border-radius: 14px; transition: transform 0.15s, box-shadow 0.15s; }
-.carte-choix.choisie, .carte-main.choisie { transform: translateY(-6px); box-shadow: 0 0 0 3px var(--accent), 0 0 24px rgba(255, 184, 0, 0.45); }
+.carte-main.choisie { transform: translateY(-6px); box-shadow: 0 0 0 3px var(--accent), 0 0 24px rgba(255, 184, 0, 0.45); }
+/* Carte déjà placée dans le deck : grisée dans la liste (un clic la retire) */
+.carte-choix.choisie { opacity: 0.35; }
+.carte-choix:not(.choisie):hover { transform: translateY(-4px); }
+/* Les emplacements du deck, en haut */
+.deck-slots { display: grid; grid-template-columns: repeat(3, minmax(0, 150px)); gap: 0.9rem; justify-content: center; margin: 0.6rem 0 1.2rem; }
+.deck-slot {
+    position: relative;
+    aspect-ratio: 5 / 7;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    border: 2px dashed var(--bord-fort);
+    color: var(--texte-doux);
+    font-size: 2rem;
+    font-weight: 900;
+}
+.deck-slot.plein { border: none; transition: transform 0.15s; }
+.deck-slot.plein:hover { transform: translateY(-4px); }
+.deck-slot.arrive { animation: slot-arrive 0.35s cubic-bezier(0.2, 0.8, 0.3, 1.4); }
+@keyframes slot-arrive { from { transform: scale(0.6); opacity: 0; } }
+.slot-retirer {
+    position: absolute;
+    top: -9px;
+    right: -9px;
+    z-index: 4;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--rouge);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 900;
+    box-shadow: 0 0 0 3px var(--fond), 0 4px 10px rgba(0, 0, 0, 0.5);
+}
 .carte-main:not(:disabled):hover { transform: translateY(-4px); }
 .carte-main:disabled { cursor: default; }
 .decks-main { display: grid; grid-template-columns: repeat(3, minmax(0, 150px)); gap: 0.8rem; justify-content: center; margin: 1rem 0; }
@@ -1736,14 +1772,6 @@ main {
 }
 
 /* Animations du combat */
-/* Pile ou face : la pièce monte en tournant et retombe */
-.pile-ou-face { display: grid; place-items: center; height: 240px; perspective: 600px; }
-.pile-ou-face .piece { font-size: 5rem; animation: pile-ou-face 1.2s cubic-bezier(0.3, 0.7, 0.4, 1) forwards; }
-@keyframes pile-ou-face {
-    0% { transform: translateY(50px) rotateY(0) scale(0.6); }
-    50% { transform: translateY(-60px) rotateY(900deg) scale(1.1); }
-    100% { transform: translateY(0) rotateY(1800deg) scale(1); }
-}
 /* Cartes posées : la tienne monte depuis ta main, celle de l'ordinateur descend de la sienne */
 .decks-combat .arrivee-moi > :first-child { animation: pose-moi 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.2) both; }
 .decks-combat .arrivee-ordi > :first-child { animation: pose-ordi 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.2) both; }

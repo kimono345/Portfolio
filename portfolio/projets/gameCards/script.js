@@ -2054,7 +2054,7 @@ const TRIS_DECK = {
 };
 
 const deckDuel = {
-    etape: 'niveau', niveau: null, choix: [], recherche: '', tri: 'total', limite: CARTES_CHOIX_DECK,
+    etape: 'niveau', niveau: null, choix: [], dernierAjout: null, recherche: '', tri: 'total', limite: CARTES_CHOIX_DECK,
     moi: [], ordi: [], score: { moi: 0, ordi: 0 }, attaquant: 'moi',
     attente: null,   // 'attaque' (choisir une carte puis une stat), 'defense' (choisir une carte), ou rien
     carte: null,     // index de la carte choisie pour attaquer
@@ -2062,7 +2062,6 @@ const deckDuel = {
     // revele (elle se retourne pendant l'animation), arrivee (elle vient d'être posée) }
     combat: null,
     actions: null,   // boutons du moment : 'suivante', 'decisive' ou 'fin'
-    lancer: false,   // pièce de pile ou face en l'air
     pointMarque: null, // 'moi' ou 'ordi' : le point qui vient d'être marqué (petite animation)
     verrou: false,   // animation en cours, les clics attendent
     message: '',
@@ -2141,8 +2140,17 @@ function choixDeckHTML() {
         .filter(e => !recherche || e.nom.toLowerCase().includes(recherche))
         .sort((a, b) => valeur(b) - valeur(a) || totalStats(b) - totalStats(a));
     return `
-        <p class="duel-message">${t('Niveau {niveau} : choisis {n} cartes de ta collection ({choisies} / {n}).',
-            { niveau: d.niveau.nom, n: TAILLE_DECK, choisies: d.choix.length })}</p>
+        <p class="duel-message">${t('Niveau {niveau} : clique sur tes cartes pour remplir les {n} emplacements de ton deck.',
+            { niveau: d.niveau.nom, n: TAILLE_DECK })}</p>
+        <div class="deck-slots">${Array.from({ length: TAILLE_DECK }, (_, i) => {
+            const carte = etat.collection[d.choix[i]];
+            return carte
+                ? `<button class="deck-slot plein${carte.id === d.dernierAjout ? ' arrive' : ''}" data-choix-deck="${carte.id}"
+                        aria-label="${t('Retirer {nom} du deck', { nom: echapper(carte.nom) })}">
+                        ${carteHTML(carte, { holo: carte.holos > 0 })}<span class="slot-retirer" aria-hidden="true">✕</span>
+                    </button>`
+                : `<div class="deck-slot"><span>${i + 1}</span></div>`;
+        }).join('')}</div>
         <div class="duel-actions">
             <button class="btn" data-deck-action="niveaux">${t('Changer de difficulté')}</button>
             <button class="btn btn-principal" data-deck-action="lancer"${d.choix.length === TAILLE_DECK ? '' : ' disabled'}>${t('Lancer la partie')}</button>
@@ -2214,9 +2222,7 @@ function plateauDeckHTML() {
     const total = carte => (c && c.stat === null && carte ? `<span class="total-deck">Σ ${totalStats(carte)}</span>` : '');
     const carteOrdi = !c?.ordi ? '' : c.revele ? flipHTML(c.ordi) : c.cache ? dos : carteHTML(c.ordi);
     const mainOrdi = d.ordi.filter(carte => carte !== c?.ordi);
-    const table = d.lancer
-        ? `<div class="pile-ou-face" aria-hidden="true">${PIECE}</div>`
-        : `${annonceStatHTML()}
+    const table = `${annonceStatHTML()}
         <div class="decks-combat${c?.ecart !== undefined ? ' compare' : ''}">
             <div class="duel-emplacement${resultat('moi')}${['moi', 'les-deux'].includes(c?.arrivee) ? ' arrivee-moi' : ''}" data-titre="${t('Ta carte')}">
                 ${c?.moi ? carteHTML(c.moi, { holo: c.moi.holos > 0 }) : ''}${total(c?.moi)}
@@ -2256,7 +2262,7 @@ function afficherDuelDecks() {
 const surlignerStatDeck = stat => document.querySelectorAll(`#mode-decks .decks-combat li[data-stat="${stat}"]`)
     .forEach(li => li.classList.add('stat-choisie'));
 
-async function lancerPartieDecks() {
+function lancerPartieDecks() {
     const d = deckDuel;
     d.choix = d.choix.filter(id => etat.collection[id]);
     if (!donneesPretes() || d.choix.length < TAILLE_DECK) return afficherDuelDecks();
@@ -2267,11 +2273,7 @@ async function lancerPartieDecks() {
         attaquant: Math.random() < 0.5 ? 'moi' : 'ordi',
         etape: 'partie', combat: null, actions: null, attente: null, pointMarque: null,
     });
-    // Pile ou face : la pièce tourne en l'air, puis on annonce qui commence
-    Object.assign(d, { lancer: true, verrou: true, message: t('Pile ou face…') });
-    afficherDuelDecks();
-    await attendre(1300);
-    Object.assign(d, { lancer: false, verrou: false });
+    // Le premier attaquant est tiré au sort, le gros message de la première manche l'annonce
     mancheDecks(true);
 }
 
@@ -2386,6 +2388,7 @@ function actionDuelDecks(element) {
         const id = Number(choixDeck);
         if (d.choix.includes(id)) d.choix = d.choix.filter(x => x !== id);
         else if (d.choix.length < TAILLE_DECK) d.choix.push(id);
+        d.dernierAjout = d.choix.includes(id) ? id : null; // la carte qui vient d'arriver dans un emplacement s'anime
     } else if (carteMain !== undefined) {
         const i = Number(carteMain);
         if (d.attente === 'defense') return resoudreMancheDecks(d.moi[i], d.combat.ordi, d.combat.stat);
