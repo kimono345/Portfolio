@@ -1509,22 +1509,35 @@ function raisonRarete(jeu) {
     return `${t('Rang {n} au score de prestige', { n: nombre(jeu.rang) })}${raisons}`;
 }
 
-// Une seule variante : vente directe. Plusieurs : « Vendre » ouvre le choix de l'exemplaire
+const variantesPossedees = e => Object.entries(exemplairesParVariante(e)).filter(([, n]) => n > 0);
+
+// Une seule variante : vente directe. Plusieurs : « Vendre… » ouvre la fenêtre du choix de l'exemplaire
 function boutonsVenteHTML(e) {
-    const variantes = Object.entries(exemplairesParVariante(e)).filter(([, n]) => n > 0);
+    const variantes = variantesPossedees(e);
     if (variantes.length === 1) {
         const [variante] = variantes[0];
         return `<button class="btn btn-or" data-vendre="${e.id}" data-variante="${variante}">${t('Vendre')} · +${prixVariante(e, variante)} ${PIECE}</button>`;
     }
-    return `<button class="btn btn-or" data-choix-vente>${t('Vendre…')}</button>
-        <div class="fiche-vente" hidden>
-            <p>${t('Quel exemplaire veux-tu vendre ?')}</p>
-            ${variantes.map(([variante, n]) => `
-                <button class="btn" data-vendre="${e.id}" data-variante="${variante}">
-                    ${VARIANTES[variante].nom} <span class="gris">×${n}</span> · +${prixVariante(e, variante)} ${PIECE}
-                </button>`).join('')}
-            <button class="btn" data-annuler-vente>${t('Annuler')}</button>
-        </div>`;
+    return `<button class="btn btn-or" data-choix-vente="${e.id}">${t('Vendre…')}</button>`;
+}
+
+// Fenêtre par-dessus la fiche : chaque variante possédée, avec sa carte, son nombre et son prix
+function choisirVente(id) {
+    const e = etat.collection[id];
+    if (!e) return;
+    const jeu = jeuxParId.get(id);
+    // Stats de la variante : l'EX a les siennes, les autres celles de la carte normale
+    const carteDe = variante => jeu ? creerCarte(jeu, { ex: variante === 'ex' }) : e;
+    $('#vente-contenu').innerHTML = `
+        <h2>${t('Quel exemplaire veux-tu vendre ?')}</h2>
+        <p class="vente-nom">${echapper(e.nom)}</p>
+        <div class="vente-options">${variantesPossedees(e).map(([variante, n]) => `
+            <button class="vente-option" data-vendre="${id}" data-variante="${variante}">
+                ${carteHTML(carteDe(variante), { holo: variante === 'holo', fullArt: variante === 'fullArt', ex: variante === 'ex' })}
+                <span class="vente-variante">${VARIANTES[variante].nom} <span class="gris">×${n}</span></span>
+                <span class="vente-prix">+${prixVariante(e, variante)} ${PIECE}</span>
+            </button>`).join('')}</div>`;
+    $('#modale-vente').showModal();
 }
 
 function afficherFiche(id) {
@@ -2694,6 +2707,7 @@ function inclinerVers(element, e) {
 function afficherEcran(nom) {
     if (!document.getElementById(`ecran-${nom}`)) nom = 'accueil';
     document.querySelectorAll('.ecran').forEach(e => (e.hidden = e.id !== `ecran-${nom}`));
+    document.body.dataset.ecran = nom; // couleur de l'écran (fond, titre, menu)
     document.querySelectorAll('.menu a').forEach(a => {
         if (a.dataset.ecran === nom) a.setAttribute('aria-current', 'page');
         else a.removeAttribute('aria-current');
@@ -2784,17 +2798,13 @@ function init() {
         const vendre = e.target.closest('[data-vendre]');
         if (vendre) {
             const id = Number(vendre.dataset.vendre);
+            if ($('#modale-vente').open) $('#modale-vente').close();
             vendreDepuisFiche(id, vendre.dataset.variante);
             if ($('#modale').open) afficherFiche(id);
             return;
         }
-        const choixVente = e.target.closest('[data-choix-vente], [data-annuler-vente]');
-        if (choixVente) {
-            const choisir = choixVente.matches('[data-choix-vente]');
-            $('#modale [data-choix-vente]').hidden = choisir;
-            $('#modale .fiche-vente').hidden = !choisir;
-            return;
-        }
+        const choixVente = e.target.closest('[data-choix-vente]');
+        if (choixVente) return choisirVente(Number(choixVente.dataset.choixVente));
         const fiche = e.target.closest('[data-fiche]');
         if (fiche) afficherFiche(Number(fiche.dataset.fiche));
     });
@@ -2803,6 +2813,10 @@ function init() {
     $('#modale-fermer').addEventListener('click', () => $('#modale').close());
     $('#modale').addEventListener('click', e => {
         if (e.target === $('#modale')) $('#modale').close();
+    });
+    // Choix de l'exemplaire à vendre : fermeture par le bouton ou en cliquant à côté
+    $('#modale-vente').addEventListener('click', e => {
+        if (e.target === $('#modale-vente') || e.target.closest('.modale-fermer')) $('#modale-vente').close();
     });
     // Récompense du jour : depuis la fenêtre d'arrivée ou le Profil
     document.addEventListener('click', e => {

@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=71">
+    <link rel="stylesheet" href="style.css?v=73">
 </head>
 <body>
 
@@ -446,6 +446,14 @@
         Données : <a href="https://www.kaggle.com/datasets/fronkongames/steam-games-dataset" target="_blank" rel="noopener">Steam Games Dataset</a> (Kaggle) · images © Steam · GameCards, projet personnel
     </footer>
 
+    <!-- Choix de l'exemplaire à vendre, par-dessus la fiche -->
+    <dialog class="modale modale-vente" id="modale-vente">
+        <button class="modale-fermer" aria-label="Fermer" data-i18n-attr="aria-label">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+        <div id="vente-contenu"></div>
+    </dialog>
+
     <!-- Fiche détaillée d'une carte -->
     <dialog class="modale" id="modale">
         <button class="modale-fermer" id="modale-fermer" aria-label="Fermer" data-i18n-attr="aria-label">
@@ -457,6 +465,6 @@
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
     <script src="i18n.js?v=19"></script>
-    <script src="script.js?v=121"></script>
+    <script src="script.js?v=123"></script>
 </body>
 </html>

@@ -36,16 +36,22 @@
         rgba(255, 255, 255, 0.09) 0 1px, rgba(0, 0, 0, 0.05) 1px 2px, transparent 2px 4px);
 }
 
+/* Couleurs de l'écran affiché (fond, titre, menu) : déclarées pour pouvoir glisser de l'une à l'autre */
+@property --theme { syntax: '<color>'; inherits: true; initial-value: #7b3cff; }
+@property --theme-2 { syntax: '<color>'; inherits: true; initial-value: #ffb800; }
+body { --theme: #7b3cff; --theme-2: #ffb800; transition: --theme 0.8s, --theme-2 0.8s; }  /* Boosters : violet et or */
+body[data-ecran="collection"] { --theme: #3b8bff; --theme-2: #45d4ff; }                   /* bleu */
+body[data-ecran="catalogue"]  { --theme: #2fbf71; --theme-2: #45d4ff; }                   /* vert */
+body[data-ecran="duel"]       { --theme: #ff4d5e; --theme-2: #ff9a1f; }                   /* rouge et orange */
+body[data-ecran="regles"]     { --theme: #45d4ff; --theme-2: #a352ff; }                   /* cyan */
+body[data-ecran="profil"]     { --theme: #ffb800; --theme-2: #ff4d8d; }                   /* doré */
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; }
 
 body {
-    background:
-        radial-gradient(1100px 600px at 85% -15%, rgba(123, 60, 255, 0.16), transparent 60%),
-        radial-gradient(900px 500px at -10% 110%, rgba(255, 77, 141, 0.08), transparent 60%),
-        var(--fond);
-    background-attachment: fixed;
+    background: var(--fond);
     color: var(--texte);
     font-family: 'Outfit', system-ui, sans-serif;
     line-height: 1.5;
@@ -54,6 +60,41 @@ body {
     flex-direction: column;
     -webkit-font-smoothing: antialiased;
 }
+
+/* Fond vivant : halos aux couleurs de l'écran qui dérivent lentement, et quelques étoiles */
+body::before, body::after {
+    content: '';
+    position: fixed;
+    inset: -20%;
+    z-index: -1;
+    pointer-events: none;
+}
+body::before {
+    background:
+        radial-gradient(38% 32% at 82% 8%, color-mix(in srgb, var(--theme) 42%, transparent), transparent 70%),
+        radial-gradient(34% 30% at 8% 92%, color-mix(in srgb, var(--theme-2) 26%, transparent), transparent 70%),
+        radial-gradient(30% 26% at 55% 55%, color-mix(in srgb, var(--theme) 12%, transparent), transparent 70%);
+    animation: halos 26s ease-in-out infinite alternate;
+}
+body::after {
+    inset: 0;
+    background-image:
+        radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.5), transparent),
+        radial-gradient(1px 1px at 68% 12%, rgba(255, 255, 255, 0.35), transparent),
+        radial-gradient(1.5px 1.5px at 85% 46%, rgba(255, 255, 255, 0.4), transparent),
+        radial-gradient(1px 1px at 32% 64%, rgba(255, 255, 255, 0.3), transparent),
+        radial-gradient(1.5px 1.5px at 52% 86%, rgba(255, 255, 255, 0.35), transparent),
+        radial-gradient(1px 1px at 92% 82%, rgba(255, 255, 255, 0.3), transparent),
+        radial-gradient(1px 1px at 22% 40%, rgba(255, 255, 255, 0.25), transparent);
+    background-size: 640px 640px;
+    animation: etoiles 7s ease-in-out infinite alternate;
+}
+@keyframes halos {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(-4%, 3%) scale(1.08); }
+    100% { transform: translate(3%, -2%) scale(1.03); }
+}
+@keyframes etoiles { from { opacity: 0.45; } to { opacity: 1; } }
 
 a { color: var(--accent); }
 img { display: block; max-width: 100%; }
@@ -107,6 +148,17 @@ h2 { font-size: 1.15rem; font-weight: 800; }
     -webkit-backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--bord);
 }
+/* Liseré coloré sous l'en-tête */
+.entete::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--theme) 30%, var(--theme-2) 70%, transparent);
+    opacity: 0.7;
+}
 
 .logo {
     display: flex;
@@ -143,8 +195,12 @@ h2 { font-size: 1.15rem; font-weight: 800; }
 }
 .menu a svg { width: 19px; height: 19px; }
 .menu a:hover { color: var(--texte); background: var(--fond-3); }
-.menu a[aria-current="page"] { color: var(--texte); background: var(--fond-4); }
-.menu a[aria-current="page"] svg { color: var(--accent); }
+.menu a[aria-current="page"] {
+    color: var(--texte);
+    background: color-mix(in srgb, var(--theme) 22%, var(--fond-3));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--theme) 45%, transparent), 0 0 18px color-mix(in srgb, var(--theme) 25%, transparent);
+}
+.menu a[aria-current="page"] svg { color: var(--theme-2); }
 
 /* Pastille quand le booster gratuit est prêt */
 .menu a.pret::after {
@@ -185,6 +241,14 @@ main {
 
 .titre-ecran { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 1.2rem; margin-bottom: 1.4rem; }
 .titre-ecran p { color: var(--texte-doux); }
+/* Grand titre en dégradé aux couleurs de l'écran */
+.titre-ecran h1 {
+    background: linear-gradient(100deg, #fff 10%, color-mix(in srgb, var(--theme) 55%, #fff) 55%, var(--theme-2) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 4px 22px color-mix(in srgb, var(--theme) 35%, transparent));
+}
 .titre-centre { flex-direction: column; align-items: center; text-align: center; }
 .titre-centre p { max-width: 540px; }
 
@@ -206,24 +270,59 @@ main {
     padding: 0.7rem 1.25rem;
     border-radius: 12px;
     border: 1px solid var(--bord-fort);
-    background: var(--fond-3);
+    background: linear-gradient(180deg, var(--fond-4), var(--fond-3));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 14px rgba(0, 0, 0, 0.25);
     font-weight: 700;
     text-decoration: none;
     color: var(--texte);
     white-space: nowrap;
-    transition: transform 0.15s, background 0.2s, opacity 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    transition: transform 0.15s, background 0.2s, opacity 0.2s, box-shadow 0.2s, border-color 0.2s, filter 0.2s;
 }
-.btn:hover:not(:disabled) { transform: translateY(-2px); background: var(--fond-4); }
-.btn:active:not(:disabled) { transform: translateY(0); }
+/* Reflet qui balaie le bouton au survol */
+.btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.22) 50%, transparent 70%);
+    transform: translateX(-120%);
+    pointer-events: none;
+}
+.btn:hover:not(:disabled)::after { transform: translateX(120%); transition: transform 0.6s ease; }
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--theme) 60%, transparent);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 8px 22px color-mix(in srgb, var(--theme) 30%, transparent);
+}
+.btn:active:not(:disabled) { transform: translateY(1px) scale(0.97); filter: brightness(0.92); transition-duration: 0.05s; }
 .btn:disabled { opacity: 0.45; }
 .btn-principal {
-    background: linear-gradient(135deg, var(--violet), var(--accent-2));
+    background: linear-gradient(135deg, var(--violet), var(--accent-2) 70%, #ff7a59);
     border-color: transparent;
-    box-shadow: 0 8px 24px rgba(123, 60, 255, 0.35);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 24px rgba(123, 60, 255, 0.4);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
-.btn-principal:hover:not(:disabled) { background: linear-gradient(135deg, #8b52ff, #ff66a0); box-shadow: 0 10px 30px rgba(255, 77, 141, 0.4); }
-.btn-or { color: var(--accent); border-color: rgba(255, 184, 0, 0.35); background: rgba(255, 184, 0, 0.08); }
-.btn-or:hover:not(:disabled) { background: rgba(255, 184, 0, 0.16); }
+.btn-principal:hover:not(:disabled) {
+    border-color: transparent;
+    background: linear-gradient(135deg, #8b52ff, #ff66a0 70%, #ff8f6b);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 12px 32px rgba(255, 77, 141, 0.5);
+}
+/* Bouton or : plein, comme un lingot */
+.btn-or {
+    color: #2b1a00;
+    border-color: transparent;
+    background: linear-gradient(135deg, #ffe08a, #ffb800 45%, #f08c00);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 6px 20px rgba(255, 170, 0, 0.35);
+}
+.btn-or:hover:not(:disabled) {
+    border-color: transparent;
+    background: linear-gradient(135deg, #fff0b8, #ffc933 45%, #ff9d1a);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 10px 28px rgba(255, 170, 0, 0.5);
+}
+.btn-or .piece { filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3)); }
 .btn-grand { padding: 0.9rem 2rem; font-size: 1.05rem; }
 
 /* =========================================================
@@ -494,7 +593,10 @@ main {
     height: 100%;
     width: 0;
     border-radius: inherit;
-    background: linear-gradient(90deg, var(--violet), var(--accent-2), var(--accent));
+    /* Dégradé des raretés, de la Commune à la Mythique */
+    background: linear-gradient(90deg, var(--commune), var(--peu-commune), var(--rare), var(--epique), var(--legendaire), var(--mythique));
+    background-size: 100vw 100%;
+    box-shadow: 0 0 12px rgba(163, 82, 255, 0.5);
     transition: width 0.8s cubic-bezier(0.2, 0.8, 0.3, 1);
 }
 
@@ -505,14 +607,22 @@ main {
     gap: 0.45rem;
     padding: 0.35rem 0.8rem 0.35rem 0.6rem;
     border-radius: 999px;
-    border: 1px solid var(--bord);
-    background: var(--fond-3);
+    border: 1px solid color-mix(in srgb, var(--rar, var(--texte-doux)) 40%, transparent);
+    background: color-mix(in srgb, var(--rar, var(--texte-doux)) 10%, var(--fond-3));
     font-size: 0.88rem;
     font-weight: 600;
     color: var(--texte-doux);
     white-space: nowrap;
 }
-.puce i { width: 10px; height: 10px; border-radius: 3px; background: var(--rar-fond, var(--rar, var(--texte-doux))); }
+.puce i { width: 10px; height: 10px; border-radius: 3px; background: var(--rar-fond, var(--rar, var(--texte-doux))); box-shadow: 0 0 8px var(--rar, transparent); }
+.puce.rarete-legendaire { border-color: rgba(255, 196, 60, 0.55); box-shadow: 0 0 14px rgba(255, 184, 0, 0.15); }
+/* Mythique : liseré prismatique */
+.puce.rarete-mythique {
+    border-color: transparent;
+    background:
+        linear-gradient(color-mix(in srgb, var(--mythique) 12%, var(--fond-3)), color-mix(in srgb, var(--mythique) 12%, var(--fond-3))) padding-box,
+        var(--prisme) border-box;
+}
 .puce b { color: var(--texte); font-family: 'Space Mono', monospace; font-size: 0.8rem; }
 
 /* ── Dernières trouvailles ── */
@@ -1368,7 +1478,17 @@ main {
 .filtre-puces { margin-bottom: 1rem; }
 .filtre-puces .puce { cursor: pointer; transition: border-color 0.2s, background 0.2s, color 0.2s; }
 .filtre-puces .puce:hover { color: var(--texte); border-color: var(--bord-fort); }
-.filtre-puces .puce.active { color: var(--texte); background: var(--fond-4); border-color: var(--rar, var(--texte-doux)); }
+.filtre-puces .puce.active {
+    color: var(--texte);
+    background: color-mix(in srgb, var(--rar, var(--theme)) 30%, var(--fond-3));
+    border-color: var(--rar, var(--theme));
+    box-shadow: 0 0 16px color-mix(in srgb, var(--rar, var(--theme)) 35%, transparent);
+}
+.filtre-puces .puce.rarete-mythique.active {
+    background:
+        linear-gradient(color-mix(in srgb, var(--mythique) 28%, var(--fond-3)), color-mix(in srgb, var(--mythique) 28%, var(--fond-3))) padding-box,
+        var(--prisme) border-box;
+}
 
 .filtres {
     display: flex;
@@ -1551,10 +1671,28 @@ main {
 .fiche-exemplaires { color: var(--texte-doux); font-size: 0.92rem; }
 .fiche-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.2rem; }
 /* Choix de l'exemplaire à vendre quand on a plusieurs variantes */
-.fiche-vente { display: flex; flex-wrap: wrap; gap: 0.5rem; width: 100%; padding: 0.8rem; border: 1px solid var(--bord-fort); border-radius: 12px; }
-.fiche-vente[hidden] { display: none; }
-.fiche-vente p { width: 100%; margin: 0; color: var(--texte-doux); font-size: 0.9rem; }
-.fiche-vente .gris { font-style: normal; }
+/* Choix de l'exemplaire à vendre : une carte par variante possédée */
+.modale-vente { width: min(720px, calc(100% - 32px)); text-align: center; }
+.modale-vente h2 { font-size: 1.4rem; }
+.vente-nom { color: var(--texte-doux); margin: 0.2rem 0 1.3rem; }
+.vente-options { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
+.vente-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+    width: 150px;
+    padding: 0.6rem 0.6rem 0.8rem;
+    border-radius: 16px;
+    border: 1px solid var(--bord);
+    background: var(--fond-3);
+    transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
+}
+.vente-option .carte { width: 100%; }
+.vente-option:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 10px 26px rgba(255, 184, 0, 0.25); }
+.vente-variante { font-weight: 700; }
+.vente-variante .gris { font-style: normal; font-family: 'Space Mono', monospace; font-size: 0.85rem; }
+.vente-prix { display: flex; align-items: center; gap: 0.3rem; font-family: 'Space Mono', monospace; font-weight: 700; color: var(--accent); }
 
 /* =========================================================
    DUEL
@@ -2211,6 +2349,7 @@ main {
 @keyframes toast-entree { from { opacity: 0; transform: translateY(8px); } }
 
 @media (prefers-reduced-motion: reduce) {
+    body::before, body::after { animation: none; }
     *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
     /* Sans animation, le titre du god pack reste affiché tel quel, sans pluie d’étincelles */
     .titre-godpack { animation: none !important; transform: translate(-50%, -50%); }
