@@ -2707,7 +2707,6 @@ function inclinerVers(element, e) {
 function afficherEcran(nom) {
     if (!document.getElementById(`ecran-${nom}`)) nom = 'accueil';
     document.querySelectorAll('.ecran').forEach(e => (e.hidden = e.id !== `ecran-${nom}`));
-    document.body.dataset.ecran = nom; // couleur de l'écran (fond, titre, menu)
     document.querySelectorAll('.menu a').forEach(a => {
         if (a.dataset.ecran === nom) a.setAttribute('aria-current', 'page');
         else a.removeAttribute('aria-current');

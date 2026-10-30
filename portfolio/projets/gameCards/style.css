@@ -3,12 +3,15 @@
    ========================================================= */
 
 :root {
-    --fond: #0b0d17;
-    --fond-2: #12152a;
-    --fond-3: #1b1f3a;
-    --fond-4: #252a4d;
-    --texte: #eef0ff;
-    --texte-doux: #8d92b8;
+    --fond: #07080d;
+    --fond-2: #0f1118;
+    --fond-3: #171a24;
+    --fond-4: #222633;
+    --texte: #eef0f6;
+    --texte-doux: #8e93a8;
+    /* Identité : duo néon cyan et magenta, en rappels (logo, titres, menu, boutons, lueurs) */
+    --neon-1: #00e5ff;
+    --neon-2: #ff2bd6;
     --bord: rgba(255, 255, 255, 0.08);
     --bord-fort: rgba(255, 255, 255, 0.16);
     --accent: #ffb800;
@@ -36,15 +39,8 @@
         rgba(255, 255, 255, 0.09) 0 1px, rgba(0, 0, 0, 0.05) 1px 2px, transparent 2px 4px);
 }
 
-/* Couleurs de l'écran affiché (fond, titre, menu) : déclarées pour pouvoir glisser de l'une à l'autre */
-@property --theme { syntax: '<color>'; inherits: true; initial-value: #7b3cff; }
-@property --theme-2 { syntax: '<color>'; inherits: true; initial-value: #ffb800; }
-body { --theme: #7b3cff; --theme-2: #ffb800; transition: --theme 0.8s, --theme-2 0.8s; }  /* Boosters : violet et or */
-body[data-ecran="collection"] { --theme: #3b8bff; --theme-2: #45d4ff; }                   /* bleu */
-body[data-ecran="catalogue"]  { --theme: #2fbf71; --theme-2: #45d4ff; }                   /* vert */
-body[data-ecran="duel"]       { --theme: #ff4d5e; --theme-2: #ff9a1f; }                   /* rouge et orange */
-body[data-ecran="regles"]     { --theme: #45d4ff; --theme-2: #a352ff; }                   /* cyan */
-body[data-ecran="profil"]     { --theme: #ffb800; --theme-2: #ff4d8d; }                   /* doré */
+/* Couleurs des rappels néon (halos, titres, menu, survols) : le duo de l'identité sur tous les écrans */
+body { --theme: var(--neon-1); --theme-2: var(--neon-2); }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -71,9 +67,9 @@ body::before, body::after {
 }
 body::before {
     background:
-        radial-gradient(38% 32% at 82% 8%, color-mix(in srgb, var(--theme) 42%, transparent), transparent 70%),
-        radial-gradient(34% 30% at 8% 92%, color-mix(in srgb, var(--theme-2) 26%, transparent), transparent 70%),
-        radial-gradient(30% 26% at 55% 55%, color-mix(in srgb, var(--theme) 12%, transparent), transparent 70%);
+        radial-gradient(38% 32% at 82% 8%, color-mix(in srgb, var(--theme) 22%, transparent), transparent 70%),
+        radial-gradient(34% 30% at 8% 92%, color-mix(in srgb, var(--theme-2) 18%, transparent), transparent 70%),
+        radial-gradient(30% 26% at 55% 55%, color-mix(in srgb, var(--theme) 5%, transparent), transparent 70%);
     animation: halos 26s ease-in-out infinite alternate;
 }
 body::after {
@@ -170,14 +166,14 @@ h2 { font-size: 1.15rem; font-weight: 800; }
     text-decoration: none;
     letter-spacing: -0.02em;
 }
-.logo b { color: var(--accent); font-weight: inherit; }
+.logo b { color: var(--neon-1); font-weight: inherit; text-shadow: 0 0 10px color-mix(in srgb, var(--neon-1) 70%, transparent), 0 0 24px color-mix(in srgb, var(--neon-1) 35%, transparent); }
 .logo-carte {
     width: 18px;
     height: 25px;
     border-radius: 4px;
-    background: linear-gradient(160deg, var(--violet), var(--accent-2) 60%, var(--accent));
+    background: linear-gradient(160deg, var(--neon-1), var(--neon-2));
     transform: rotate(-10deg);
-    box-shadow: 5px 1px 0 -1px var(--fond), 6px 1px 0 0 rgba(255, 255, 255, 0.35);
+    box-shadow: 5px 1px 0 -1px var(--fond), 6px 1px 0 0 rgba(255, 255, 255, 0.35), 0 0 14px color-mix(in srgb, var(--neon-2) 55%, transparent);
 }
 
 .menu { display: flex; gap: 0.25rem; margin: 0 auto; }
@@ -211,8 +207,8 @@ h2 { font-size: 1.15rem; font-weight: 800; }
     width: 9px;
     height: 9px;
     border-radius: 50%;
-    background: var(--accent-2);
-    box-shadow: 0 0 0 2px var(--fond);
+    background: var(--neon-2);
+    box-shadow: 0 0 0 2px var(--fond), 0 0 10px var(--neon-2);
     animation: pulse 1.6s infinite;
 }
 
@@ -242,12 +238,12 @@ main {
 .titre-ecran { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 1.2rem; margin-bottom: 1.4rem; }
 .titre-ecran p { color: var(--texte-doux); }
 /* Grand titre en dégradé aux couleurs de l'écran */
-.titre-ecran h1 {
-    background: linear-gradient(100deg, #fff 10%, color-mix(in srgb, var(--theme) 55%, #fff) 55%, var(--theme-2) 100%);
+.titre-ecran h1, .choix-titre h1 {
+    background: linear-gradient(100deg, #fff 15%, var(--neon-1) 70%, color-mix(in srgb, var(--neon-1) 50%, var(--neon-2)) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    filter: drop-shadow(0 4px 22px color-mix(in srgb, var(--theme) 35%, transparent));
+    filter: drop-shadow(0 0 18px color-mix(in srgb, var(--neon-1) 30%, transparent)) drop-shadow(0 4px 30px color-mix(in srgb, var(--neon-2) 25%, transparent));
 }
 .titre-centre { flex-direction: column; align-items: center; text-align: center; }
 .titre-centre p { max-width: 540px; }
@@ -300,15 +296,17 @@ main {
 .btn:active:not(:disabled) { transform: translateY(1px) scale(0.97); filter: brightness(0.92); transition-duration: 0.05s; }
 .btn:disabled { opacity: 0.45; }
 .btn-principal {
-    background: linear-gradient(135deg, var(--violet), var(--accent-2) 70%, #ff7a59);
+    background: linear-gradient(120deg, #0094b8, #7a3cd6 55%, #c8169f);
     border-color: transparent;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 24px rgba(123, 60, 255, 0.4);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 0 0 1px color-mix(in srgb, var(--neon-1) 35%, transparent),
+        -6px 6px 22px color-mix(in srgb, var(--neon-1) 30%, transparent), 6px 8px 22px color-mix(in srgb, var(--neon-2) 30%, transparent);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 .btn-principal:hover:not(:disabled) {
     border-color: transparent;
-    background: linear-gradient(135deg, #8b52ff, #ff66a0 70%, #ff8f6b);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 12px 32px rgba(255, 77, 141, 0.5);
+    background: linear-gradient(120deg, #00a9d1, #8a4ae8 55%, #e01fb5);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 0 1px color-mix(in srgb, var(--neon-1) 60%, transparent),
+        -8px 8px 30px color-mix(in srgb, var(--neon-1) 45%, transparent), 8px 10px 30px color-mix(in srgb, var(--neon-2) 45%, transparent);
 }
 /* Bouton or : plein, comme un lingot */
 .btn-or {
