@@ -257,7 +257,7 @@ const PLAFONNES_RARE = [
 const STATS_FORCEES = {
     //2357570: { attaque: 75, popularite: 88 }, // Overwatch 2 : le CSV date d'avant sa sortie sur Steam
     72850: { attaque: 84 },                   // The Elder Scrolls V: Skyrim (2011)
-    12210: { attaque: 91 },                   // GTA IV : note Steam plombée par le portage PC (98 sur Metacritic)
+    12210: { attaque: 93 },                   // GTA IV : note Steam plombée par le portage PC (98 sur Metacritic)
     319510: { attaque: 92, popularite: 96 },             // Five Nights at Freddy's : phénomène bien au-delà de ses avis Steam
     332800: { popularite: 88 },               // Five Nights at Freddy's 2 : porté par le phénomène FNAF
     388090: { popularite: 86 },               // Five Nights at Freddy's 4
