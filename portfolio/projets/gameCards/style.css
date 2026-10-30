@@ -1680,6 +1680,61 @@ main {
 .dos-carte span { font-weight: 900; font-size: 0.8rem; color: var(--accent); padding: 0.1rem 0.4rem; border: 2px solid var(--accent); border-radius: 6px; }
 .decks-combat .dos-carte span { font-size: 1.5rem; padding: 0.3rem 0.7rem; border-width: 3px; }
 
+/* Bandeau de la stat annoncée : rouge et pulsant quand l'ordinateur attaque */
+.stat-annoncee {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    width: fit-content;
+    max-width: 100%;
+    min-height: 3rem;
+    margin: 0 auto 2.4rem;
+    padding: 0.55rem 1.4rem;
+    border-radius: 999px;
+    border: 2px solid var(--accent);
+    background: rgba(255, 184, 0, 0.1);
+    box-shadow: 0 0 24px rgba(255, 184, 0, 0.25);
+    font-size: 1.25rem;
+    font-weight: 800;
+    text-align: center;
+}
+.stat-annoncee span { color: var(--texte-doux); font-size: 1rem; font-weight: 600; }
+.stat-annoncee.vide { visibility: hidden; }
+.stat-annoncee.par-ordi {
+    border-color: var(--rouge);
+    background: rgba(255, 80, 100, 0.12);
+    box-shadow: 0 0 26px rgba(255, 80, 100, 0.35);
+    animation: annonce-pulse 1.2s ease-in-out infinite;
+}
+@keyframes annonce-pulse { 50% { transform: scale(1.06); } }
+/* Gros message du tour, au centre de l'écran */
+.annonce-deck {
+    position: fixed;
+    top: 42%;
+    left: 50%;
+    z-index: 62;
+    max-width: 90vw;
+    pointer-events: none;
+    font-size: clamp(2rem, 8vw, 4rem);
+    font-weight: 900;
+    line-height: 1.1;
+    text-align: center;
+    color: var(--accent);
+    text-shadow: 0 4px 24px rgba(0, 0, 0, 0.85), 0 0 34px currentColor;
+    animation: annonce-deck 1.6s cubic-bezier(0.2, 0.8, 0.3, 1.2) forwards;
+}
+.annonce-deck.moi { color: var(--vert); }
+.annonce-deck.ordi { color: var(--rouge); }
+@keyframes annonce-deck {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+    20% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+    30% { transform: translate(-50%, -50%) scale(1); }
+    80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -62%) scale(1); }
+}
+
 /* Animations du combat */
 /* Pile ou face : la pièce monte en tournant et retombe */
 .pile-ou-face { display: grid; place-items: center; height: 240px; perspective: 600px; }

@@ -2180,6 +2180,26 @@ function actionsDeckHTML() {
     return '';
 }
 
+// Bandeau au-dessus de la table : qui attaque, et sur quelle stat
+function annonceStatHTML() {
+    const c = deckDuel.combat;
+    if (!c) return '<div class="stat-annoncee vide"></div>';
+    if (c.stat === null) return `<div class="stat-annoncee">Σ <b>${t('Manche décisive : total des stats')}</b></div>`;
+    const ordi = c.par === 'ordi';
+    return `<div class="stat-annoncee${ordi ? ' par-ordi' : ''}">⚔ <span>${ordi ? t('Attaque de l’ordinateur :') : t('Ton attaque :')}</span>
+        <b>${STATS[c.stat].icone} ${STATS[c.stat].nom}</b></div>`;
+}
+
+// Gros message au centre de l'écran (« Tu commences ! », « L'ordinateur attaque ! »…), qui disparaît tout seul
+function annonceDeck(texte, qui) {
+    const annonce = document.createElement('div');
+    annonce.className = `annonce-deck ${qui}`;
+    annonce.setAttribute('role', 'status');
+    annonce.textContent = texte;
+    document.body.append(annonce);
+    setTimeout(() => annonce.remove(), 1700);
+}
+
 function plateauDeckHTML() {
     const d = deckDuel;
     const c = d.combat;
@@ -2196,12 +2216,13 @@ function plateauDeckHTML() {
     const mainOrdi = d.ordi.filter(carte => carte !== c?.ordi);
     const table = d.lancer
         ? `<div class="pile-ou-face" aria-hidden="true">${PIECE}</div>`
-        : `<div class="decks-combat${c?.ecart !== undefined ? ' compare' : ''}">
-            <div class="duel-emplacement${resultat('ordi')}${['ordi', 'les-deux'].includes(c?.arrivee) ? ' arrivee-ordi' : ''}" data-titre="${t('Ordinateur')}">
-                ${carteOrdi}${total(c?.ordi)}
-            </div>
+        : `${annonceStatHTML()}
+        <div class="decks-combat${c?.ecart !== undefined ? ' compare' : ''}">
             <div class="duel-emplacement${resultat('moi')}${['moi', 'les-deux'].includes(c?.arrivee) ? ' arrivee-moi' : ''}" data-titre="${t('Ta carte')}">
                 ${c?.moi ? carteHTML(c.moi, { holo: c.moi.holos > 0 }) : ''}${total(c?.moi)}
+            </div>
+            <div class="duel-emplacement${resultat('ordi')}${['ordi', 'les-deux'].includes(c?.arrivee) ? ' arrivee-ordi' : ''}" data-titre="${t('Ordinateur')}">
+                ${carteOrdi}${total(c?.ordi)}
             </div>
         </div>`;
     return `
@@ -2251,24 +2272,27 @@ async function lancerPartieDecks() {
     afficherDuelDecks();
     await attendre(1300);
     Object.assign(d, { lancer: false, verrou: false });
-    mancheDecks(d.attaquant === 'moi' ? t('Pile ou face : c’est toi qui commences !') : t('Pile ou face : l’ordinateur commence.'));
+    mancheDecks(true);
 }
 
-function mancheDecks(annonce = '') {
+// `premiere` : première manche, le gros message dit qui commence
+function mancheDecks(premiere = false) {
     const d = deckDuel;
     Object.assign(d, { carte: null, combat: null, actions: null, attente: null, pointMarque: null });
-    const avant = annonce ? `${annonce} ` : '';
     if (d.moi.length === 1 && d.score.moi === d.score.ordi) {
         d.actions = 'decisive';
-        d.message = avant + t('Égalité ! Dernière manche : vos dernières cartes se départagent au total de leurs stats.');
+        d.message = t('Égalité ! Dernière manche : vos dernières cartes se départagent au total de leurs stats.');
+        annonceDeck(t('Manche décisive !'), 'decisive');
     } else if (d.attaquant === 'moi') {
         d.attente = 'attaque';
-        d.message = avant + t('À toi d’attaquer : choisis une carte, puis la stat sur laquelle tu l’engages.');
+        d.message = t('À toi d’attaquer : choisis une carte, puis la stat sur laquelle tu l’engages.');
+        annonceDeck(premiere ? t('Tu commences !') : t('À toi d’attaquer !'), 'moi');
     } else {
         const coup = coupOrdi('attaque');
-        d.combat = { ordi: coup.carte, stat: coup.stat, cache: true, arrivee: 'ordi' };
+        d.combat = { ordi: coup.carte, stat: coup.stat, cache: true, arrivee: 'ordi', par: 'ordi' };
         d.attente = 'defense';
-        d.message = avant + t('L’ordinateur pose une carte face cachée et attaque en {stat}. Choisis ta carte pour défendre.', { stat: STATS[coup.stat].nom });
+        annonceDeck(premiere ? t('L’ordinateur commence !') : t('L’ordinateur attaque !'), 'ordi');
+        d.message = t('L’ordinateur pose une carte face cachée et attaque en {stat}. Choisis ta carte pour défendre.', { stat: STATS[coup.stat].nom });
         jouerSon('carte');
     }
     afficherDuelDecks();
@@ -2284,7 +2308,7 @@ async function resoudreMancheDecks(carteMoi, carteOrdi, stat) {
     d.ordi = d.ordi.filter(c => c !== carteOrdi);
     const nomStat = stat ? `${STATS[stat].icone} ${STATS[stat].nom}` : t('Total des stats');
     Object.assign(d, {
-        combat: { moi: carteMoi, ordi: carteOrdi, stat, revele: true, arrivee: d.combat?.cache ? 'moi' : 'les-deux' },
+        combat: { moi: carteMoi, ordi: carteOrdi, stat, revele: true, arrivee: d.combat?.cache ? 'moi' : 'les-deux', par: d.attaquant },
         attente: null, carte: null, actions: null, pointMarque: null,
         message: t('{stat} : qui l’emporte ?', { stat: nomStat }),
     });
@@ -2309,7 +2333,7 @@ async function resoudreMancheDecks(carteMoi, carteOrdi, stat) {
     else if (ecart < 0) d.score.ordi++;
     const resultat = ecart > 0 ? t('Manche gagnée !') : ecart < 0 ? t('Manche perdue.') : t('Égalité parfaite, personne ne marque.');
     Object.assign(d, {
-        combat: { moi: carteMoi, ordi: carteOrdi, stat, ecart },
+        combat: { moi: carteMoi, ordi: carteOrdi, stat, ecart, par: d.combat.par },
         pointMarque: ecart > 0 ? 'moi' : ecart < 0 ? 'ordi' : null,
         message: `${t('{stat} : <b>{a}</b> contre <b>{b}</b>.', { stat: nomStat, a: valeur(carteMoi), b: valeur(carteOrdi) })} <b>${resultat}</b>`,
         verrou: false,
