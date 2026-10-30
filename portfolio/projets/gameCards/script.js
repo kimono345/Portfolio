@@ -24,8 +24,8 @@ const RARETES = [
     { id: 'mythique',    nom: t('Mythique'),    quota: null, stats: [55, 100], chance: 0.1, chanceGarantie: 0.1, chancePrestige: 0.2,  chancePrestigeGarantie: 1,  chanceDuel: 3,  revente: 300, prix: 10000 },
     { id: 'legendaire',  nom: t('Légendaire'),  quota: 110,  stats: [45, 95],  chance: 0.5, chanceGarantie: 0.9, chancePrestige: 1,    chancePrestigeGarantie: 5,  chanceDuel: 7,  revente: 100, prix: 4000 },
     { id: 'epique',      nom: t('Épique'),      quota: 600,  stats: [35, 90],  chance: 2, chanceGarantie: 12,  chancePrestige: 6,    chancePrestigeGarantie: 94, chanceDuel: 12, revente: 40,  prix: 1500 },
-    { id: 'rare',        nom: t('Rare'),        quota: 1109, stats: [25, 85],  chance: 6, chanceGarantie: 30,  chancePrestige: 22.8, chancePrestigeGarantie: 0,  chanceDuel: 18, revente: 15,  prix: 600 },
-    { id: 'peu-commune', nom: t('Peu commune'), quota: 2257, stats: [15, 80],  chance: 18, chanceGarantie: 57,  chancePrestige: 70,   chancePrestigeGarantie: 0,  chanceDuel: 25, revente: 5,   prix: 250 },
+    { id: 'rare',        nom: t('Rare'),        quota: 1500, stats: [25, 85],  chance: 6, chanceGarantie: 30,  chancePrestige: 22.8, chancePrestigeGarantie: 0,  chanceDuel: 18, revente: 15,  prix: 600 },
+    { id: 'peu-commune', nom: t('Peu commune'), quota: 3000, stats: [15, 80],  chance: 18, chanceGarantie: 57,  chancePrestige: 70,   chancePrestigeGarantie: 0,  chanceDuel: 25, revente: 5,   prix: 250 },
     { id: 'commune',     nom: t('Commune'),     quota: null, stats: [5, 75],   chance: 73.4, chanceGarantie: 0,   chancePrestige: 0,    chancePrestigeGarantie: 0,  chanceDuel: 35, revente: 2,   prix: 100 },
 ];
 const CHANCE_HOLO_PRESTIGE = 0.08; // contre 2 % dans un booster normal
@@ -161,6 +161,8 @@ const CULTES_LEGENDAIRES = [
     3764200, // Resident Evil Requiem
     620980,  // Beat Saber
     698780,  // Doki Doki Literature Club!
+    1659040, // HITMAN World of Assassination
+    438100,  // VRChat
     646570,  // Slay the Spire
     883710,  // Resident Evil 2
     2379780, // Balatro
@@ -169,6 +171,7 @@ const CULTES_LEGENDAIRES = [
 // Jeux plafonnés à Épique : surtout des succès viraux (petit prix, portés par les streamers), populaires sur Steam mais pas « légendaires ».
 // Ils ne dépassent jamais Épique, leurs places en Légendaire reviennent aux suivants.
 const PLAFONNES_EPIQUE = [
+    477160,  // Human: Fall Flat
     304930,  // Unturned
     1118200, // People Playground
     648800,  // Raft
@@ -227,6 +230,14 @@ const CULTES_EPIQUES = [
     859570,  // Secret Neighbor
     1002300, // Fear & Hunger
     2171440, // Fear & Hunger 2: Termina
+    382940,  // HITMAN (2016)
+];
+
+// Jeux connus placés à la main en Rare (leurs données Steam les classent trop bas)
+const CULTES_RARES = [
+    2239550, // Watch Dogs: Legion
+    393080,  // Call of Duty: Modern Warfare Remastered (2017)
+    2933620, // Call of Duty: Black Ops 6
 ];
 
 // Ces jeux ne montent jamais au-dessus de Rare
@@ -514,6 +525,7 @@ function calculerRaretes() {
     const cultes = new Map([
         ...CULTES_LEGENDAIRES.map(id => [id, INDEX_LEGENDAIRE]),
         ...CULTES_EPIQUES.map(id => [id, INDEX_EPIQUE]),
+        ...CULTES_RARES.map(id => [id, INDEX_RARE]),
     ]);
     for (const jeu of tousLesJeux) {
         const i = cultes.get(jeu.id);
