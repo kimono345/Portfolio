@@ -103,7 +103,7 @@ const gotyDe = id => GOTY[id] && { annee: GOTY[id][0], ceremonie: GOTY[id][1] };
 // Les Mythiques : les jeux les plus cultes et connus, choisis à la main (identifiant Steam)
 const MYTHIQUES = [
     271590,  // Grand Theft Auto V
-    12210,   // Grand Theft Auto IV
+    105600,  // Terraria
     1174180, // Red Dead Redemption 2
     292030,  // The Witcher 3: Wild Hunt
     1086940, // Baldur's Gate 3
@@ -129,6 +129,7 @@ const MYTHIQUES = [
 // Classiques cultes : leur notoriété dépasse leurs chiffres Steam (jeux anciens ou surtout joués sur console).
 // Ils sont placés exactement dans cette rareté, en prenant une place du quota.
 const CULTES_LEGENDAIRES = [
+    12210,   // Grand Theft Auto IV (Mythique avant Terraria ; GTA V reste la Mythique de la série)
     632470,  // Disco Elysium
     753640,  // Outer Wilds
     546560,  // Half-Life: Alyx
@@ -254,6 +255,7 @@ const PLAFONNES_RARE = [
 const STATS_FORCEES = {
     //2357570: { attaque: 75, popularite: 88 }, // Overwatch 2 : le CSV date d'avant sa sortie sur Steam
     72850: { attaque: 84 },                   // The Elder Scrolls V: Skyrim (2011)
+    12210: { attaque: 91 },                   // GTA IV : note Steam plombée par le portage PC (98 sur Metacritic)
 };
 
 // Score de prestige des autres jeux : 85 % popularité + 15 % qualité + bonus
