@@ -100,7 +100,7 @@ const col = Object.fromEntries(entete.map((nom, i) => [nom, i]));
 // Jeux sans avis dans le dataset alors qu'ils en ont sur Steam : vrais chiffres saisis à la main
 // (à lire sur la page Steam du jeu). Format : identifiant: { avis: total des avis, note: % d'avis positifs }
 const CORRECTIONS = {
-    // 1223750: { avis: 0, note: 0 }, // Cloud Meadow : à remplir avec les chiffres de sa page Steam
+    1223750: { avis: 5518, note: 85 },  // Cloud Meadow
     2357570: { avis: 429544, note: 32 },
     3764200: { avis: 109711, note: 95 }, // Resident Evil Requiem
     1030300: { avis: 426230, note: 90 },      // Hollow Knight: Silksong
