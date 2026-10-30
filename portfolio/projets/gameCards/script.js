@@ -51,13 +51,14 @@ const GAIN_POM = 2; // pièces par bonne réponse au Plus ou moins
 
 const CARTES_PAR_BOOSTER = 5;
 const BOOSTERS_PAR_LOT = 10; // ouverture ×10
-const PRIX_BOOSTER = 0;
+const PRIX_BOOSTER = 0; //50
 
 // Les deux boosters. Chacun se recharge gratuitement (`recharge` ms), avec une réserve de `stockMax` ;
-// quand il n'en reste plus, on peut en acheter (`prix` pièces). `paquet` : le paquet de l'accueil.
+// quand il n'en reste plus, on peut en acheter (`prix` pièces). `gain` : pièces gagnées à chaque ouverture.
+// `paquet` : le paquet de l'accueil.
 const TYPES_BOOSTER = {
-    standard: { id: 'standard', nom: t('booster'), prix: PRIX_BOOSTER, recharge: 10 * 60 * 1000, stockMax: 10, paquet: '#paquet-gratuit' },
-    prestige: { id: 'prestige', nom: 'Prestige', prix: 0, recharge: 24 * 60 * 60 * 1000, stockMax: 1, prestige: true, paquet: '#paquet-prestige' },
+    standard: { id: 'standard', nom: t('booster'), prix: PRIX_BOOSTER, gain: 5, recharge: 10 * 60 * 1000, stockMax: 10, paquet: '#paquet-gratuit' },
+    prestige: { id: 'prestige', nom: 'Prestige', prix: 0, gain: 25, recharge: 24 * 60 * 60 * 1000, stockMax: 1, prestige: true, paquet: '#paquet-prestige' },
 };
 const CHANCE_HOLO = 0.02;
 const MULTIPLICATEUR_HOLO = 3;
@@ -969,6 +970,9 @@ async function ouvrirBooster(mode, nombreBoosters = 1, type = TYPES_BOOSTER.stan
     const godPacks = tirage.filter(t => t.godPack).length / CARTES_PAR_BOOSTER;
     if (mode === 'gratuit') consommerCharges(type, nombreBoosters);
     else etat.pieces -= prix;
+    // Chaque booster ouvert rapporte des pièces
+    dernierGain = type.gain * nombreBoosters;
+    etat.pieces += dernierGain;
     if (godPacks) {
         etat.godPacks.nombre += godPacks;
         etat.godPacks.premier ??= Date.now();
@@ -1005,6 +1009,7 @@ async function ouvrirBooster(mode, nombreBoosters = 1, type = TYPES_BOOSTER.stan
 }
 
 let dernierTirage = [];
+let dernierGain = 0; // pièces gagnées par la dernière ouverture
 
 // Mise en scène du god pack : le paquet devient doré et tremble, flash, pluie d'étincelles, titre géant
 async function revelationGodPack(paquet) {
@@ -1254,7 +1259,8 @@ function finTirage() {
         <span>${tn(nouvelles, '<b>{n}</b> nouvelle', '<b>{n}</b> nouvelles')}</span>
         <span class="rarete-${meilleure.id}">${t('Meilleure :')} <b class="texte-rarete">${meilleure.nom}</b></span>
         ${holos ? `<span>✨ ${tn(holos, '<b>{n}</b> holo', '<b>{n}</b> holos')}</span>` : ''}
-        ${fullArts ? `<span class="bilan-full-art"><b>${fullArts}</b> Full Art</span>` : ''}`;
+        ${fullArts ? `<span class="bilan-full-art"><b>${fullArts}</b> Full Art</span>` : ''}
+        <span class="bilan-gain">+<b>${nombre(dernierGain)}</b> ${PIECE}</span>`;
     majPaquets();
     for (const id of ['#bilan', '#btn-retour', '#btn-voir-collection']) $(id).hidden = false;
     verifierSucces();

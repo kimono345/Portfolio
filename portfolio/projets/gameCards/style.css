@@ -728,6 +728,8 @@ main {
 }
 .btn-x10 { padding: 0.5rem 1rem; font-size: 0.9rem; }
 .bilan b { color: var(--texte); }
+.bilan-gain { display: inline-flex; align-items: center; gap: 0.3rem; }
+.bilan .bilan-gain b { color: var(--accent); }
 .bilan .texte-rarete { color: var(--rar); }
 
 /* ── God pack ── */
