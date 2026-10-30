@@ -403,7 +403,7 @@ const etat = {
         ...lire(CLES.charges, {}),
     },
     godPacks: lire(CLES.godPacks, { nombre: 0, premier: null }), // trophée : combien, et la date du premier
-    stats: { boosters: 0, prestiges: 0, duelsGagnes: 0, duelsParfaits: 0, ventes: 0, recordPom: 0, ...lire(CLES.stats, {}) },
+    stats: { boosters: 0, prestiges: 0, duelsGagnes: 0, duelsParfaits: 0, ventes: 0, recordPom: 0, decksGagnes: 0, decksHardcore: 0, ...lire(CLES.stats, {}) },
     succes: lire(CLES.succes, {}),        // { id du succès: date d'obtention }
     // { id du succès: date de récupération de la récompense }. Les anciennes sauvegardes avaient reçu
     // leurs récompenses tout de suite : leurs succès déjà obtenus comptent comme récupérés.
@@ -1831,6 +1831,8 @@ const SUCCES = [
     { id: 'grand-luxe', nom: t('Grand luxe'), description: t('Ouvrir un booster Prestige'), cible: 1, recompense: { pieces: 30 }, valeur: () => etat.stats.prestiges },
     { id: 'habitue-prestige', nom: t('Habitué du Prestige'), description: t('Ouvrir 30 boosters Prestige'), cible: 30, recompense: { pieces: 200 }, valeur: () => etat.stats.prestiges },
     // Jeux
+    { id: 'stratege', nom: t('Stratège'), description: t('Gagner un duel de decks'), cible: 1, recompense: { boosters: 10 }, valeur: () => etat.stats.decksGagnes },
+    { id: 'invincible', nom: t('Invincible'), description: t('Gagner un duel de decks en Hardcore'), cible: 1, recompense: { fullArt: 1 }, valeur: () => etat.stats.decksHardcore },
     { id: 'premier-sang', nom: t('Premier sang'), description: t('Gagner un duel'), cible: 1, recompense: { boosters: 10 }, valeur: () => etat.stats.duelsGagnes },
     { id: 'duelliste', nom: t('Duelliste'), description: t('Gagner 10 duels'), cible: 10, recompense: { pieces: 100 }, valeur: () => etat.stats.duelsGagnes },
     { id: 'champion', nom: t('Champion'), description: t('Gagner 50 duels'), cible: 50, recompense: { prestiges: 1 }, valeur: () => etat.stats.duelsGagnes },
@@ -2011,7 +2013,7 @@ function repondrePom(choix) {
     verifierSucces();
 }
 
-// Onglets de l'écran « Jouer » : Duel ou Plus ou moins
+// Onglets de l'écran « Jouer » : Duel, Duel de decks ou Plus ou moins
 function changerModeJeu(mode) {
     document.querySelectorAll('[data-mode]').forEach(onglet => {
         onglet.classList.toggle('actif', onglet.dataset.mode === mode);
@@ -2019,8 +2021,304 @@ function changerModeJeu(mode) {
     });
     $('#mode-duel').hidden = mode !== 'duel';
     $('#mode-pom').hidden = mode !== 'pom';
+    $('#mode-decks').hidden = mode !== 'decks';
     if (mode === 'pom' && !pom.paire) nouvelleQuestionPom();
+    if (mode === 'decks') afficherDuelDecks();
 }
+
+// ---------- Duel de decks ----------
+
+// Chacun a un deck de 3 cartes, sous le plafond de rareté du niveau (pour toi comme pour l'ordinateur).
+// À tour de rôle, l'attaquant pose une carte face cachée et annonce une stat ; le défenseur répond avec une
+// de ses cartes sans voir celle de l'attaquant. Premier à 2 points. Score à égalité avant la dernière manche
+// (ou à la fin) : les dernières cartes se départagent au total de leurs stats.
+const TAILLE_DECK = 3;
+const POINTS_VICTOIRE_DECK = Math.floor(TAILLE_DECK / 2) + 1;
+// `intelligence` : probabilité que l'ordinateur joue son meilleur coup (sinon il joue au hasard)
+// `elite` : son deck est tiré parmi les N meilleures cartes du jeu sous le plafond (sinon au hasard, selon chanceDuel)
+const NIVEAUX_DECK = [
+    { id: 'facile', nom: t('Facile'), max: 'peu-commune', gain: 20, intelligence: 0 },
+    { id: 'normal', nom: t('Normal'), max: 'rare', gain: 40, intelligence: 0.35 },
+    { id: 'difficile', nom: t('Difficile'), max: 'epique', gain: 80, intelligence: 0.6 },
+    { id: 'impossible', nom: t('Impossible'), max: 'legendaire', gain: 150, intelligence: 0.85, elite: 100 },
+    { id: 'hardcore', nom: t('Hardcore'), max: 'mythique', gain: 300, intelligence: 1, elite: 30 },
+];
+const CARTES_CHOIX_DECK = 40; // cartes affichées à la fois pendant la composition du deck
+const STATS_DECK = Object.keys(STATS);
+
+const deckDuel = {
+    etape: 'niveau', niveau: null, choix: [], recherche: '', limite: CARTES_CHOIX_DECK,
+    moi: [], ordi: [], score: { moi: 0, ordi: 0 }, attaquant: 'moi',
+    attente: null,   // 'attaque' (choisir une carte puis une stat), 'defense' (choisir une carte), ou rien
+    carte: null,     // index de la carte choisie pour attaquer
+    combat: null,    // { moi, ordi, stat, ecart, cache } : les cartes posées sur la table
+    actions: null,   // boutons du moment : 'suivante', 'decisive' ou 'fin'
+    message: '',
+};
+
+const totalStats = c => c.attaque + c.popularite + c.anciennete;
+const autoriseeAuNiveau = (rarete, niveau) => indexRarete(rarete) >= indexRarete(niveau.max);
+const cartesDuNiveau = niveau => Object.values(etat.collection).filter(e => autoriseeAuNiveau(e.rarete, niveau));
+
+function melanger(liste) {
+    const copie = [...liste];
+    for (let i = copie.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copie[i], copie[j]] = [copie[j], copie[i]];
+    }
+    return copie;
+}
+
+// Les meilleures cartes du jeu sous un plafond, calculées une seule fois par niveau
+const meilleuresParNiveau = {};
+
+function deckOrdinateur(niveau) {
+    if (niveau.elite) {
+        meilleuresParNiveau[niveau.id] ??= tousLesJeux.filter(j => autoriseeAuNiveau(j.rarete, niveau))
+            .map(j => creerCarte(j)).sort((a, b) => totalStats(b) - totalStats(a)).slice(0, niveau.elite);
+        return melanger(meilleuresParNiveau[niveau.id]).slice(0, TAILLE_DECK);
+    }
+    const raretes = RARETES.filter(r => autoriseeAuNiveau(r.id, niveau));
+    const exclus = new Set();
+    return Array.from({ length: TAILLE_DECK }, () => {
+        const carte = piocher(tirerRarete('chanceDuel', raretes), exclus);
+        exclus.add(carte.id);
+        return carte;
+    });
+}
+
+// Coup de l'ordinateur : le meilleur avec la probabilité `intelligence` du niveau, sinon au hasard
+function coupOrdi(role, stat) {
+    const d = deckDuel;
+    const malin = Math.random() < d.niveau.intelligence;
+    if (role === 'attaque') {
+        if (!malin) return { carte: auHasard(d.ordi), stat: auHasard(STATS_DECK) };
+        let meilleur = null;
+        for (const carte of d.ordi) {
+            for (const s of STATS_DECK) if (!meilleur || carte[s] > meilleur.carte[meilleur.stat]) meilleur = { carte, stat: s };
+        }
+        return meilleur;
+    }
+    // Défense : il ne voit pas ta carte, il répond avec sa meilleure valeur dans la stat annoncée
+    return malin ? d.ordi.reduce((m, c) => (c[stat] > m[stat] ? c : m)) : auHasard(d.ordi);
+}
+
+function niveauxDeckHTML() {
+    return `
+        <p class="duel-message">${t('Choisis la difficulté. Elle fixe la rareté maximale des cartes, pour toi comme pour l’ordinateur.')}</p>
+        <div class="niveaux-deck">
+            ${NIVEAUX_DECK.map(niveau => {
+                const max = RARETES[indexRarete(niveau.max)];
+                const assez = cartesDuNiveau(niveau).length >= TAILLE_DECK;
+                return `
+                <button class="niveau-deck rarete-${max.id}" data-niveau="${niveau.id}"${assez ? '' : ' disabled'}>
+                    <b>${niveau.nom}</b>
+                    <span>${t('Rareté max : {rarete}', { rarete: max.nom })}</span>
+                    <span class="niveau-gain">+${niveau.gain} ${PIECE}</span>
+                    ${assez ? '' : `<small>${t('Il te faut au moins {n} cartes {rarete} ou moins', { n: TAILLE_DECK, rarete: max.nom })}</small>`}
+                </button>`;
+            }).join('')}
+        </div>`;
+}
+
+function choixDeckHTML() {
+    const d = deckDuel;
+    const recherche = d.recherche.trim().toLowerCase();
+    const cartes = cartesDuNiveau(d.niveau)
+        .filter(e => !recherche || e.nom.toLowerCase().includes(recherche))
+        .sort((a, b) => totalStats(b) - totalStats(a));
+    return `
+        <p class="duel-message">${t('Niveau {niveau} : choisis {n} cartes de ta collection ({choisies} / {n}).',
+            { niveau: d.niveau.nom, n: TAILLE_DECK, choisies: d.choix.length })}</p>
+        <div class="duel-actions">
+            <button class="btn" data-deck-action="niveaux">${t('Changer de difficulté')}</button>
+            <button class="btn btn-principal" data-deck-action="lancer"${d.choix.length === TAILLE_DECK ? '' : ' disabled'}>${t('Lancer la partie')}</button>
+        </div>
+        <label class="recherche deck-recherche">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" id="deck-recherche" value="${echapper(d.recherche)}" placeholder="${t('Rechercher un jeu…')}" aria-label="${t('Rechercher un jeu')}">
+        </label>
+        <div class="grille">${cartes.slice(0, d.limite).map(e => `
+            <button class="carte-choix${d.choix.includes(e.id) ? ' choisie' : ''}" data-choix-deck="${e.id}" aria-pressed="${d.choix.includes(e.id)}">
+                ${carteHTML(e, { holo: e.holos > 0 })}
+            </button>`).join('')}</div>
+        ${cartes.length > d.limite ? `<div class="plus"><button class="btn" data-deck-action="plus">${t('Afficher plus')}</button></div>` : ''}`;
+}
+
+function actionsDeckHTML() {
+    const d = deckDuel;
+    if (d.attente === 'attaque' && d.carte !== null) {
+        const carte = d.moi[d.carte];
+        return STATS_DECK.map(s => `
+            <button class="btn-stat" data-stat-deck="${s}"><span>${STATS[s].icone} ${STATS[s].nom}</span><b>${carte[s]}</b></button>`).join('');
+    }
+    if (d.actions === 'suivante') return `<button class="btn btn-principal btn-grand" data-deck-action="suivante">${t('Manche suivante')}</button>`;
+    if (d.actions === 'decisive') return `<button class="btn btn-principal btn-grand" data-deck-action="decisive">${t('Révéler les dernières cartes')}</button>`;
+    if (d.actions === 'fin') {
+        return `<button class="btn btn-principal btn-grand" data-deck-action="rejouer">${t('Rejouer')}</button>
+            <button class="btn" data-deck-action="niveaux">${t('Changer de difficulté')}</button>`;
+    }
+    return '';
+}
+
+function plateauDeckHTML() {
+    const d = deckDuel;
+    const pips = n => Array.from({ length: POINTS_VICTOIRE_DECK }, (_, i) => `<i${i < n ? ' class="plein"' : ''}></i>`).join('');
+    const dos = '<div class="dos-carte" aria-hidden="true"><span>GC</span></div>';
+    const resultat = qui => (!d.combat || d.combat.ecart === undefined || !d.combat.ecart ? ''
+        : (qui === 'moi') === (d.combat.ecart > 0) ? ' gagne' : ' perd');
+    const mainOrdi = d.ordi.filter(c => c !== d.combat?.ordi);
+    return `
+        <div class="duel-score">
+            <div class="duel-joueur-score"><span>${t('Toi')}</span><div class="pips">${pips(d.score.moi)}</div></div>
+            <div class="duel-infos"><div class="duel-vs">VS</div><span>${d.niveau.nom}</span></div>
+            <div class="duel-joueur-score"><span>${t('Ordi')}</span><div class="pips">${pips(d.score.ordi)}</div></div>
+        </div>
+        <div class="decks-main decks-ordi">${mainOrdi.map(() => dos).join('')}</div>
+        <div class="decks-combat">
+            <div class="duel-emplacement${resultat('ordi')}" data-titre="${t('Ordinateur')}">
+                ${d.combat?.ordi ? (d.combat.cache ? dos : carteHTML(d.combat.ordi)) : ''}
+            </div>
+            <div class="duel-emplacement${resultat('moi')}" data-titre="${t('Ta carte')}">
+                ${d.combat?.moi ? carteHTML(d.combat.moi, { holo: d.combat.moi.holos > 0 }) : ''}
+            </div>
+        </div>
+        <p class="duel-message">${d.message}</p>
+        <div class="duel-actions">${actionsDeckHTML()}</div>
+        <div class="decks-main">${d.moi.map((c, i) => `
+            <button class="carte-main${d.carte === i ? ' choisie' : ''}" data-carte-main="${i}"${d.attente ? '' : ' disabled'}>
+                ${carteHTML(c, { holo: c.holos > 0 })}
+            </button>`).join('')}</div>`;
+}
+
+function afficherDuelDecks() {
+    const d = deckDuel;
+    const zone = $('#mode-decks');
+    if (d.etape === 'niveau') zone.innerHTML = niveauxDeckHTML();
+    else if (d.etape === 'deck') zone.innerHTML = choixDeckHTML();
+    else {
+        zone.innerHTML = plateauDeckHTML();
+        // La stat comparée ressort sur les deux cartes de la table
+        if (d.combat?.stat && d.combat.ecart !== undefined) {
+            zone.querySelectorAll(`.decks-combat li[data-stat="${d.combat.stat}"]`).forEach(li => li.classList.add('stat-choisie'));
+        }
+    }
+}
+
+function lancerPartieDecks() {
+    const d = deckDuel;
+    d.choix = d.choix.filter(id => etat.collection[id]);
+    if (!donneesPretes() || d.choix.length < TAILLE_DECK) return afficherDuelDecks();
+    d.moi = d.choix.map(id => ({ ...etat.collection[id] }));
+    d.ordi = deckOrdinateur(d.niveau);
+    d.score = { moi: 0, ordi: 0 };
+    d.attaquant = Math.random() < 0.5 ? 'moi' : 'ordi';
+    d.etape = 'partie';
+    mancheDecks(d.attaquant === 'moi' ? t('Pile ou face : c’est toi qui commences !') : t('Pile ou face : l’ordinateur commence.'));
+}
+
+function mancheDecks(annonce = '') {
+    const d = deckDuel;
+    Object.assign(d, { carte: null, combat: null, actions: null, attente: null });
+    const avant = annonce ? `${annonce} ` : '';
+    if (d.moi.length === 1 && d.score.moi === d.score.ordi) {
+        d.actions = 'decisive';
+        d.message = avant + t('Égalité ! Dernière manche : vos dernières cartes se départagent au total de leurs stats.');
+    } else if (d.attaquant === 'moi') {
+        d.attente = 'attaque';
+        d.message = avant + t('À toi d’attaquer : choisis une carte, puis la stat sur laquelle tu l’engages.');
+    } else {
+        const coup = coupOrdi('attaque');
+        d.combat = { ordi: coup.carte, stat: coup.stat, cache: true };
+        d.attente = 'defense';
+        d.message = avant + t('L’ordinateur pose une carte face cachée et attaque en {stat}. Choisis ta carte pour défendre.', { stat: STATS[coup.stat].nom });
+    }
+    afficherDuelDecks();
+}
+
+// `stat` vide : manche décisive, au total des stats
+function resoudreMancheDecks(carteMoi, carteOrdi, stat) {
+    const d = deckDuel;
+    const valeur = c => (stat ? c[stat] : totalStats(c));
+    const ecart = valeur(carteMoi) - valeur(carteOrdi);
+    if (ecart > 0) d.score.moi++;
+    else if (ecart < 0) d.score.ordi++;
+    d.moi = d.moi.filter(c => c !== carteMoi);
+    d.ordi = d.ordi.filter(c => c !== carteOrdi);
+    Object.assign(d, { combat: { moi: carteMoi, ordi: carteOrdi, stat, ecart }, attente: null, carte: null });
+    const nomStat = stat ? `${STATS[stat].icone} ${STATS[stat].nom}` : t('Total des stats');
+    const resultat = ecart > 0 ? t('Manche gagnée !') : ecart < 0 ? t('Manche perdue.') : t('Égalité parfaite, personne ne marque.');
+    d.message = `${t('{stat} : <b>{a}</b> contre <b>{b}</b>.', { stat: nomStat, a: valeur(carteMoi), b: valeur(carteOrdi) })} <b>${resultat}</b>`;
+    jouerSon(ecart > 0 ? 'bonne' : ecart < 0 ? 'mauvaise' : 'carte');
+    if (d.score.moi >= POINTS_VICTOIRE_DECK || d.score.ordi >= POINTS_VICTOIRE_DECK || !d.moi.length) {
+        finPartieDecks(carteMoi, carteOrdi, stat);
+    } else {
+        d.attaquant = d.attaquant === 'moi' ? 'ordi' : 'moi';
+        d.actions = 'suivante';
+    }
+    afficherDuelDecks();
+}
+
+function finPartieDecks(carteMoi, carteOrdi, stat) {
+    const d = deckDuel;
+    const { moi, ordi } = d.score;
+    let gagnant = moi > ordi ? 'moi' : ordi > moi ? 'ordi' : null;
+    // Toujours à égalité après la dernière manche : total des stats des dernières cartes jouées
+    if (!gagnant && stat) {
+        const ecart = totalStats(carteMoi) - totalStats(carteOrdi);
+        gagnant = ecart > 0 ? 'moi' : ecart < 0 ? 'ordi' : null;
+        d.message += ` ${t('Score à égalité : départage au total des stats des dernières cartes ({a} contre {b}).', { a: totalStats(carteMoi), b: totalStats(carteOrdi) })}`;
+    }
+    if (gagnant === 'moi') {
+        etat.pieces += d.niveau.gain;
+        etat.stats.decksGagnes++;
+        if (d.niveau.id === 'hardcore') etat.stats.decksHardcore++;
+        sauvegarder();
+        majEntete();
+        toast(t('Victoire ! +{n} pièces', { n: d.niveau.gain }), 'gain');
+        d.message += t('<br><b class="victoire">Victoire {a} à {b} !</b> Tu gagnes {n} pièces.', { a: moi, b: ordi, n: d.niveau.gain });
+    } else if (gagnant === 'ordi') {
+        d.message += t('<br><b class="defaite">Défaite {a} à {b}.</b> Retente ta chance !', { a: moi, b: ordi });
+    } else {
+        d.message += t('<br><b>Match nul.</b>');
+    }
+    jouerSon(gagnant === 'moi' ? 'succes' : gagnant === 'ordi' ? 'mauvaise' : 'carte');
+    d.actions = 'fin';
+    verifierSucces();
+}
+
+function actionDuelDecks(element) {
+    const d = deckDuel;
+    const { niveau, choixDeck, carteMain, statDeck, deckAction } = element.dataset;
+    if (niveau) {
+        Object.assign(d, { niveau: NIVEAUX_DECK.find(n => n.id === niveau), choix: [], recherche: '', limite: CARTES_CHOIX_DECK, etape: 'deck' });
+    } else if (choixDeck) {
+        const id = Number(choixDeck);
+        if (d.choix.includes(id)) d.choix = d.choix.filter(x => x !== id);
+        else if (d.choix.length < TAILLE_DECK) d.choix.push(id);
+    } else if (carteMain !== undefined) {
+        const i = Number(carteMain);
+        if (d.attente === 'defense') return resoudreMancheDecks(d.moi[i], d.combat.ordi, d.combat.stat);
+        if (d.attente === 'attaque') d.carte = i;
+    } else if (statDeck) {
+        return resoudreMancheDecks(d.moi[d.carte], coupOrdi('defense', statDeck), statDeck);
+    } else if (deckAction === 'niveaux') {
+        d.etape = 'niveau';
+    } else if (deckAction === 'plus') {
+        d.limite += CARTES_CHOIX_DECK;
+    } else if (deckAction === 'lancer') {
+        return lancerPartieDecks();
+    } else if (deckAction === 'suivante') {
+        return mancheDecks();
+    } else if (deckAction === 'decisive') {
+        return resoudreMancheDecks(d.moi[0], d.ordi[0], null);
+    } else if (deckAction === 'rejouer') {
+        d.choix = d.choix.filter(id => etat.collection[id]);
+        d.etape = 'deck';
+    }
+    afficherDuelDecks();
+}
+
 
 // ---------- Sons (synthétisés avec Web Audio, coupés par défaut) ----------
 
@@ -2282,6 +2580,19 @@ function init() {
     $('#onglets-jeu').addEventListener('click', e => {
         const onglet = e.target.closest('[data-mode]');
         if (onglet) changerModeJeu(onglet.dataset.mode);
+    });
+    $('#mode-decks').addEventListener('click', e => {
+        const element = e.target.closest('[data-niveau], [data-choix-deck], [data-carte-main], [data-stat-deck], [data-deck-action]');
+        if (element && !element.disabled) actionDuelDecks(element);
+    });
+    // Recherche pendant la composition du deck : on garde le curseur dans le champ
+    $('#mode-decks').addEventListener('input', e => {
+        if (e.target.id !== 'deck-recherche') return;
+        Object.assign(deckDuel, { recherche: e.target.value, limite: CARTES_CHOIX_DECK });
+        afficherDuelDecks();
+        const champ = $('#deck-recherche');
+        champ.focus();
+        champ.setSelectionRange(champ.value.length, champ.value.length);
     });
     $('#pom-plateau').addEventListener('click', e => {
         const choix = e.target.closest('[data-pom]');

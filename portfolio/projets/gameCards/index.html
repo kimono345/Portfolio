@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=65">
+    <link rel="stylesheet" href="style.css?v=66">
 </head>
 <body>
 
@@ -245,6 +245,7 @@
             </div>
             <div class="onglets" id="onglets-jeu" role="tablist">
                 <button class="actif" data-mode="duel" role="tab" aria-selected="true">Duel</button>
+                <button data-mode="decks" role="tab" aria-selected="false" data-i18n>Duel de decks</button>
                 <button data-mode="pom" role="tab" aria-selected="false" data-i18n>Plus ou moins</button>
             </div>
 
@@ -279,6 +280,9 @@
             </div>
 
             <!-- Mini-jeu : deviner lequel des deux jeux gagne sur une question -->
+            <!-- Duel de decks : construit par script.js (difficulté, deck, partie) -->
+            <div id="mode-decks" hidden></div>
+
             <div id="mode-pom" hidden>
                 <p class="pom-question" id="pom-question" data-i18n>Chargement…</p>
                 <div class="pom-plateau" id="pom-plateau"></div>
@@ -351,6 +355,10 @@
                 <article>
                     <h3 data-i18n>⚔ Duel</h3>
                     <p data-i18n="regle-duel">Premier à 3 manches, 30 pièces à la clé. Chaque carte est tirée selon les chances de la colonne « Duel », puis au hasard dans sa rareté. Tu vois le jeu adverse mais ni sa rareté ni ses stats (révélées après ton choix). En cas d’égalité, la Popularité départage.</p>
+                </article>
+                <article>
+                    <h3 data-i18n>🃏 Duel de decks</h3>
+                    <p data-i18n="regle-decks">Choisis une difficulté (elle plafonne la rareté des cartes pour toi et pour l’ordinateur : Peu commune en Facile, Rare en Normal, Épique en Difficile, Légendaire en Impossible, Mythique en Hardcore), puis 3 cartes de ta collection. Pile ou face désigne qui commence. À tour de rôle, l’attaquant pose une carte face cachée et annonce une stat, le défenseur répond avec une de ses cartes : la plus haute valeur marque 1 point. Premier à 2 points. En cas d’égalité, les dernières cartes se départagent au total de leurs stats. De 20 à 300 pièces à gagner selon la difficulté. En Impossible et Hardcore, l’ordinateur joue avec les meilleures cartes du jeu.</p>
                 </article>
                 <article>
                     <h3 data-i18n>✨ God pack</h3>
@@ -441,7 +449,7 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="i18n.js?v=12"></script>
-    <script src="script.js?v=102"></script>
+    <script src="i18n.js?v=13"></script>
+    <script src="script.js?v=103"></script>
 </body>
 </html>

@@ -1624,6 +1624,50 @@ main {
 .onglets button:hover { color: var(--texte); }
 .onglets button.actif { background: var(--fond-4); color: var(--texte); }
 
+/* ── Duel de decks ── */
+.niveaux-deck { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.8rem; max-width: 980px; margin: 0 auto; }
+.niveau-deck {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 1rem 1.1rem;
+    border-radius: var(--rayon);
+    border: 1px solid var(--bord);
+    background: var(--fond-2);
+    box-shadow: inset 0 3px 0 var(--rar);
+    text-align: left;
+    transition: transform 0.2s, border-color 0.2s;
+}
+.niveau-deck:hover:not(:disabled) { transform: translateY(-3px); border-color: var(--rar); }
+.niveau-deck b { font-size: 1.15rem; }
+.niveau-deck span { color: var(--texte-doux); font-size: 0.88rem; }
+.niveau-deck .niveau-gain { display: flex; align-items: center; gap: 0.3rem; color: var(--accent); font-family: 'Space Mono', monospace; font-weight: 700; }
+.niveau-deck small { color: var(--rouge); font-size: 0.78rem; }
+.niveau-deck:disabled { opacity: 0.5; cursor: not-allowed; }
+.deck-recherche { max-width: 420px; margin: 1.2rem auto; }
+.carte-choix, .carte-main { border-radius: 14px; transition: transform 0.15s, box-shadow 0.15s; }
+.carte-choix.choisie, .carte-main.choisie { transform: translateY(-6px); box-shadow: 0 0 0 3px var(--accent), 0 0 24px rgba(255, 184, 0, 0.45); }
+.carte-main:not(:disabled):hover { transform: translateY(-4px); }
+.carte-main:disabled { cursor: default; }
+.decks-main { display: grid; grid-template-columns: repeat(3, minmax(0, 150px)); gap: 0.8rem; justify-content: center; margin: 1rem 0; }
+.decks-ordi { grid-template-columns: repeat(3, minmax(0, 64px)); min-height: 1rem; margin: 0 0 1rem; }
+.decks-combat { display: grid; grid-template-columns: repeat(2, minmax(0, 200px)); gap: 1.5rem; justify-content: center; }
+/* Dos de carte (main de l'ordinateur, carte posée face cachée) */
+.dos-carte {
+    aspect-ratio: 5 / 7;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    border: 3px solid #2f3560;
+    background:
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.04) 0 10px, transparent 10px 20px),
+        radial-gradient(circle at 50% 50%, rgba(123, 60, 255, 0.35), transparent 70%),
+        linear-gradient(160deg, #1f2550, #0f1230);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+.dos-carte span { font-weight: 900; font-size: 0.8rem; color: var(--accent); padding: 0.1rem 0.4rem; border: 2px solid var(--accent); border-radius: 6px; }
+.decks-combat .dos-carte span { font-size: 1.5rem; padding: 0.3rem 0.7rem; border-width: 3px; }
+
 /* ── Plus ou moins ── */
 .pom-question { text-align: center; font-size: clamp(1.2rem, 3vw, 1.6rem); font-weight: 800; margin-bottom: 1.4rem; }
 .pom-plateau {
