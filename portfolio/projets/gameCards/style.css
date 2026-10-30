@@ -993,7 +993,47 @@ main {
     overflow: hidden;
     background: linear-gradient(135deg, var(--fond-3), #2a2f55);
 }
-.carte-image img { width: 100%; height: 100%; object-fit: cover; }
+.carte-image img { position: relative; width: 100%; height: 100%; object-fit: cover; }
+
+/* Image de secours, sous l'image Steam : couleur du jeu, initiales en filigrane et nom */
+.image-secours {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    padding: 4cqi;
+    background:
+        repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0 2cqi, transparent 2cqi 4cqi),
+        radial-gradient(circle at 30% 20%, hsl(var(--teinte) 70% 45% / 0.55), transparent 65%),
+        linear-gradient(150deg, hsl(var(--teinte) 45% 26%), hsl(calc(var(--teinte) + 50) 50% 12%));
+}
+.secours-initiales {
+    position: absolute;
+    font-size: 30cqi;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    color: hsl(var(--teinte) 80% 80% / 0.14);
+    line-height: 1;
+}
+.secours-nom {
+    position: relative;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 7cqi;
+    font-weight: 800;
+    line-height: 1.15;
+    text-align: center;
+    color: #fff;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+/* Full Art : le nom est déjà en bas de la carte, on ne garde que les initiales, plus grandes */
+.full-art-fond .image-secours { align-items: start; padding-top: 30%; }
+.full-art-fond .secours-initiales { position: static; font-size: 42cqi; color: hsl(var(--teinte) 80% 80% / 0.28); }
+.full-art-fond .secours-nom { display: none; }
+.full-art-fond.paysage .image-secours { display: none; } /* image horizontale : le fond flou la remplace */
 
 /* ── GOTY : bandeau doré en diagonale sur le coin haut droit (coupé par l'arrondi de la carte) ── */
 .ruban-goty {
@@ -1924,6 +1964,57 @@ main {
     border: 1px solid var(--bord);
 }
 .profil-bloc > p { color: var(--texte-doux); margin-bottom: 1rem; max-width: 640px; }
+
+/* Récompense du jour : 7 cases, celle du jour en or, les passées cochées */
+.modale-contenu:has(.connexion) { display: block; }
+.connexion { text-align: center; }
+.connexion h2 { font-size: 1.5rem; margin-bottom: 0.4rem; }
+.profil-bloc.connexion > p { margin-inline: auto; }
+.profil-bloc.connexion > p.connexion-serie, .connexion-serie { color: var(--texte-doux); margin: 0 auto 1.2rem; max-width: 520px; }
+.connexion-jours { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.5rem; margin: 0 auto 1.3rem; max-width: 680px; list-style: none; padding: 0; }
+.connexion-jours li {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-height: 92px;
+    padding: 0.7rem 0.3rem;
+    border-radius: 12px;
+    border: 1px solid var(--bord);
+    background: var(--fond-3);
+}
+.connexion-numero { font-size: 0.72rem; font-weight: 700; color: var(--texte-doux); text-transform: uppercase; letter-spacing: 0.05em; }
+.connexion-jours b { display: flex; align-items: center; gap: 0.25rem; font-family: 'Space Mono', monospace; font-size: 0.8rem; color: var(--accent); text-align: center; }
+.connexion-jours li.faite { opacity: 0.45; }
+.connexion-coche {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--vert);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 900;
+}
+.connexion-jours li.aujourdhui {
+    border-color: var(--accent);
+    background: rgba(255, 184, 0, 0.12);
+    box-shadow: 0 0 0 1px var(--accent), 0 0 22px rgba(255, 184, 0, 0.3);
+    animation: jour-pulse 1.6s ease-in-out infinite;
+}
+@keyframes jour-pulse { 50% { transform: translateY(-3px); } }
+.connexion-jours li.jour-full-art b { background: linear-gradient(90deg, #ffa0d2, #aad7ff, #bef5dc, #ffe1a0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.connexion-suite { color: var(--texte-doux); font-size: 0.9rem; }
+.profil-bloc.connexion > p.connexion-suite { margin-bottom: 0; }
+@media (max-width: 560px) {
+    .connexion-jours { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
 .profil-bloc .interrupteur { padding: 0; color: var(--texte); }
 /* Choix de la langue */
 .reglage-langue { display: flex; align-items: center; gap: 0.8rem; margin-top: 1rem; font-weight: 600; }

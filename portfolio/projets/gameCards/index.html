@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=70">
+    <link rel="stylesheet" href="style.css?v=71">
 </head>
 <body>
 
@@ -288,7 +288,7 @@
                 <div class="pom-plateau" id="pom-plateau"></div>
                 <p class="duel-message" id="pom-message"></p>
                 <div class="duel-actions" id="pom-actions"></div>
-                <p class="pom-score" data-i18n>Série <b id="pom-serie">0</b> · Record <b id="pom-record">0</b> · +2 pièces par bonne réponse</p>
+                <p class="pom-score" data-i18n>Série <b id="pom-serie">0</b> · Record <b id="pom-record">0</b> · Pièces à 5, 10 et 20 bonnes réponses d’affilée</p>
             </div>
         </section>
 
@@ -354,11 +354,11 @@
                 </article>
                 <article>
                     <h3 data-i18n>⚔ Duel</h3>
-                    <p data-i18n="regle-duel">Premier à 3 manches, 30 pièces à la clé. Chaque carte est tirée selon les chances de la colonne « Duel », puis au hasard dans sa rareté. Tu vois le jeu adverse mais ni sa rareté ni ses stats (révélées après ton choix). En cas d’égalité, la Popularité départage.</p>
+                    <p data-i18n="regle-duel">Premier à 3 manches, 10 pièces à la clé. Chaque carte est tirée selon les chances de la colonne « Duel », puis au hasard dans sa rareté. Tu vois le jeu adverse mais ni sa rareté ni ses stats (révélées après ton choix). En cas d’égalité, la Popularité départage.</p>
                 </article>
                 <article>
                     <h3 data-i18n>🃏 Duel de decks</h3>
-                    <p data-i18n="regle-decks">Choisis une difficulté (elle plafonne la rareté des cartes pour toi et pour l’ordinateur : Peu commune en Facile, Rare en Normal, Épique en Difficile, Légendaire en Impossible, Mythique en Hardcore), puis 3 cartes de ta collection. Pile ou face désigne qui commence. À tour de rôle, l’attaquant pose une carte face cachée et annonce une stat, le défenseur répond avec une de ses cartes : la plus haute valeur marque 1 point. Premier à 2 points. En cas d’égalité, les dernières cartes se départagent au total de leurs stats. De 20 à 300 pièces à gagner selon la difficulté. En Impossible et Hardcore, l’ordinateur joue avec les meilleures cartes du jeu.</p>
+                    <p data-i18n="regle-decks">Choisis une difficulté (elle plafonne la rareté des cartes pour toi et pour l’ordinateur : Peu commune en Facile, Rare en Normal, Épique en Difficile, Légendaire en Impossible, Mythique en Hardcore), puis 3 cartes de ta collection. Pile ou face désigne qui commence. À tour de rôle, l’attaquant pose une carte face cachée et annonce une stat, le défenseur répond avec une de ses cartes : la plus haute valeur marque 1 point. Premier à 2 points. En cas d’égalité, les dernières cartes se départagent au total de leurs stats. De 5 à 80 pièces à gagner selon la difficulté. En Impossible et Hardcore, l’ordinateur joue avec les meilleures cartes du jeu.</p>
                 </article>
                 <article>
                     <h3 data-i18n>✨ God pack</h3>
@@ -377,12 +377,16 @@
                     <p data-i18n="regle-succes">Une trentaine d’objectifs (collection, boosters, duels, Plus ou moins). Quand un succès est atteint, va dans l’onglet Profil pour récupérer sa récompense : des pièces, des boosters, des Prestiges, et même une carte Full Art au hasard.</p>
                 </article>
                 <article>
+                    <h3 data-i18n>💰 Gains du jour</h3>
+                    <p data-i18n="regle-gains">Dans chaque mode (duel, duel de decks, Plus ou moins), ta première victoire du jour rapporte le triple. Les suivantes rapportent le gain normal jusqu’à la 5ᵉ, la moitié jusqu’à la 15ᵉ, puis 10 % jusqu’au lendemain : de quoi jouer autant que tu veux, sans farmer. Tout repart à zéro chaque jour à minuit.</p>
+                </article>
+                <article>
                     <h3 data-i18n>🍀 Compteur de malchance</h3>
                     <p data-i18n="regle-malchance">Après 50 boosters sans Légendaire ni Mythique, le suivant en contient une à coup sûr. Le compteur est affiché sur l’accueil.</p>
                 </article>
                 <article>
                     <h3 data-i18n>❓ Plus ou moins</h3>
-                    <p data-i18n="regle-pom">Deux jeux, une question : lequel a le plus d’avis, le mieux noté, le plus ancien ? 2 pièces par bonne réponse, la série s’arrête à la première erreur.</p>
+                    <p data-i18n="regle-pom">Deux jeux, une question : lequel a le plus d’avis, le mieux noté, le plus ancien ? La série s’arrête à la première erreur. Elle rapporte des pièces à 5 bonnes réponses d’affilée (5 pièces), 10 (15), 20 (40), puis 40 toutes les 10.</p>
                 </article>
                 <article>
                     <h3 data-i18n>💰 Revente</h3>
@@ -397,6 +401,9 @@
                 <h1 data-i18n>Profil</h1>
                 <p id="resume-profil"></p>
             </div>
+
+            <h2 class="profil-titre" data-i18n>Récompense du jour</h2>
+            <div class="profil-bloc connexion" id="connexion-profil"></div>
 
             <h2 class="profil-titre" data-i18n-texte>Succès <span id="succes-compte"></span>
                 <button class="btn btn-or" id="btn-tout-recuperer" hidden data-i18n>Tout récupérer</button></h2>
@@ -449,7 +456,7 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="i18n.js?v=17"></script>
-    <script src="script.js?v=107"></script>
+    <script src="i18n.js?v=19"></script>
+    <script src="script.js?v=109"></script>
 </body>
 </html>

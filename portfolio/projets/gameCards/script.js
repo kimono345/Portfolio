@@ -54,7 +54,9 @@ const PART_MYTHIQUE_GOD_PACK = 0.25; // en plus de la Mythique garantie
 
 // Compteur de malchance : après 50 boosters sans Légendaire ni Mythique, le suivant en garantit une
 const MALCHANCE_MAX = 50;
-const GAIN_POM = 2; // pièces par bonne réponse au Plus ou moins
+// Plus ou moins : des pièces aux paliers de la série (5, 10, 20 bonnes réponses), puis toutes les 10 au-delà
+const PALIERS_POM = { 5: 5, 10: 15, 20: 40 };
+const GAIN_POM_AU_DELA = 40;
 
 const CARTES_PAR_BOOSTER = 5;
 const BOOSTERS_PAR_LOT = 10; // ouverture ×10
@@ -112,7 +114,7 @@ const MYTHIQUES = [
     1091500, // Cyberpunk 2077
     220,     // Half-Life 2
     620,     // Portal 2
-    1593500, // God of War
+    1593500, // God of War 
     391540,  // Undertale
     489830,  // The Elder Scrolls V: Skyrim Special Edition
     379720,  // DOOM
@@ -263,8 +265,14 @@ const BONUS_PRESTIGE = { goty: 3, chefOeuvre: 2, adore: 1, malNote: -3 };
 // Ces jeux ne descendent jamais sous Légendaire : les GOTY, et les géants (750 000 avis ou plus)
 const AVIS_GEANT = 750000;
 const MANCHES_GAGNANTES = 3;
-const GAIN_DUEL = 30;
+const GAIN_DUEL = 10;
+// Gains du jour, mode par mode : la 1re victoire compte triple, puis 100 % jusqu'à la 5e, 50 % jusqu'à la 15e, 10 % au-delà
+const TAUX_GAINS = [{ jusqua: 1, taux: 3 }, { jusqua: 5, taux: 1 }, { jusqua: 15, taux: 0.5 }, { jusqua: Infinity, taux: 0.1 }];
 const CARTES_PAR_PAGE = 60; // collection affichée par tranches
+// Récompense de connexion : un cycle de 7 jours qui recommence ; manquer un jour fait repartir au jour 1
+const RECOMPENSES_CONNEXION = [
+    { pieces: 50 }, { boosters: 2 }, { pieces: 100 }, { boosters: 3 }, { prestiges: 1 }, { pieces: 200 }, { fullArt: true },
+];
 const URL_IMAGES = 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps';
 
 // Icônes Bootstrap Icons (licence MIT) en SVG : rendu identique sur tous les appareils, contrairement aux emoji
@@ -373,6 +381,8 @@ const CLES = {
     succesRecuperes: 'gameCards.succesRecuperes',
     malchance: 'gameCards.malchance',
     reglages: 'gameCards.reglages',
+    connexion: 'gameCards.connexion',
+    gainsJour: 'gameCards.gainsJour',
 };
 
 function lire(cle, defaut) {
@@ -410,6 +420,8 @@ const etat = {
     succesRecuperes: lire(CLES.succesRecuperes, null) ?? { ...lire(CLES.succes, {}) },
     malchance: lire(CLES.malchance, 0),   // boosters ouverts depuis la dernière Légendaire ou Mythique
     reglages: { sons: false, ...lire(CLES.reglages, {}) },
+    connexion: lire(CLES.connexion, { dernier: null, serie: 0 }), // dernier jour récupéré, et jours d'affilée
+    gainsJour: lire(CLES.gainsJour, { jour: null }), // victoires payées aujourd'hui, mode par mode
 };
 
 // Tous les jeux de data/jeux.json (chargés au démarrage), et les mêmes rangés par rareté
@@ -605,6 +617,16 @@ function creerCarte(jeu, { ex = false } = {}) {
 // Jaquette verticale Steam (600 × 900) pour les Full Art ; à défaut, l'image horizontale
 const imagePortrait = carte => `${URL_IMAGES}/${carte.id}/library_600x900.jpg`;
 
+// Image de secours, sous l'image Steam : visible pendant le chargement, et si l'image n'existe pas.
+// Une couleur propre à chaque jeu, ses initiales en grand et son nom.
+function imageSecoursHTML(carte) {
+    const mots = carte.nom.replace(/[^\p{L}\p{N} ]/gu, ' ').split(' ').filter(Boolean);
+    const initiales = mots.slice(0, 2).map(mot => mot[0]).join('').toUpperCase() || '?';
+    return `<div class="image-secours" style="--teinte: ${(carte.id * 47) % 360}" aria-hidden="true">
+                        <span class="secours-initiales">${echapper(initiales)}</span><span class="secours-nom">${echapper(carte.nom)}</span>
+                    </div>`;
+}
+
 function carteHTML(carte, { holo = false, compteur = 0, cachee = false, fullArt = (carte.fullArts || 0) > 0, ex = Boolean(carte.ex) } = {}) {
     if (fullArt) holo = false;
     const rarete = RARETES[indexRarete(carte.rarete)];
@@ -634,8 +656,8 @@ function carteHTML(carte, { holo = false, compteur = 0, cachee = false, fullArt 
     return `
         <article class="carte rarete-${rarete.id}${holo ? ' holo' : ''}${cachee ? ' stats-cachees' : ''}${chef ? ' chef-oeuvre' : ''}${goty ? ' goty' : ''}${fullArt ? ' full-art' : ''}${ex ? ' ex' : ''}">
             <div class="carte-corps">
-                ${fullArt ? `<div class="full-art-fond" style="--secours: url('${secours}')" aria-hidden="true"><img src="${imagePortrait(carte)}" alt="" loading="lazy"
-                    onerror="this.onerror=null; this.src='${secours}'; this.parentNode.classList.add('paysage')"></div>` : ''}
+                ${fullArt ? `<div class="full-art-fond" style="--secours: url('${secours}')" aria-hidden="true">${imageSecoursHTML(carte)}<img src="${imagePortrait(carte)}" alt="" loading="lazy"
+                    onerror="if (this.dataset.repli) { this.parentNode.classList.remove('paysage'); this.remove(); } else { this.dataset.repli = 1; this.src = '${secours}'; this.parentNode.classList.add('paysage'); }"></div>` : ''}
                 ${goty ? `<span class="ruban-goty" title="${t('Jeu de l’année {annee}', { annee: goty.annee })} · ${goty.ceremonie}"><span>${BRIN_LAURIER}GOTY ${goty.annee}${BRIN_LAURIER}</span></span>` : ''}
                 ${goty && !fullArt ? `<span class="filigrane-goty" aria-hidden="true">${LAURIER}</span>` : ''}
                 <header class="carte-haut">
@@ -645,6 +667,7 @@ function carteHTML(carte, { holo = false, compteur = 0, cachee = false, fullArt 
                 ${fullArt
                     ? `<div class="carte-bas">${plaque}${texte}</div>`
                     : `<div class="carte-image">
+                    ${imageSecoursHTML(carte)}
                     ${carte.image ? `<img src="${secours}" alt="" loading="lazy" onerror="this.remove()">` : ''}
                     ${plaque}
                 </div>${texte}`}
@@ -1764,17 +1787,18 @@ async function choisirStat(stat) {
 
 function finDuel() {
     const victoire = duel.joueur >= MANCHES_GAGNANTES;
+    const gain = victoire ? gainDuJour('duel', GAIN_DUEL) : null;
     if (victoire) {
         etat.stats.duelsGagnes++;
         if (duel.ordi === 0) etat.stats.duelsParfaits++;
-        etat.pieces += GAIN_DUEL;
+        etat.pieces += gain.pieces;
         sauvegarder();
         majEntete();
-        toast(t('Victoire ! +{n} pièces', { n: GAIN_DUEL }), 'gain');
+        toast(t('Victoire ! +{n} pièces', { n: gain.pieces }) + noteGain(gain.taux), 'gain');
     }
     // Le détail de la dernière manche reste affiché au-dessus du résultat
     $('#duel-message').innerHTML += victoire
-        ? t('<br><b class="victoire">Victoire {a} à {b} !</b> Tu gagnes {n} pièces.', { a: duel.joueur, b: duel.ordi, n: GAIN_DUEL })
+        ? t('<br><b class="victoire">Victoire {a} à {b} !</b> Tu gagnes {n} pièces.', { a: duel.joueur, b: duel.ordi, n: gain.pieces }) + noteGain(gain.taux)
         : t('<br><b class="defaite">Défaite {a} à {b}.</b> Retente ta chance !', { a: duel.joueur, b: duel.ordi });
     actionsDuel(`<button class="btn btn-principal btn-grand" data-action="demarrer">${t('Rejouer')}</button>`);
     jouerSon(victoire ? 'succes' : 'mauvaise');
@@ -1863,9 +1887,9 @@ function verifierSucces() {
 
 const succesARecuperer = () => SUCCES.filter(s => etat.succes[s.id] && !etat.succesRecuperes[s.id]);
 
-// Pastille sur le menu Profil tant qu'une récompense attend
+// Pastille sur le menu Profil tant qu'une récompense attend (succès ou récompense du jour)
 function majBadgeSucces() {
-    $('#lien-profil').classList.toggle('pret', succesARecuperer().length > 0);
+    $('#lien-profil').classList.toggle('pret', succesARecuperer().length > 0 || jourConnexion() > 0);
 }
 
 // « +50 pièces », « +2 boosters », « Carte Full Art » : texte de la récompense, avec la pièce dessinée si piece est vrai
@@ -1876,12 +1900,8 @@ function texteRecompense(r, piece = true) {
     return t('Carte Full Art');
 }
 
-// Verse la récompense d'un succès obtenu (une seule fois)
-function recupererSucces(id) {
-    const succes = SUCCES.find(s => s.id === id);
-    if (!succes || !etat.succes[id] || etat.succesRecuperes[id] || !donneesPretes()) return;
-    const r = succes.recompense;
-    etat.succesRecuperes[id] = Date.now();
+// Verse une récompense (succès ou connexion) et l'annonce ; renvoie la carte Full Art gagnée, s'il y en a une
+function verserRecompense(r) {
     let carte = null;
     if (r.pieces) etat.pieces += r.pieces;
     // Les boosters gagnés s'ajoutent à la réserve, même au-delà de son maximum
@@ -1899,6 +1919,15 @@ function recupererSucces(id) {
     if (r.boosters) toast(tn(r.boosters, '+{n} booster ajouté à ta réserve', '+{n} boosters ajoutés à ta réserve'), 'gain');
     if (r.prestiges) toast(tn(r.prestiges, '+{n} Prestige ajouté à ta réserve', '+{n} Prestiges ajoutés à ta réserve'), 'gain');
     if (carte) toast(t('{nom} en Full Art rejoint ta collection !', { nom: carte.nom }), 'gain');
+    return carte;
+}
+
+// Verse la récompense d'un succès obtenu (une seule fois)
+function recupererSucces(id) {
+    const succes = SUCCES.find(s => s.id === id);
+    if (!succes || !etat.succes[id] || etat.succesRecuperes[id] || !donneesPretes()) return;
+    etat.succesRecuperes[id] = Date.now();
+    const carte = verserRecompense(succes.recompense);
     afficherProfil();
     verifierSucces(); // la carte gagnée peut débloquer d'autres succès
     if (carte) afficherFiche(carte.id);
@@ -1906,6 +1935,89 @@ function recupererSucces(id) {
 
 function toutRecuperer() {
     for (const s of succesARecuperer()) recupererSucces(s.id);
+}
+
+// ---------- Gains du jour ----------
+
+// Pièces d'une victoire dans un mode ('duel', 'decks', 'pom'), selon le nombre de victoires déjà payées aujourd'hui
+function gainDuJour(mode, base) {
+    if (etat.gainsJour.jour !== jourLocal()) etat.gainsJour = { jour: jourLocal() };
+    const n = etat.gainsJour[mode] = (etat.gainsJour[mode] || 0) + 1;
+    const { taux } = TAUX_GAINS.find(palier => n <= palier.jusqua);
+    return { pieces: Math.max(1, Math.round(base * taux)), taux };
+}
+
+// Précision affichée après le gain : bonus du jour ou gains réduits
+function noteGain(taux) {
+    if (taux > 1) return t(' (première victoire du jour : ×3)');
+    if (taux === 0.5) return t(' (gains réduits de moitié pour aujourd’hui)');
+    if (taux < 0.5) return t(' (gains très réduits jusqu’à demain)');
+    return '';
+}
+
+// ---------- Récompense de connexion quotidienne ----------
+
+// Date en heure locale (« 2026-10-30 ») : aujourd'hui, ou décalée de quelques jours
+function jourLocal(decalage = 0) {
+    const d = new Date();
+    d.setDate(d.getDate() + decalage);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+// Jours d'affilée en comptant aujourd'hui : la série continue si la dernière récompense date d'hier
+const serieConnexion = () => etat.connexion.dernier === jourLocal(-1) ? etat.connexion.serie + 1 : 1;
+
+// Jour du cycle à récupérer aujourd'hui (1 à 7), 0 si c'est déjà fait
+function jourConnexion() {
+    if (etat.connexion.dernier === jourLocal()) return 0;
+    return (serieConnexion() - 1) % RECOMPENSES_CONNEXION.length + 1;
+}
+
+// Les 7 jours du cycle : passés cochés, celui du jour mis en avant
+function calendrierConnexionHTML() {
+    const jour = jourConnexion();
+    // Déjà récupérée aujourd'hui : on montre où en est le cycle
+    const actuel = jour || (etat.connexion.serie - 1) % RECOMPENSES_CONNEXION.length + 1;
+    const serie = jour ? serieConnexion() : etat.connexion.serie;
+    return `
+        <p class="connexion-serie">${serie > 1
+            ? tn(serie, '{n} jour d’affilée', '{n} jours d’affilée')
+            : t('Reviens chaque jour : la récompense grandit jusqu’au 7ᵉ jour. Un jour manqué, et le cycle recommence.')}</p>
+        <ol class="connexion-jours">${RECOMPENSES_CONNEXION.map((r, i) => {
+            const etatJour = i + 1 < actuel || (!jour && i + 1 === actuel) ? 'faite' : i + 1 === actuel ? 'aujourdhui' : '';
+            return `
+            <li class="${etatJour}${r.fullArt ? ' jour-full-art' : ''}">
+                <span class="connexion-numero">${t('Jour {n}', { n: i + 1 })}</span>
+                <b>${texteRecompense(r)}</b>
+                ${etatJour === 'faite' ? '<span class="connexion-coche" aria-hidden="true">✓</span>' : ''}
+            </li>`;
+        }).join('')}</ol>
+        ${jour
+            ? `<button class="btn btn-or btn-grand" data-connexion>${t('Récupérer')}</button>`
+            : `<p class="connexion-suite">${t('Reviens demain pour la récompense suivante !')}</p>`}`;
+}
+
+// Fenêtre de la récompense du jour, à l'arrivée sur le jeu (si elle n'est pas encore récupérée)
+function proposerConnexion() {
+    if (!jourConnexion() || !donneesPretes() || $('#modale').open) return;
+    $('#modale-contenu').innerHTML = `
+        <div class="connexion">
+            <h2>${t('Récompense du jour')}</h2>
+            ${calendrierConnexionHTML()}
+        </div>`;
+    $('#modale').showModal();
+}
+
+function recupererConnexion() {
+    const jour = jourConnexion();
+    if (!jour || !donneesPretes()) return;
+    etat.connexion = { dernier: jourLocal(), serie: serieConnexion() };
+    if ($('#modale').open && $('#modale-contenu .connexion')) $('#modale').close();
+    const carte = verserRecompense(RECOMPENSES_CONNEXION[jour - 1]);
+    majBadgeSucces();
+    if (!$('#ecran-profil').hidden) afficherProfil();
+    verifierSucces();
+    if (carte) afficherFiche(carte.id);
 }
 
 // ---------- Écran profil ----------
@@ -1936,6 +2048,7 @@ function afficherProfil() {
             </article>`;
     }).join('');
     $('#btn-tout-recuperer').hidden = succesARecuperer().length < 2;
+    $('#connexion-profil').innerHTML = calendrierConnexionHTML();
     $('#reglage-sons').checked = etat.reglages.sons;
     $('#reglage-langue').value = LANGUE;
 }
@@ -1953,6 +2066,12 @@ const QUESTIONS_POM = [
 ];
 const pom = { serie: 0, paire: null, question: null, verrou: false };
 let jeuxPom = null;
+
+// Prochain palier de série qui rapporte des pièces
+function prochainPalierPom(serie) {
+    const palier = Object.keys(PALIERS_POM).map(Number).find(p => p > serie);
+    return palier ?? (Math.floor(serie / 10) + 1) * 10;
+}
 
 function majScorePom() {
     $('#pom-serie').textContent = pom.serie;
@@ -1995,12 +2114,17 @@ function repondrePom(choix) {
 
     if (choix === bonne) {
         pom.serie++;
-        etat.pieces += GAIN_POM;
         etat.stats.recordPom = Math.max(etat.stats.recordPom, pom.serie);
+        // Palier de série atteint : il compte comme une victoire dans les gains du jour
+        const base = PALIERS_POM[pom.serie] ?? (pom.serie > 20 && pom.serie % 10 === 0 ? GAIN_POM_AU_DELA : 0);
+        const gain = base ? gainDuJour('pom', base) : null;
+        if (gain) etat.pieces += gain.pieces;
         sauvegarder();
         majEntete();
         jouerSon('bonne');
-        $('#pom-message').innerHTML = t('<b class="victoire">Bonne réponse !</b> +{n} pièces', { n: GAIN_POM });
+        $('#pom-message').innerHTML = gain
+            ? t('<b class="victoire">Bonne réponse !</b> Palier de {s} : +{n} pièces', { s: pom.serie, n: gain.pieces }) + noteGain(gain.taux)
+            : t('<b class="victoire">Bonne réponse !</b> Prochain palier : {p} bonnes réponses', { p: prochainPalierPom(pom.serie) });
         $('#pom-actions').innerHTML = `<button class="btn btn-principal btn-grand" data-pom-action="suivant">${t('Question suivante')}</button>`;
     } else {
         jouerSon('mauvaise');
@@ -2037,11 +2161,11 @@ const POINTS_VICTOIRE_DECK = Math.floor(TAILLE_DECK / 2) + 1;
 // `intelligence` : probabilité que l'ordinateur joue son meilleur coup (sinon il joue au hasard)
 // `elite` : son deck est tiré parmi les N meilleures cartes du jeu sous le plafond (sinon au hasard, selon chanceDuel)
 const NIVEAUX_DECK = [
-    { id: 'facile', nom: t('Facile'), max: 'peu-commune', gain: 20, intelligence: 0 },
-    { id: 'normal', nom: t('Normal'), max: 'rare', gain: 40, intelligence: 0.35 },
-    { id: 'difficile', nom: t('Difficile'), max: 'epique', gain: 80, intelligence: 0.6 },
-    { id: 'impossible', nom: t('Impossible'), max: 'legendaire', gain: 150, intelligence: 0.85, elite: 100 },
-    { id: 'hardcore', nom: t('Hardcore'), max: 'mythique', gain: 300, intelligence: 1, elite: 30 },
+    { id: 'facile', nom: t('Facile'), max: 'peu-commune', gain: 5, intelligence: 0 },
+    { id: 'normal', nom: t('Normal'), max: 'rare', gain: 10, intelligence: 0.35 },
+    { id: 'difficile', nom: t('Difficile'), max: 'epique', gain: 20, intelligence: 0.6 },
+    { id: 'impossible', nom: t('Impossible'), max: 'legendaire', gain: 40, intelligence: 0.85, elite: 100 },
+    { id: 'hardcore', nom: t('Hardcore'), max: 'mythique', gain: 80, intelligence: 1, elite: 30 },
 ];
 const CARTES_CHOIX_DECK = 40; // cartes affichées à la fois pendant la composition du deck
 const STATS_DECK = Object.keys(STATS);
@@ -2361,13 +2485,14 @@ function finPartieDecks(carteMoi, carteOrdi, stat) {
         d.message += ` ${t('Score à égalité : départage au total des stats des dernières cartes ({a} contre {b}).', { a: totalStats(carteMoi), b: totalStats(carteOrdi) })}`;
     }
     if (gagnant === 'moi') {
-        etat.pieces += d.niveau.gain;
+        const gain = gainDuJour('decks', d.niveau.gain);
+        etat.pieces += gain.pieces;
         etat.stats.decksGagnes++;
         if (d.niveau.id === 'hardcore') etat.stats.decksHardcore++;
         sauvegarder();
         majEntete();
-        toast(t('Victoire ! +{n} pièces', { n: d.niveau.gain }), 'gain');
-        d.message += t('<br><b class="victoire">Victoire {a} à {b} !</b> Tu gagnes {n} pièces.', { a: moi, b: ordi, n: d.niveau.gain });
+        toast(t('Victoire ! +{n} pièces', { n: gain.pieces }) + noteGain(gain.taux), 'gain');
+        d.message += t('<br><b class="victoire">Victoire {a} à {b} !</b> Tu gagnes {n} pièces.', { a: moi, b: ordi, n: gain.pieces }) + noteGain(gain.taux);
     } else if (gagnant === 'ordi') {
         d.message += t('<br><b class="defaite">Défaite {a} à {b}.</b> Retente ta chance !', { a: moi, b: ordi });
     } else {
@@ -2658,6 +2783,16 @@ function init() {
     $('#modale').addEventListener('click', e => {
         if (e.target === $('#modale')) $('#modale').close();
     });
+    // Récompense du jour : depuis la fenêtre d'arrivée ou le Profil
+    document.addEventListener('click', e => {
+        if (e.target.closest('[data-connexion]')) recupererConnexion();
+    });
+    // Jeu resté ouvert : la récompense du lendemain est proposée au retour sur l'onglet
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState !== 'visible' || !donneesPretes()) return;
+        majBadgeSucces();
+        if (!ouvertureEnCours) proposerConnexion();
+    });
 
     // Duel
     $('#duel-actions').addEventListener('click', e => {
@@ -2760,6 +2895,7 @@ function init() {
             if (!$('#mode-pom').hidden) nouvelleQuestionPom();
             verifierSucces(); // succès déjà atteints par une collection existante
             majBadgeSucces();
+            proposerConnexion();
         })
         .catch(e => {
             console.error(e);
