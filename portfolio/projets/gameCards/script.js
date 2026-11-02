@@ -261,7 +261,7 @@ const STATS_FORCEES = {
     304240: { popularite: 92 },               // Resident Evil (1996) : le fondateur du survival horror
 
     // Mythiques : leurs vraies stats Steam, ajustées de quelques points seulement. Elles ne sont pas toutes
-    // aussi fortes : (Qualité + Popularité) de 192 à 194 pour les titans, 188 à 191 pour le cœur,
+    // aussi fortes : (Qualité + Popularité) de 192 à 196 pour les titans, 188 à 191 pour le cœur,
     // 185 à 187 pour les classiques surtout joués sur console (leurs chiffres Steam les sous-estiment déjà).
     // Titans
     1086940: { attaque: 97, popularite: 97 }, // Baldur's Gate 3 (194)
@@ -282,7 +282,7 @@ const STATS_FORCEES = {
     730: { attaque: 88, popularite: 100 },    // Counter-Strike 2 (188)
     // Classiques de console, et Cyberpunk (lancement raté)
     10180: { attaque: 94, popularite: 93 },   // Call of Duty: Modern Warfare 2 (2009) (187)
-    319510: { attaque: 91, popularite: 96 },  // Five Nights at Freddy's (187)
+    319510: { attaque: 91, popularite: 97 },  // Five Nights at Freddy's (187)
     1091500: { attaque: 89, popularite: 97 }, // Cyberpunk 2077 (186)
     254700: { attaque: 94, popularite: 92 },  // Resident Evil 4 (2005) (186)
     39140: { attaque: 94, popularite: 91 },   // Final Fantasy VII (185)
