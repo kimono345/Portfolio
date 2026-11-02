@@ -488,7 +488,12 @@ function calculerAnciennete() {
     }
 }
 
-const anciennete = annee => ancienneteParAnnee[annee] ?? (annee < premiereAnnee ? 100 : 0);
+// Plancher de 20 : les jeux les plus récents ne tombent pas à 0 (l'échelle 0–100 est ramenée à 20–100)
+const PLANCHER_ANCIENNETE = 20;
+const anciennete = annee => {
+    const brute = ancienneteParAnnee[annee] ?? (annee < premiereAnnee ? 100 : 0);
+    return Math.round(PLANCHER_ANCIENNETE + brute * (100 - PLANCHER_ANCIENNETE) / 100);
+};
 // Les rééditions lauréates d'un GOTY (GTA IV, Resident Evil 4, Skyrim SE…) comptent depuis l'année du prix,
 // pas depuis la sortie de leur version Steam
 // sauf les remakes, qui sont presque de nouveaux jeux
@@ -641,13 +646,15 @@ function imageSecoursHTML(carte) {
                     </div>`;
 }
 
-function carteHTML(carte, { holo = false, compteur = 0, cachee = false, fullArt = (carte.fullArts || 0) > 0, ex = Boolean(carte.ex) } = {}) {
+// `bonus` : bonus de variante en combat, affiché en pastille à côté de chaque stat (duels)
+function carteHTML(carte, { holo = false, compteur = 0, cachee = false, fullArt = (carte.fullArts || 0) > 0, ex = Boolean(carte.ex), bonus = 0 } = {}) {
     if (fullArt) holo = false;
     const rarete = RARETES[indexRarete(carte.rarete)];
     // Sur la carte adverse du duel, l'année trahirait l'Ancienneté : on la cache aussi
     const infos = [cachee ? null : carte.annee, carte.genres[0]].filter(Boolean).join(' · ');
     const chef = !cachee && carte.metacritic >= SEUIL_CHEF_OEUVRE;
     const goty = gotyDe(carte.id);
+    const pastille = bonus && !cachee ? `<small class="bonus-stat">+${bonus}</small>` : '';
     const plaque = chef ? `<span class="plaque-chef" title="${t('Metacritic : {n} / 100', { n: carte.metacritic })}">${ICONES.medaille}<span>${t('Chef-d’œuvre')}</span></span>` : '';
     const texte = `
                 <div class="carte-titre">
@@ -659,10 +666,10 @@ function carteHTML(carte, { holo = false, compteur = 0, cachee = false, fullArt 
                     ${Object.entries(STATS).map(([cle, stat]) => fullArt
                         // Full Art : juste l'icône et le chiffre, pour laisser la place à l'illustration
                         ? `
-                        <li data-stat="${cle}" title="${stat.nom}"><span>${stat.icone}</span><b>${cachee ? '?' : carte[cle]}</b></li>`
+                        <li data-stat="${cle}" title="${stat.nom}"><span>${stat.icone}</span><b>${cachee ? '?' : carte[cle]}${pastille}</b></li>`
                         : `
                         <li data-stat="${cle}">
-                            <span>${stat.icone} ${stat.nom}</span><b>${cachee ? '?' : carte[cle]}</b>
+                            <span>${stat.icone} ${stat.nom}</span><b>${cachee ? '?' : carte[cle]}${pastille}</b>
                             <i style="--v:${cachee ? 0 : Math.min(100, carte[cle])}%"></i>
                         </li>`).join('')}
                 </ul>`;
@@ -690,12 +697,12 @@ function carteHTML(carte, { holo = false, compteur = 0, cachee = false, fullArt 
 }
 
 // Carte retournable (dos / face), pour les boosters et le duel
-function flipHTML(carte, { holo = false, fullArt = false, retournee = false, nouvelle = false, cachee = false, godPack = false } = {}) {
+function flipHTML(carte, { holo = false, fullArt = false, retournee = false, nouvelle = false, cachee = false, godPack = false, bonus = 0 } = {}) {
     return `
         <div class="flip${retournee ? ' retournee' : ''}${godPack ? ' dos-divin' : ''}" data-rarete="${carte.rarete}" data-id="${carte.id}">
             <div class="flip-inner">
                 <div class="flip-face">
-                    ${carteHTML(carte, { holo, fullArt, cachee })}
+                    ${carteHTML(carte, { holo, fullArt, cachee, bonus })}
                     ${nouvelle ? `<span class="badge-nouvelle">${t('Nouvelle !')}</span>` : ''}
                 </div>
                 <div class="flip-dos" aria-hidden="true"><span>GC</span></div>
@@ -773,15 +780,30 @@ async function chargerJeux() {
 }
 
 // Les cartes déjà obtenues gardent une copie de leurs stats : on les recalcule
-// pour qu'elles suivent les règles actuelles (exemplaires, holos et date sont conservés)
+// pour qu'elles suivent les règles actuelles (exemplaires, holos et date sont conservés).
+// Une carte dont le jeu a disparu des données (doublon, DLC retiré…) quitte la collection, ses exemplaires sont remboursés.
 function majCollectionDepuisDonnees() {
+    let retirees = 0;
+    let rembourse = 0;
     for (const entree of Object.values(etat.collection)) {
         const jeu = jeuxParId.get(entree.id);
-        if (!jeu) continue;
+        if (!jeu) {
+            const copie = { ...entree, holos: entree.holos || 0 };
+            for (const [variante, n] of Object.entries(exemplairesParVariante(copie))) rembourse += n * prixVariante(copie, variante);
+            delete etat.collection[entree.id];
+            retirees++;
+            continue;
+        }
         Object.assign(entree, creerCarte(jeu, { ex: entree.exs > 0 }));
         delete entree.defense; // ancienne stat Note Metacritic
     }
+    etat.pieces += rembourse;
     sauvegarder();
+    if (retirees) {
+        majEntete();
+        toast(tn(retirees, '{n} carte retirée : son jeu n’existe plus dans GameCards. +{p} pièces remboursées',
+            '{n} cartes retirées : leurs jeux n’existent plus dans GameCards. +{p} pièces remboursées', { p: nombre(rembourse) }), 'gain');
+    }
 }
 
 const donneesPretes = () => tousLesJeux.length > 0;
@@ -1153,6 +1175,7 @@ function clonerPaquet(modele) {
     paquet.classList.remove('verrouille');
     paquet.querySelector('.paquet-charges')?.remove();
     paquet.classList.add('paquet-seul');
+    paquet.hidden = false;
     paquet.querySelector('.paquet-verrou')?.remove();
     paquet.setAttribute('aria-label', t('Ouvrir le paquet'));
     // Indication du geste : un point lumineux qui glisse le long de la ligne de découpe
@@ -1345,7 +1368,7 @@ function finTirage() {
         ${holos ? `<span>✨ ${tn(holos, '<b>{n}</b> holo', '<b>{n}</b> holos')}</span>` : ''}
         ${fullArts ? `<span class="bilan-full-art"><b>${fullArts}</b> Full Art</span>` : ''}
         ${exs ? `<span class="bilan-ex"><b>${exs}</b> EX</span>` : ''}
-        <span class="bilan-gain">+<b>${nombre(dernierGain)}</b> ${PIECE}</span>`;
+        ${dernierGain ? `<span class="bilan-gain">+<b>${nombre(dernierGain)}</b> ${PIECE}</span>` : ''}`;
     majPaquets();
     for (const id of ['#bilan', '#btn-retour', '#btn-voir-collection']) $(id).hidden = false;
     verifierSucces();
@@ -1364,8 +1387,7 @@ function afficherAccueil() {
     $('#progression-texte').innerHTML = total
         ? t('<b>{n}</b> / {total} jeux découverts', { n: nombre(entrees.length), total: nombre(total) })
         : t('Chargement des jeux…');
-    $('#progression-barre').style.width = total ? `${Math.max(0.5, (entrees.length / total) * 100)}%` : '0';
-    $('#progression-raretes').innerHTML = pucesRaretesHTML();
+    $('#progression-raretes').innerHTML = progressionRaretesHTML(entrees);
     majTropheeGodPack();
     majMalchance();
 
@@ -1713,6 +1735,17 @@ function reinitialiser() {
 
 // ---------- Duel ----------
 
+// Bonus des variantes en combat (duel et duel de decks), sur chaque stat : Full Art +3, Holo +2
+const BONUS_COMBAT = { fullArt: 3, holo: 2 };
+const bonusCombat = carte => (carte.fullArts > 0 ? BONUS_COMBAT.fullArt : carte.holos > 0 ? BONUS_COMBAT.holo : 0);
+const valeurCombat = (carte, stat) => carte[stat] + bonusCombat(carte);
+// « (bonus Holo +2 compris) » après le score, quand ta carte en a un
+function noteBonusCombat(carte) {
+    const bonus = bonusCombat(carte);
+    if (!bonus) return '';
+    return ` ${t('(bonus {variante} +{n} compris)', { variante: carte.fullArts > 0 ? 'Full Art' : 'Holo', n: bonus })}`;
+}
+
 // Tirage d'une carte de duel : une rareté selon `chanceDuel`, puis une carte au hasard dedans.
 // Pour toi, seules les raretés que tu possèdes comptent (leurs chances se répartissent entre elles).
 function tirerCarteJoueur() {
@@ -1762,7 +1795,7 @@ function nouvelleManche() {
 
     $('#duel-joueur').className = 'duel-emplacement';
     $('#duel-ordi').className = 'duel-emplacement';
-    $('#duel-joueur').innerHTML = flipHTML(duel.carteJoueur, { holo: duel.carteJoueur.holos > 0, retournee: true });
+    $('#duel-joueur').innerHTML = flipHTML(duel.carteJoueur, { holo: duel.carteJoueur.holos > 0, fullArt: duel.carteJoueur.fullArts > 0, retournee: true, bonus: bonusCombat(duel.carteJoueur) });
     // On voit le jeu adverse, pas ses stats : à toi de deviner où il est faible
     $('#duel-ordi').innerHTML = flipHTML(duel.carteOrdi, { retournee: true, cachee: true });
     $('#duel-manche').textContent = t('Manche {n}', { n: duel.manche });
@@ -1788,14 +1821,14 @@ async function choisirStat(stat) {
     $('#duel-ordi').querySelector(`li[data-stat="${stat}"]`).classList.add('stat-choisie');
     await attendre(700);
 
-    // En cas d'égalité, la Popularité départage
-    const mienne = duel.carteJoueur[stat];
-    const sienne = duel.carteOrdi[stat];
+    // En cas d'égalité, la Popularité départage (bonus de variante compris)
+    const mienne = valeurCombat(duel.carteJoueur, stat);
+    const sienne = valeurCombat(duel.carteOrdi, stat);
     let ecart = mienne - sienne;
     let departage = '';
     if (!ecart && stat !== 'popularite') {
-        const pm = duel.carteJoueur.popularite;
-        const ps = duel.carteOrdi.popularite;
+        const pm = valeurCombat(duel.carteJoueur, 'popularite');
+        const ps = valeurCombat(duel.carteOrdi, 'popularite');
         ecart = pm - ps;
         if (ecart) departage = ` ${t('Égalité, départagée par la Popularité ({a} contre {b}).', { a: pm, b: ps })}`;
     }
@@ -1813,7 +1846,7 @@ async function choisirStat(stat) {
         $('#duel-ordi').classList.add('gagne');
     }
     majScoreDuel();
-    $('#duel-message').innerHTML = `${t('{stat} : <b>{a}</b> contre <b>{b}</b>.', { stat: `${STATS[stat].icone} ${STATS[stat].nom}`, a: mienne, b: sienne })}${departage} <b>${resultat}</b>`;
+    $('#duel-message').innerHTML = `${t('{stat} : <b>{a}</b> contre <b>{b}</b>.', { stat: `${STATS[stat].icone} ${STATS[stat].nom}`, a: mienne, b: sienne })}${noteBonusCombat(duel.carteJoueur)}${departage} <b>${resultat}</b>`;
 
     if (duel.joueur >= MANCHES_GAGNANTES || duel.ordi >= MANCHES_GAGNANTES) finDuel();
     else actionsDuel(`<button class="btn btn-principal btn-grand" data-action="manche">${t('Manche suivante')}</button>`);
@@ -1843,9 +1876,28 @@ function finDuel() {
 
 function majMalchance() {
     const reste = MALCHANCE_MAX - etat.malchance;
-    $('#malchance').innerHTML = reste <= 1
+    const texte = reste <= 1
         ? t('<b>Prochain booster : Légendaire garantie !</b>')
         : t('Légendaire garantie au plus tard dans <b>{n}</b> boosters', { n: reste });
+    // La jauge se remplit à chaque booster sans Légendaire ni Mythique
+    $('#malchance').innerHTML = `<p>${texte}</p><div class="malchance-jauge"><i style="--v: ${(etat.malchance / MALCHANCE_MAX) * 100}%"></i></div>`;
+}
+
+// Progression de l'accueil : une tuile par rareté (possédées / total, jauge et pourcentage)
+function progressionRaretesHTML(entrees) {
+    const pourcent = p => `${p > 0 && p < 0.1 ? '< ' + (0.1).toLocaleString(LOCALE) : p.toLocaleString(LOCALE, { maximumFractionDigits: p < 10 ? 1 : 0 })} %`;
+    return RARETES.map(r => {
+        const possedees = entrees.filter(e => e.rarete === r.id).length;
+        const total = jeuxParRarete[r.id]?.length || 0;
+        const p = total ? (possedees / total) * 100 : 0;
+        return `
+            <div class="tuile-rarete rarete-${r.id}">
+                <span class="tuile-nom"><i></i>${r.nom}</span>
+                <b>${nombre(possedees)}<small> / ${nombre(total)}</small></b>
+                <div class="tuile-jauge"><i style="--v: ${p > 0 ? Math.max(2, p) : 0}%"></i></div>
+                <span class="tuile-pourcent">${pourcent(p)}</span>
+            </div>`;
+    }).join('');
 }
 
 // ---------- Succès ----------
@@ -1935,15 +1987,17 @@ function texteRecompense(r, piece = true) {
 }
 
 // Verse une récompense (succès ou connexion) et l'annonce ; renvoie la carte Full Art gagnée, s'il y en a une
-function verserRecompense(r) {
+// `paquet` : la carte Full Art n'est pas annoncée, elle arrive dans un paquet à ouvrir (succès)
+function verserRecompense(r, { paquet = false } = {}) {
     let carte = null;
+    let nouvelle = false;
     if (r.pieces) etat.pieces += r.pieces;
     // Les boosters gagnés s'ajoutent à la réserve, même au-delà de son maximum
     if (r.boosters) etat.charges.standard.charges += r.boosters;
     if (r.prestiges) etat.charges.prestige.charges += r.prestiges;
     if (r.fullArt) {
         carte = piocher(tirerRarete('chance', RARETES.slice(0, INDEX_LEGENDAIRE + 1)));
-        ajouterACollection(carte, false, true);
+        nouvelle = ajouterACollection(carte, false, true);
     }
     sauvegarder();
     majEntete();
@@ -1952,8 +2006,8 @@ function verserRecompense(r) {
     if (r.pieces) toast(texteRecompense(r, false), 'gain');
     if (r.boosters) toast(tn(r.boosters, '+{n} booster ajouté à ta réserve', '+{n} boosters ajoutés à ta réserve'), 'gain');
     if (r.prestiges) toast(tn(r.prestiges, '+{n} Prestige ajouté à ta réserve', '+{n} Prestiges ajoutés à ta réserve'), 'gain');
-    if (carte) toast(t('{nom} en Full Art rejoint ta collection !', { nom: carte.nom }), 'gain');
-    return carte;
+    if (carte && !paquet) toast(t('{nom} en Full Art rejoint ta collection !', { nom: carte.nom }), 'gain');
+    return { carte, nouvelle };
 }
 
 // Verse la récompense d'un succès obtenu (une seule fois)
@@ -1961,10 +2015,58 @@ function recupererSucces(id) {
     const succes = SUCCES.find(s => s.id === id);
     if (!succes || !etat.succes[id] || etat.succesRecuperes[id] || !donneesPretes()) return;
     etat.succesRecuperes[id] = Date.now();
-    const carte = verserRecompense(succes.recompense);
+    const { carte, nouvelle } = verserRecompense(succes.recompense, { paquet: true });
     afficherProfil();
     verifierSucces(); // la carte gagnée peut débloquer d'autres succès
-    if (carte) afficherFiche(carte.id);
+    // Une à la fois : avec « Tout récupérer », les paquets s'ouvrent l'un après l'autre
+    if (carte) fileFullArt = fileFullArt.then(() => ouvrirPaquetFullArt(carte, nouvelle, t('Récompense de succès')));
+}
+
+// ---------- Paquet Full Art (récompense de succès ou du 7ᵉ jour de connexion) ----------
+
+let fileFullArt = Promise.resolve();
+
+// La carte arrive dans un paquet irisé à déchirer, puis se révèle face cachée, avec un peu de suspense.
+// `origine` : d'où vient le paquet, rappelé devant la consigne
+async function ouvrirPaquetFullArt(carte, nouvelle, origine) {
+    while (ouvertureEnCours) await attendre(300);
+    ouvertureEnCours = true;
+    location.hash = '#accueil';
+    afficherEcran('accueil');
+    const tirage = [{ carte, fullArt: true, holo: false, ex: false, nouvelle }];
+    dernierGain = 0;
+
+    $('#choix').hidden = true;
+    $('#ouverture').hidden = false;
+    $('#ouverture').classList.remove('multiple');
+    $('#tirage').innerHTML = '';
+    for (const id of ['#bilan', '#btn-retour', '#btn-voir-collection']) $(id).hidden = true;
+    $('#btn-passer').textContent = t('Passer');
+    $('#btn-passer').hidden = false;
+    $('#ouverture-aide').hidden = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    seance.passer = false;
+    await dechirerPaquet($('#paquet-full-art'), false, `${origine} · `);
+    if (!seance.passer) {
+        // Le dos de la carte brille de plus en plus fort… puis elle se retourne dans un éclair
+        $('#ouverture-scene').innerHTML = `<div class="revelation-full-art">${flipHTML(carte, { fullArt: true })}</div>`;
+        $('#ouverture-aide').innerHTML = t('Une carte <b>Full Art</b>… laquelle ?');
+        await attendre(2000);
+        const scene = $('#ouverture-scene .revelation-full-art');
+        if (scene && !seance.passer) {
+            scene.classList.add('eclair');
+            scene.querySelector('.flip').classList.add('retournee');
+            jouerSonRarete(carte.rarete);
+            await attendre(1800);
+        }
+    }
+
+    $('#ouverture-scene').replaceChildren();
+    $('#btn-passer').hidden = true;
+    afficherRecapitulatif(tirage, 1);
+    ouvertureEnCours = false;
+    finTirage();
 }
 
 function toutRecuperer() {
@@ -1987,6 +2089,41 @@ function noteGain(taux) {
     if (taux === 0.5) return t(' (gains réduits de moitié pour aujourd’hui)');
     if (taux < 0.5) return t(' (gains très réduits jusqu’à demain)');
     return '';
+}
+
+// ---------- Guide du premier lancement ----------
+
+// Trois étapes, chacune illustrée par l'icône de son onglet
+const ETAPES_GUIDE = [
+    { ecran: 'accueil', titre: t('Ouvre des boosters'),
+      texte: t('Chaque booster contient 5 cartes de vrais jeux Steam. Un booster gratuit arrive toutes les 10 minutes (jusqu’à 10 en réserve), et un Prestige, plus généreux, chaque jour.') },
+    { ecran: 'collection', titre: t('Collectionne'),
+      texte: t('Les cartes vont de Commune à Mythique, et leurs 3 stats (Qualité, Popularité, Ancienneté) viennent des vraies données Steam. Holo, EX et Full Art sont des versions rares. Revends tes doublons pour gagner des pièces.') },
+    { ecran: 'duel', titre: t('Affronte l’ordinateur'),
+      texte: t('Duel, duel de decks et Plus ou moins rapportent des pièces, surtout ta première victoire du jour. Les règles complètes sont dans l’onglet Règles.') },
+];
+let etapeGuide = 0;
+
+function afficherGuide(etape = 0) {
+    etapeGuide = etape;
+    etat.reglages.guideVu = true;
+    sauvegarder();
+    const { ecran, titre, texte } = ETAPES_GUIDE[etape];
+    const icone = document.querySelector(`.menu a[data-ecran="${ecran}"] svg`)?.outerHTML ?? '';
+    const derniere = etape === ETAPES_GUIDE.length - 1;
+    $('#modale-contenu').innerHTML = `
+        <div class="guide">
+            <span class="guide-icone">${icone}</span>
+            <p class="guide-etape">${t('Étape {n} / {total}', { n: etape + 1, total: ETAPES_GUIDE.length })}</p>
+            <h2>${titre}</h2>
+            <p>${texte}</p>
+            <div class="guide-points" aria-hidden="true">${ETAPES_GUIDE.map((_, i) => `<i${i === etape ? ' class="actif"' : ''}></i>`).join('')}</div>
+            <div class="guide-actions">
+                ${derniere ? '' : `<button class="btn" data-guide="passer">${t('Passer')}</button>`}
+                <button class="btn btn-principal" data-guide="${derniere ? 'fin' : 'suivant'}">${derniere ? t('C’est parti !') : t('Suivant')}</button>
+            </div>
+        </div>`;
+    if (!$('#modale').open) $('#modale').showModal();
 }
 
 // ---------- Récompense de connexion quotidienne ----------
@@ -2047,11 +2184,11 @@ function recupererConnexion() {
     if (!jour || !donneesPretes()) return;
     etat.connexion = { dernier: jourLocal(), serie: serieConnexion() };
     if ($('#modale').open && $('#modale-contenu .connexion')) $('#modale').close();
-    const carte = verserRecompense(RECOMPENSES_CONNEXION[jour - 1]);
+    const { carte, nouvelle } = verserRecompense(RECOMPENSES_CONNEXION[jour - 1], { paquet: true });
     majBadgeSucces();
     if (!$('#ecran-profil').hidden) afficherProfil();
     verifierSucces();
-    if (carte) afficherFiche(carte.id);
+    if (carte) fileFullArt = fileFullArt.then(() => ouvrirPaquetFullArt(carte, nouvelle, t('Récompense du jour')));
 }
 
 // ---------- Écran profil ----------
@@ -2171,12 +2308,11 @@ function repondrePom(choix) {
     verifierSucces();
 }
 
-// Onglets de l'écran « Jouer » : Duel, Duel de decks ou Plus ou moins
+// Écran « Jouer » : d'abord le choix du mode (mode = null), puis Duel, Duel de decks ou Plus ou moins.
+// Une partie en cours reste en mémoire : la reprendre, c'est rechoisir son mode.
 function changerModeJeu(mode) {
-    document.querySelectorAll('[data-mode]').forEach(onglet => {
-        onglet.classList.toggle('actif', onglet.dataset.mode === mode);
-        onglet.setAttribute('aria-selected', onglet.dataset.mode === mode);
-    });
+    $('#modes-jeu').hidden = Boolean(mode);
+    $('#retour-modes').hidden = !mode;
     $('#mode-duel').hidden = mode !== 'duel';
     $('#mode-pom').hidden = mode !== 'pom';
     $('#mode-decks').hidden = mode !== 'decks';
@@ -2225,7 +2361,7 @@ const deckDuel = {
     message: '',
 };
 
-const totalStats = c => c.attaque + c.popularite + c.anciennete;
+const totalStats = c => valeurCombat(c, 'attaque') + valeurCombat(c, 'popularite') + valeurCombat(c, 'anciennete');
 const autoriseeAuNiveau = (rarete, niveau) => indexRarete(rarete) >= indexRarete(niveau.max);
 const cartesDuNiveau = niveau => Object.values(etat.collection).filter(e => autoriseeAuNiveau(e.rarete, niveau));
 
@@ -2305,7 +2441,7 @@ function choixDeckHTML() {
             return carte
                 ? `<button class="deck-slot plein${carte.id === d.dernierAjout ? ' arrive' : ''}" data-choix-deck="${carte.id}"
                         aria-label="${t('Retirer {nom} du deck', { nom: echapper(carte.nom) })}">
-                        ${carteHTML(carte, { holo: carte.holos > 0 })}<span class="slot-retirer" aria-hidden="true">✕</span>
+                        ${carteHTML(carte, { holo: carte.holos > 0, bonus: bonusCombat(carte) })}<span class="slot-retirer" aria-hidden="true">✕</span>
                     </button>`
                 : `<div class="deck-slot"><span>${i + 1}</span></div>`;
         }).join('')}</div>
@@ -2324,7 +2460,7 @@ function choixDeckHTML() {
         </div>
         <div class="grille">${cartes.slice(0, d.limite).map(e => `
             <button class="carte-choix${d.choix.includes(e.id) ? ' choisie' : ''}" data-choix-deck="${e.id}" aria-pressed="${d.choix.includes(e.id)}">
-                ${carteHTML(e, { holo: e.holos > 0 })}
+                ${carteHTML(e, { holo: e.holos > 0, bonus: bonusCombat(e) })}
             </button>`).join('')}</div>
         ${cartes.length > d.limite ? `<div class="plus"><button class="btn" data-deck-action="plus">${t('Afficher plus')}</button></div>` : ''}`;
 }
@@ -2383,7 +2519,7 @@ function plateauDeckHTML() {
     const table = `${annonceStatHTML()}
         <div class="decks-combat${c?.ecart !== undefined ? ' compare' : ''}">
             <div class="duel-emplacement${resultat('moi')}${['moi', 'les-deux'].includes(c?.arrivee) ? ' arrivee-moi' : ''}" data-titre="${t('Ta carte')}">
-                ${c?.moi ? carteHTML(c.moi, { holo: c.moi.holos > 0 }) : ''}${total(c?.moi)}
+                ${c?.moi ? carteHTML(c.moi, { holo: c.moi.holos > 0, bonus: bonusCombat(c.moi) }) : ''}${total(c?.moi)}
             </div>
             <div class="duel-emplacement${resultat('ordi')}${['ordi', 'les-deux'].includes(c?.arrivee) ? ' arrivee-ordi' : ''}" data-titre="${t('Ordinateur')}">
                 ${carteOrdi}${total(c?.ordi)}
@@ -2401,7 +2537,7 @@ function plateauDeckHTML() {
         <div class="duel-actions">${actionsDeckHTML()}</div>
         <div class="decks-main">${d.moi.map((carte, i) => `
             <button class="carte-main${d.carte === i ? ' choisie' : ''}" data-carte-main="${i}"${d.attente && !d.verrou ? '' : ' disabled'}>
-                ${carteHTML(carte, { holo: carte.holos > 0 })}
+                ${carteHTML(carte, { holo: carte.holos > 0, bonus: bonusCombat(carte) })}
             </button>`).join('')}</div>`;
 }
 
@@ -2487,15 +2623,19 @@ async function resoudreMancheDecks(carteMoi, carteOrdi, stat) {
     await attendre(600);
 
     // Résultat
-    const valeur = c => (stat ? c[stat] : totalStats(c));
-    const ecart = valeur(carteMoi) - valeur(carteOrdi);
+    const valeur = c => (stat ? valeurCombat(c, stat) : totalStats(c));
+    let ecart = valeur(carteMoi) - valeur(carteOrdi);
+    // Égalité sur une stat annoncée : le défenseur l'emporte (la manche décisive au total reste nulle)
+    const egaliteDefendue = !ecart && stat;
+    if (egaliteDefendue) ecart = d.combat.par === 'moi' ? -1 : 1;
     if (ecart > 0) d.score.moi++;
     else if (ecart < 0) d.score.ordi++;
-    const resultat = ecart > 0 ? t('Manche gagnée !') : ecart < 0 ? t('Manche perdue.') : t('Égalité parfaite, personne ne marque.');
+    const resultat = (egaliteDefendue ? `${t('Égalité : le défenseur l’emporte.')} ` : '')
+        + (ecart > 0 ? t('Manche gagnée !') : ecart < 0 ? t('Manche perdue.') : t('Égalité parfaite, personne ne marque.'));
     Object.assign(d, {
         combat: { moi: carteMoi, ordi: carteOrdi, stat, ecart, par: d.combat.par },
         pointMarque: ecart > 0 ? 'moi' : ecart < 0 ? 'ordi' : null,
-        message: `${t('{stat} : <b>{a}</b> contre <b>{b}</b>.', { stat: nomStat, a: valeur(carteMoi), b: valeur(carteOrdi) })} <b>${resultat}</b>`,
+        message: `${t('{stat} : <b>{a}</b> contre <b>{b}</b>.', { stat: nomStat, a: valeur(carteMoi), b: valeur(carteOrdi) })}${noteBonusCombat(carteMoi)} <b>${resultat}</b>`,
         verrou: false,
     });
     jouerSon(ecart > 0 ? 'bonne' : ecart < 0 ? 'mauvaise' : 'carte');
@@ -2717,6 +2857,7 @@ function afficherEcran(nom) {
     if (nom === 'regles') afficherRegles();
     if (nom === 'catalogue') afficherCatalogue();
     if (nom === 'profil') afficherProfil();
+    if (nom === 'duel') changerModeJeu(null);
     window.scrollTo(0, 0);
 }
 
@@ -2820,7 +2961,20 @@ function init() {
     // Récompense du jour : depuis la fenêtre d'arrivée ou le Profil
     document.addEventListener('click', e => {
         if (e.target.closest('[data-connexion]')) recupererConnexion();
+        const guide = e.target.closest('[data-guide]');
+        if (guide) {
+            if (guide.dataset.guide === 'suivant') afficherGuide(etapeGuide + 1);
+            else $('#modale').close();
+        }
     });
+    // Guide fermé (fin, « Passer », croix ou clic à côté) : retour aux boosters, puis la récompense du jour
+    $('#modale').addEventListener('close', () => {
+        if (!$('#modale-contenu .guide')) return;
+        $('#modale-contenu').innerHTML = '';
+        if (location.hash && location.hash !== '#accueil') location.hash = '#accueil';
+        setTimeout(proposerConnexion, 300);
+    });
+    $('#btn-guide').addEventListener('click', () => afficherGuide());
     // Jeu resté ouvert : la récompense du lendemain est proposée au retour sur l'onglet
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState !== 'visible' || !donneesPretes()) return;
@@ -2838,10 +2992,11 @@ function init() {
     });
 
     // Jouer : onglets, Plus ou moins
-    $('#onglets-jeu').addEventListener('click', e => {
-        const onglet = e.target.closest('[data-mode]');
-        if (onglet) changerModeJeu(onglet.dataset.mode);
+    $('#modes-jeu').addEventListener('click', e => {
+        const mode = e.target.closest('[data-mode]');
+        if (mode) changerModeJeu(mode.dataset.mode);
     });
+    $('#retour-modes').addEventListener('click', () => changerModeJeu(null));
     $('#mode-decks').addEventListener('click', e => {
         const element = e.target.closest('[data-niveau], [data-choix-deck], [data-carte-main], [data-stat-deck], [data-deck-action]');
         if (element && !element.disabled) actionDuelDecks(element);
@@ -2929,7 +3084,8 @@ function init() {
             if (!$('#mode-pom').hidden) nouvelleQuestionPom();
             verifierSucces(); // succès déjà atteints par une collection existante
             majBadgeSucces();
-            proposerConnexion();
+            if (!etat.reglages.guideVu && !Object.keys(etat.collection).length) afficherGuide();
+            else proposerConnexion();
         })
         .catch(e => {
             console.error(e);

@@ -599,6 +599,30 @@ main {
 }
 
 .puces-raretes { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+/* Progression de l'accueil : six tuiles alignées, une par rareté */
+.progression-raretes { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.6rem; margin-top: 1rem; }
+.tuile-rarete {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.75rem 0.8rem 0.7rem;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--rar) 30%, transparent);
+    background: linear-gradient(160deg, color-mix(in srgb, var(--rar) 14%, var(--fond-3)), var(--fond-2) 70%);
+}
+.tuile-nom { display: flex; align-items: center; gap: 0.4rem; color: var(--rar); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.tuile-nom i { width: 8px; height: 8px; border-radius: 2px; background: var(--rar-fond, var(--rar)); box-shadow: 0 0 6px var(--rar); }
+.tuile-rarete b { font-family: 'Space Mono', monospace; font-size: 1.25rem; line-height: 1.1; }
+.tuile-rarete b small { color: var(--texte-doux); font-size: 0.72rem; font-weight: 400; }
+.tuile-jauge { height: 4px; border-radius: 999px; background: var(--fond-4); overflow: hidden; }
+.tuile-jauge i { display: block; width: var(--v); height: 100%; border-radius: inherit; background: var(--rar-fond, var(--rar)); transition: width 0.8s cubic-bezier(0.2, 0.8, 0.3, 1); }
+.tuile-pourcent { color: var(--texte-doux); font-family: 'Space Mono', monospace; font-size: 0.72rem; }
+.tuile-rarete.rarete-mythique { border-color: transparent; background: linear-gradient(160deg, color-mix(in srgb, var(--mythique) 14%, var(--fond-3)), var(--fond-2) 70%) padding-box, var(--prisme) border-box; }
+.tuile-rarete.rarete-mythique .tuile-nom { background: var(--prisme); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.tuile-rarete.rarete-legendaire { border-color: rgba(255, 196, 60, 0.5); }
+@media (max-width: 900px) { .progression-raretes { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .progression-raretes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .puce {
     display: inline-flex;
     align-items: center;
@@ -647,6 +671,52 @@ main {
 .ouverture { display: flex; flex-direction: column; align-items: center; }
 .ouverture-scene { display: grid; place-items: center; min-height: 500px; padding: 1rem 0; }
 .ouverture-scene:empty { display: none; }
+
+/* Paquet Full Art : texte bien lisible sur l'arc-en-ciel */
+.paquet-full-art .paquet-marque, .paquet-full-art .paquet-type, .paquet-full-art .paquet-mention { text-shadow: 0 2px 6px rgba(20, 0, 40, 0.6); }
+.paquet-full-art .paquet-type { background: rgba(20, 0, 40, 0.35); }
+
+/* Révélation de la carte Full Art : le dos pulse de plus en plus fort, puis éclair et retournement */
+.revelation-full-art { position: relative; isolation: isolate; width: clamp(200px, 60vw, 260px); }
+.revelation-full-art::before {
+    content: '';
+    position: absolute;
+    inset: -14%;
+    z-index: -1;
+    border-radius: 30px;
+    background: var(--prisme);
+    filter: blur(28px);
+    opacity: 0.3;
+    animation: suspense-full-art 2s ease-in forwards;
+}
+.revelation-full-art:not(.eclair) .flip { animation: tremble-full-art 2s ease-in forwards; }
+@keyframes suspense-full-art {
+    0%   { opacity: 0.2; transform: scale(0.85); }
+    40%  { opacity: 0.45; transform: scale(0.95); }
+    60%  { opacity: 0.35; transform: scale(0.92); }
+    100% { opacity: 0.95; transform: scale(1.15); }
+}
+@keyframes tremble-full-art {
+    0%, 55% { transform: none; }
+    65% { transform: rotate(-1.5deg); }
+    72% { transform: rotate(1.5deg); }
+    79% { transform: rotate(-2.5deg) scale(1.02); }
+    86% { transform: rotate(2.5deg) scale(1.03); }
+    93% { transform: rotate(-3deg) scale(1.04); }
+    100% { transform: scale(1.05); }
+}
+/* Éclair blanc au retournement */
+.revelation-full-art.eclair::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    background: radial-gradient(circle, #fff 0%, rgba(255, 255, 255, 0.6) 30%, transparent 70%);
+    animation: eclair-full-art 0.9s ease-out forwards;
+}
+.revelation-full-art.eclair::before { opacity: 0.9; transform: scale(1.15); animation: none; }
+@keyframes eclair-full-art { from { opacity: 1; } to { opacity: 0; } }
 .paquet-seul { width: clamp(200px, 50vw, 260px); cursor: default; touch-action: none; }
 
 /* Déchirure : on attrape le bandeau du haut, il se soulève au fil du geste (--dechirure de 0 à 1),
@@ -760,6 +830,8 @@ main {
     margin-top: 0.5rem;
 }
 .tirage:empty { display: none; }
+/* Une seule carte (paquet Full Art de succès) : centrée, en grand */
+.tirage:has(> .flip:only-child) { grid-template-columns: minmax(0, 240px); justify-content: center; }
 .tirage .flip { animation: arrivee 0.55s backwards cubic-bezier(0.2, 0.8, 0.3, 1.2); }
 
 .ouverture-actions {
@@ -1214,7 +1286,7 @@ main {
     transform: translateX(-50%);
     color: #f6dc8a;
     opacity: 0.3;
-    pointer-events: none;
+    pointer-events: none; 
 }
 /* Dessin au trait : contour doré fin, feuilles à peine teintées (la nouvelle forme garde ce rendu) */
 .filigrane-goty .laurier { display: block; width: 100%; height: auto; fill: rgba(246, 220, 138, 0.18); stroke: currentColor; stroke-width: 0.6; }
@@ -1311,6 +1383,19 @@ main {
 }
 .carte-stats span { color: var(--texte-doux); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .carte-stats b { font-family: 'Space Mono', monospace; }
+/* Bonus de variante en duel (Holo +2, Full Art +3) : pastille irisée à côté de la valeur */
+.bonus-stat {
+    margin-left: 1cqi;
+    padding: 0.2cqi 1.6cqi;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #fff;
+    background: linear-gradient(90deg, #0094b8, #7a3cd6, #c8169f);
+    box-shadow: 0 0 6px rgba(255, 43, 214, 0.5);
+    vertical-align: 0.05em;
+}
 .carte-stats i {
     grid-column: 1 / -1;
     height: 1.4cqi;
@@ -1566,7 +1651,50 @@ main {
 .interrupteur input:checked + span { background: var(--accent); }
 .interrupteur input:checked + span::after { transform: translateX(16px); }
 .interrupteur input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
-#btn-vendre-tout { margin-left: auto; }
+.filtres-options {
+    flex: 1 1 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--bord);
+}
+.filtres-label { margin-right: 0.2rem; color: var(--texte-doux); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+/* Option de filtre : une pastille qui s'allume quand elle est cochée */
+.option-filtre { position: relative; cursor: pointer; }
+.option-filtre input { position: absolute; opacity: 0; pointer-events: none; }
+.option-filtre span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid var(--bord-fort);
+    background: var(--fond-3);
+    color: var(--texte-doux);
+    font-size: 0.88rem;
+    font-weight: 700;
+    transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.option-filtre span::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--texte-doux); transition: background 0.2s, box-shadow 0.2s; }
+.option-filtre:hover span { color: var(--texte); border-color: color-mix(in srgb, var(--neon-1) 50%, transparent); }
+.option-filtre input:checked + span {
+    color: var(--texte);
+    border-color: var(--neon-1);
+    background: color-mix(in srgb, var(--neon-1) 16%, var(--fond-3));
+    box-shadow: 0 0 14px color-mix(in srgb, var(--neon-1) 30%, transparent);
+}
+.option-filtre input:checked + span::before { background: var(--neon-1); box-shadow: 0 0 8px var(--neon-1); }
+.option-filtre input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
+/* Full Art et EX gardent leurs couleurs quand ils sont cochés */
+.option-full-art input:checked + span { border-color: transparent; background: linear-gradient(color-mix(in srgb, #c8a0ff 18%, var(--fond-3)), color-mix(in srgb, #c8a0ff 18%, var(--fond-3))) padding-box, var(--prisme) border-box; box-shadow: 0 0 14px rgba(200, 160, 255, 0.35); }
+.option-full-art input:checked + span::before { background: var(--prisme); box-shadow: none; }
+.option-ex input:checked + span { border-color: #c0c8d8; background: color-mix(in srgb, #c0c8d8 14%, var(--fond-3)); box-shadow: 0 0 14px rgba(192, 200, 216, 0.3); }
+.option-ex input:checked + span::before { background: #e8ecf4; box-shadow: 0 0 8px #e8ecf4; }
+#btn-vendre-tout { margin-left: auto; padding: 0.5rem 1.1rem; font-size: 0.9rem; }
+/* Rien à revendre : bouton discret plutôt qu'un or terne */
+#btn-vendre-tout:disabled { opacity: 1; color: var(--texte-doux); background: var(--fond-3); border-color: var(--bord); box-shadow: none; }
 
 .grille {
     display: grid;
@@ -1699,6 +1827,13 @@ main {
 .vente-variante { font-weight: 700; }
 .vente-variante .gris { font-style: normal; font-family: 'Space Mono', monospace; font-size: 0.85rem; }
 .vente-prix { display: flex; align-items: center; gap: 0.3rem; font-family: 'Space Mono', monospace; font-weight: 700; color: var(--accent); }
+/* Fenêtres centrées : le titre laisse la place à la croix de fermeture */
+.connexion h2, .modale-vente h2, .guide h2 { padding-inline: 2.4rem; }
+@media (max-width: 560px) {
+    /* Choix de l'exemplaire à vendre : deux cartes par ligne */
+    .vente-options { gap: 0.6rem; }
+    .vente-option { width: calc(50% - 0.3rem); max-width: 150px; }
+}
 
 /* =========================================================
    DUEL
@@ -1786,6 +1921,47 @@ main {
 /* =========================================================
    JOUER : onglets Duel / Plus ou moins
    ========================================================= */
+
+/* Choix du mode de jeu : trois grandes tuiles */
+.modes-jeu { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 0.5rem; }
+.mode-jeu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 1.8rem 1.3rem 1.5rem;
+    border-radius: 20px;
+    border: 1px solid var(--bord);
+    background: linear-gradient(180deg, var(--fond-3), var(--fond-2));
+    text-align: center;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.mode-jeu:hover {
+    transform: translateY(-5px);
+    border-color: color-mix(in srgb, var(--neon-1) 60%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--neon-1) 30%, transparent), -8px 10px 30px color-mix(in srgb, var(--neon-1) 18%, transparent), 8px 12px 30px color-mix(in srgb, var(--neon-2) 18%, transparent);
+}
+.mode-icone {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    color: var(--neon-1);
+    background: radial-gradient(circle, color-mix(in srgb, var(--neon-1) 16%, transparent), transparent 70%);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--neon-1) 40%, transparent);
+    transition: color 0.2s, box-shadow 0.2s;
+}
+.mode-icone svg { width: 30px; height: 30px; }
+.mode-jeu:hover .mode-icone { color: var(--neon-2); box-shadow: inset 0 0 0 1px var(--neon-2), 0 0 22px color-mix(in srgb, var(--neon-2) 40%, transparent); }
+.mode-jeu b { font-size: 1.3rem; font-weight: 800; }
+.mode-jeu span:not(.mode-icone) { color: var(--texte-doux); font-size: 0.92rem; line-height: 1.45; }
+.mode-jeu small { margin-top: auto; padding-top: 0.4rem; color: var(--accent); font-family: 'Space Mono', monospace; font-size: 0.78rem; font-weight: 700; }
+.retour-modes { display: flex; margin: 0 auto 1.2rem; padding: 0.45rem 1rem; font-size: 0.9rem; }
+@media (max-width: 760px) {
+    .modes-jeu { grid-template-columns: 1fr; }
+    .mode-jeu { padding: 1.3rem 1.1rem; }
+}
 
 .onglets {
     display: flex;
@@ -2109,6 +2285,30 @@ main {
 }
 .profil-bloc > p { color: var(--texte-doux); margin-bottom: 1rem; max-width: 640px; }
 
+/* Guide du premier lancement */
+.modale-contenu:has(.guide) { display: block; }
+.guide { max-width: 480px; margin: 0 auto; text-align: center; }
+.guide-icone {
+    display: inline-grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    margin-bottom: 0.8rem;
+    border-radius: 50%;
+    color: var(--neon-1);
+    background: radial-gradient(circle, color-mix(in srgb, var(--neon-1) 18%, transparent), transparent 70%);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--neon-1) 45%, transparent), 0 0 26px color-mix(in srgb, var(--neon-2) 30%, transparent);
+}
+.guide-icone svg { width: 34px; height: 34px; }
+.guide-etape { color: var(--neon-2); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.guide h2 { font-size: 1.5rem; margin: 0.2rem 0 0.7rem; }
+.guide > p:not(.guide-etape) { color: var(--texte-doux); }
+.guide-points { display: flex; justify-content: center; gap: 0.4rem; margin: 1.3rem 0; }
+.guide-points i { width: 8px; height: 8px; border-radius: 999px; background: var(--fond-4); transition: width 0.2s; }
+.guide-points i.actif { width: 24px; background: linear-gradient(90deg, var(--neon-1), var(--neon-2)); }
+.guide-actions { display: flex; justify-content: center; gap: 0.7rem; }
+.btn-guide { margin-top: 1rem; }
+
 /* Récompense du jour : 7 cases, celle du jour en or, les passées cochées */
 .modale-contenu:has(.connexion) { display: block; }
 .connexion { text-align: center; }
@@ -2175,8 +2375,13 @@ main {
 .profil-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
 
 /* Compteur de malchance sur l'accueil */
-.malchance { margin-top: 0.9rem; color: var(--texte-doux); font-size: 0.9rem; }
+/* Compteur de malchance : texte et petite jauge dorée */
+.progression-pied { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.8rem 1.5rem; margin-top: 1.1rem; }
+.malchance { flex: 1 1 260px; max-width: 420px; color: var(--texte-doux); font-size: 0.88rem; }
 .malchance b { color: var(--legendaire); }
+.malchance-jauge { height: 5px; margin-top: 0.45rem; border-radius: 999px; background: var(--fond-4); overflow: hidden; }
+.malchance-jauge i { display: block; width: var(--v); height: 100%; border-radius: inherit; background: var(--or); box-shadow: 0 0 8px rgba(255, 184, 0, 0.6); transition: width 0.6s; }
+.progression-pied .trophee-godpack { margin-top: 0; }
 
 /* =========================================================
    RÈGLES
@@ -2367,6 +2572,19 @@ main {
    MOBILE : menu en bas de l'écran
    ========================================================= */
 
+/* Écrans moyens : les 6 onglets ne tiennent pas avec leur nom, seul l'onglet actif le garde */
+@media (min-width: 761px) and (max-width: 1080px) {
+    .menu a { padding: 0.5rem 0.7rem; }
+    .menu a:not([aria-current="page"]) span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+}
+
 @media (max-width: 760px) {
     /* 6 onglets dans le menu du bas */
     .menu a { font-size: 0.66rem; }
@@ -2437,7 +2655,7 @@ main {
 
     .grille { grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 1rem 0.8rem; }
     .filtres select { flex: 1 1 140px; }
-    #btn-vendre-tout { margin-left: 0; width: 100%; }
+    #btn-vendre-tout { margin-left: 0; width: 100%; margin-top: 0.2rem; }
 
     .modale-contenu { grid-template-columns: 1fr; justify-items: center; text-align: center; }
     .fiche-visuel { width: min(220px, 60vw); }

@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=76">
+    <link rel="stylesheet" href="style.css?v=88">
 </head>
 <body>
 
@@ -114,6 +114,17 @@
                             </span>
                             <span class="paquet-charges" id="charges-prestige" hidden></span>
                         </button>
+                        <!-- Paquet Full Art, gagné grâce aux succès : modèle caché, copié à l'ouverture -->
+                        <button class="paquet paquet-full-art" id="paquet-full-art" hidden tabindex="-1" aria-hidden="true"
+                                style="--fond-paquet: linear-gradient(160deg, #ff4d8d 0%, #ffb84d 22%, #7dffb0 45%, #45d4ff 68%, #8b5cff 88%, #ff4d8d 100%); --texte-paquet: #fff; --ombre-paquet: rgba(200, 160, 255, 0.6)">
+                            <span class="paquet-haut"></span>
+                            <span class="paquet-corps">
+                                <span class="paquet-marque">Game<br>Cards</span>
+                                <span class="paquet-embleme" aria-hidden="true"></span>
+                                <span class="paquet-type">Full Art</span>
+                                <span class="paquet-mention" data-i18n>1 carte</span>
+                            </span>
+                        </button>
                         <p class="legende-paquet" id="legende-prestige">Un gratuit toutes les 24 h</p>
                     </div>
                 </div>
@@ -123,10 +134,11 @@
                         <h2 data-i18n>Ta progression</h2>
                         <span id="progression-texte">0 / 0 jeux</span>
                     </div>
-                    <div class="barre"><i id="progression-barre"></i></div>
-                    <div class="puces-raretes" id="progression-raretes"></div>
-                    <p class="malchance" id="malchance"></p>
-                    <p class="trophee-godpack" id="trophee-godpack" hidden></p>
+                    <div class="progression-raretes" id="progression-raretes"></div>
+                    <div class="progression-pied">
+                        <div class="malchance" id="malchance"></div>
+                        <p class="trophee-godpack" id="trophee-godpack" hidden></p>
+                    </div>
                 </div>
 
                 <div class="recentes" id="bloc-recentes" hidden>
@@ -178,19 +190,13 @@
                     <option value="nom" data-i18n>Tri : nom</option>
                     <option value="exemplaires" data-i18n>Tri : exemplaires</option>
                 </select>
-                <label class="interrupteur" data-i18n-texte>
-                    <input type="checkbox" id="filtre-doublons">
-                    <span></span> Doublons
-                </label>
-                <label class="interrupteur">
-                    <input type="checkbox" id="filtre-fullart">
-                    <span></span> Full Art
-                </label>
-                <label class="interrupteur">
-                    <input type="checkbox" id="filtre-ex">
-                    <span></span> EX
-                </label>
-                <button class="btn btn-or" id="btn-vendre-tout" data-i18n>Revendre les doublons</button>
+                <div class="filtres-options">
+                    <span class="filtres-label" data-i18n>Afficher seulement</span>
+                    <label class="option-filtre"><input type="checkbox" id="filtre-doublons"><span data-i18n>Doublons</span></label>
+                    <label class="option-filtre option-full-art"><input type="checkbox" id="filtre-fullart"><span>Full Art</span></label>
+                    <label class="option-filtre option-ex"><input type="checkbox" id="filtre-ex"><span>EX</span></label>
+                    <button class="btn btn-or" id="btn-vendre-tout" data-i18n>Revendre les doublons</button>
+                </div>
             </div>
 
             <div class="grille" id="grille-collection"></div>
@@ -226,10 +232,10 @@
                     <option value="ancien" data-i18n>Tri : plus anciens</option>
                     <option value="nom" data-i18n>Tri : nom</option>
                 </select>
-                <label class="interrupteur" data-i18n-texte>
-                    <input type="checkbox" id="catalogue-manquantes">
-                    <span></span> Pas encore possédées
-                </label>
+                <div class="filtres-options">
+                    <span class="filtres-label" data-i18n>Afficher seulement</span>
+                    <label class="option-filtre"><input type="checkbox" id="catalogue-manquantes"><span data-i18n>Pas encore possédées</span></label>
+                </div>
             </div>
 
             <div class="grille" id="grille-catalogue"></div>
@@ -243,11 +249,28 @@
             <div class="titre-ecran titre-centre">
                 <h1 data-i18n>Jouer</h1>
             </div>
-            <div class="onglets" id="onglets-jeu" role="tablist">
-                <button class="actif" data-mode="duel" role="tab" aria-selected="true">Duel</button>
-                <button data-mode="decks" role="tab" aria-selected="false" data-i18n>Duel de decks</button>
-                <button data-mode="pom" role="tab" aria-selected="false" data-i18n>Plus ou moins</button>
+            <!-- Choix du mode de jeu, affiché à chaque arrivée sur l'écran -->
+            <div class="modes-jeu" id="modes-jeu">
+                <button class="mode-jeu" data-mode="duel">
+                    <span class="mode-icone"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M14.5 6.5 18 3h3v3l-3.5 3.5M5 14l4 4M7 17l-3 3M3 19l2 2"/></svg></span>
+                    <b>Duel</b>
+                    <span data-i18n>Premier à 3 manches. Une carte de ta collection contre une carte de l’ordinateur : à toi de choisir la stat qui l’emporte.</span>
+                    <small data-i18n>Rapide · 10 pièces</small>
+                </button>
+                <button class="mode-jeu" data-mode="decks">
+                    <span class="mode-icone"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="10" height="14" rx="1.5"/><path d="M7 6V5a1.5 1.5 0 0 1 1.5-1.5h9A1.5 1.5 0 0 1 19 5v12a1.5 1.5 0 0 1-1.5 1.5H13"/></svg></span>
+                    <b data-i18n>Duel de decks</b>
+                    <span data-i18n>Compose un deck de 3 cartes et affronte l’ordinateur, de Facile à Hardcore. Attaque, défends, anticipe.</span>
+                    <small data-i18n>Stratégique · 5 à 80 pièces</small>
+                </button>
+                <button class="mode-jeu" data-mode="pom">
+                    <span class="mode-icone"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 20V4M3 8l4-4 4 4M17 4v16M13 16l4 4 4-4"/></svg></span>
+                    <b data-i18n>Plus ou moins</b>
+                    <span data-i18n>Deux jeux, une question : lequel a le plus d’avis, la meilleure note, le plus ancien ? Enchaîne les bonnes réponses.</span>
+                    <small data-i18n>Quiz · pièces aux paliers de série</small>
+                </button>
             </div>
+            <button class="btn retour-modes" id="retour-modes" hidden data-i18n>← Modes de jeu</button>
 
             <div id="mode-duel">
             <p class="duel-message" data-i18n="duel-intro">Premier à 3 manches. À chaque manche, une carte de ta collection affronte une carte adverse : tu vois le jeu adverse mais ni sa rareté ni ses stats, à toi de choisir la stat qui le bat.</p>
@@ -318,7 +341,7 @@
                 </article>
                 <article>
                     <h3><svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 15a.5.5 0 1 1 0-1h1v-1a4.5 4.5 0 0 1 2.557-4.06c.29-.139.443-.377.443-.59v-.7c0-.213-.154-.451-.443-.59A4.5 4.5 0 0 1 3.5 3V2h-1a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-1v1a4.5 4.5 0 0 1-2.557 4.06c-.29.139-.443.377-.443.59v.7c0 .213.154.451.443.59A4.5 4.5 0 0 1 12.5 13v1h1a.5.5 0 0 1 0 1zm2-13v1c0 .537.12 1.045.337 1.5h6.326c.216-.455.337-.963.337-1.5V2zm3 6.35c0 .701-.478 1.236-1.011 1.492A3.5 3.5 0 0 0 4.5 13s.866-1.299 3-1.48zm1 0v3.17c2.134.181 3 1.48 3 1.48a3.5 3.5 0 0 0-1.989-3.158C8.978 9.586 8.5 9.052 8.5 8.351z"/></svg> <span data-i18n>Ancienneté</span></h3>
-                    <p data-i18n="regle-anciennete">Plus le jeu est ancien, plus elle est haute : 2025 donne 0, 2010 environ 76, 1998 environ 98. C’est la seule stat qui ne dépend pas de la rareté : une vieille Commune peut battre une Mythique récente. En duel, l’année de la carte adverse reste cachée.</p>
+                    <p data-i18n="regle-anciennete">Plus le jeu est ancien, plus elle est haute : 2025 donne 20 (le minimum), 2010 environ 81, 1998 environ 98. C’est la seule stat qui ne dépend pas de la rareté : une vieille Commune peut battre une Mythique récente. En duel, l’année de la carte adverse reste cachée.</p>
                 </article>
                 <article>
                     <h3 data-i18n>★ Popularité</h3>
@@ -338,7 +361,7 @@
                 </article>
                 <article>
                     <h3 data-i18n>🎨 Full Art</h3>
-                    <p data-i18n="regle-fullart">Chaque Légendaire ou Mythique tirée a 5 % de chance d’être Full Art (30 % dans un god pack) : l’illustration couvre toute la carte sous un voile irisé. Un Full Art n’est jamais holo, et se revend 5 fois plus cher.</p>
+                    <p data-i18n="regle-fullart">Chaque Légendaire ou Mythique tirée a 5 % de chance d’être Full Art (30 % dans un god pack) : l’illustration couvre toute la carte sous un voile irisé. Un Full Art n’est jamais holo, se revend 5 fois plus cher et gagne +3 sur chaque stat en duel.</p>
                 </article>
                 <article>
                     <h3 data-i18n>⭐ EX</h3>
@@ -346,7 +369,7 @@
                 </article>
                 <article>
                     <h3 data-i18n>✨ Holo</h3>
-                    <p data-i18n="regle-holo">2 % de chance par carte. Une holo se revend 3 fois plus cher.</p>
+                    <p data-i18n="regle-holo">2 % de chance par carte. Une holo se revend 3 fois plus cher et gagne +2 sur chaque stat en duel.</p>
                 </article>
                 <article>
                     <h3 data-i18n>🏆 Chef-d’œuvre</h3>
@@ -358,7 +381,7 @@
                 </article>
                 <article>
                     <h3 data-i18n>🃏 Duel de decks</h3>
-                    <p data-i18n="regle-decks">Choisis une difficulté (elle plafonne la rareté des cartes pour toi et pour l’ordinateur : Peu commune en Facile, Rare en Normal, Épique en Difficile, Légendaire en Impossible, Mythique en Hardcore), puis 3 cartes de ta collection. Pile ou face désigne qui commence. À tour de rôle, l’attaquant pose une carte face cachée et annonce une stat, le défenseur répond avec une de ses cartes : la plus haute valeur marque 1 point. Premier à 2 points. En cas d’égalité, les dernières cartes se départagent au total de leurs stats. De 5 à 80 pièces à gagner selon la difficulté. En Impossible et Hardcore, l’ordinateur joue avec les meilleures cartes du jeu.</p>
+                    <p data-i18n="regle-decks">Choisis une difficulté (elle plafonne la rareté des cartes pour toi et pour l’ordinateur : Peu commune en Facile, Rare en Normal, Épique en Difficile, Légendaire en Impossible, Mythique en Hardcore), puis 3 cartes de ta collection. Pile ou face désigne qui commence. À tour de rôle, l’attaquant pose une carte face cachée et annonce une stat, le défenseur répond avec une de ses cartes : la plus haute valeur marque 1 point, et en cas d’égalité c’est le défenseur qui marque. Premier à 2 points. Si le score est à égalité, les dernières cartes se départagent au total de leurs stats. De 5 à 80 pièces à gagner selon la difficulté. En Impossible et Hardcore, l’ordinateur joue avec les meilleures cartes du jeu.</p>
                 </article>
                 <article>
                     <h3 data-i18n>✨ God pack</h3>
@@ -419,6 +442,7 @@
                     <span data-i18n>Langue</span>
                     <select id="reglage-langue"></select>
                 </label>
+                <button class="btn btn-guide" id="btn-guide" data-i18n>Revoir le guide de démarrage</button>
             </div>
 
             <h2 class="profil-titre" data-i18n>Sauvegarde</h2>
@@ -464,7 +488,7 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="i18n.js?v=19"></script>
-    <script src="script.js?v=124"></script>
+    <script src="i18n.js?v=24"></script>
+    <script src="script.js?v=134"></script>
 </body>
 </html>
