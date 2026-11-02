@@ -58,7 +58,7 @@ const MALCHANCE_MAX = 50;
 
 const CARTES_PAR_BOOSTER = 5;
 const BOOSTERS_PAR_LOT = 10; // ouverture ×10
-const PRIX_BOOSTER = 0; //50
+const PRIX_BOOSTER = 50; //50
 
 // Les deux boosters. Chacun se recharge gratuitement (`recharge` ms), avec une réserve de `stockMax` ;
 // quand il n'en reste plus, on peut en acheter (`prix` pièces). `gain` : pièces gagnées à chaque ouverture.
@@ -256,8 +256,8 @@ const STATS_FORCEES = {
     72850: { attaque: 84 },                   // The Elder Scrolls V: Skyrim (2011)
     12210: { attaque: 93 },                   // GTA IV : note Steam plombée par le portage PC (98 sur Metacritic)
     319510: { attaque: 92, popularite: 94 },             // Five Nights at Freddy's : phénomène bien au-delà de ses avis Steam
-    332800: { popularite: 88 },               // Five Nights at Freddy's 2 : porté par le phénomène FNAF
-    388090: { popularite: 86 },               // Five Nights at Freddy's 4
+    332800: { popularite: 87 },               // Five Nights at Freddy's 2 : porté par le phénomène FNAF
+    388090: { popularite: 85 },               // Five Nights at Freddy's 4
     814380: { attaque: 93 },                  // Sekiro : GOTY 2019, ex-Mythique
     // Mythiques anciennes : leur notoriété dépasse leurs avis Steam (surtout joués sur console)
     33230: { popularite: 94 },                // Assassin's Creed II
