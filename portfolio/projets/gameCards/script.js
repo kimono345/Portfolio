@@ -268,10 +268,10 @@ const STATS_FORCEES = {
     304240: { popularite: 92 },               // Resident Evil (1996) : le fondateur du survival horror
 };
 
-// Score de prestige des autres jeux : 85 % popularité + 15 % qualité + bonus
+// Score de prestige des autres jeux : 75 % popularité + 25 % qualité + bonus
 //   popularité = 75 % avis Steam (1 → 0, 1 million → 100) + 25 % joueurs estimés (1 → 0, 100 millions → 100)
 //   qualité    = note public (corrigée pour les jeux à peu d'avis), moyennée avec Metacritic quand il y en a une
-const POIDS_POPULARITE = 0.85;
+const POIDS_POPULARITE = 0.75;
 const PART_JOUEURS = 0.25;
 const BONUS_PRESTIGE = { goty: 3, chefOeuvre: 2, adore: 1, malNote: -3 };
 // Ces jeux ne descendent jamais sous Légendaire : les GOTY, et les géants (750 000 avis ou plus)
@@ -306,7 +306,6 @@ const ICONES = {
     trophee: '<svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5.5A.5.5 0 0 1 3 0h10a.5.5 0 0 1 .5.5q0 .807-.034 1.536a3 3 0 1 1-1.133 5.89c-.79 1.865-1.878 2.777-2.833 3.011v2.173l1.425.356c.194.048.377.135.537.255L13.3 15.1a.5.5 0 0 1-.3.9H3a.5.5 0 0 1-.3-.9l1.838-1.379c.16-.12.343-.207.537-.255L6.5 13.11v-2.173c-.955-.234-2.043-1.146-2.833-3.012a3 3 0 1 1-1.132-5.89A33 33 0 0 1 2.5.5m.099 2.54a2 2 0 0 0 .72 3.935c-.333-1.05-.588-2.346-.72-3.935m10.083 3.935a2 2 0 0 0 .72-3.935c-.133 1.59-.388 2.885-.72 3.935"/></svg>',
     sablier: '<svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 15a.5.5 0 1 1 0-1h1v-1a4.5 4.5 0 0 1 2.557-4.06c.29-.139.443-.377.443-.59v-.7c0-.213-.154-.451-.443-.59A4.5 4.5 0 0 1 3.5 3V2h-1a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-1v1a4.5 4.5 0 0 1-2.557 4.06c-.29.139-.443.377-.443.59v.7c0 .213.154.451.443.59A4.5 4.5 0 0 1 12.5 13v1h1a.5.5 0 0 1 0 1zm2-13v1c0 .537.12 1.045.337 1.5h6.326c.216-.455.337-.963.337-1.5V2zm3 6.35c0 .701-.478 1.236-1.011 1.492A3.5 3.5 0 0 0 4.5 13s.866-1.299 3-1.48zm1 0v3.17c2.134.181 3 1.48 3 1.48a3.5 3.5 0 0 0-1.989-3.158C8.978 9.586 8.5 9.052 8.5 8.351z"/></svg>',
 };
-
 // Couronne de laurier dorée : deux branches qui se croisent en bas, des paires de feuilles en amande
 // le long d'une courbe de Bézier. Le dégradé doré (#degrade-laurier) est défini une fois dans index.html.
 function laurierSVG() {
@@ -781,7 +780,7 @@ const aLeGenre = (carte, valeur) => DISTINCTIONS[valeur]
 // ---------- Données ----------
 
 async function chargerJeux() {
-    const reponse = await fetch('data/jeux.json?v=14');
+    const reponse = await fetch('data/jeux.json?v=16');
     if (!reponse.ok) throw new Error(`data/jeux.json introuvable (${reponse.status})`);
     // Format compact (voir outils/convertir-csv.js) : un tableau par jeu, genres et thèmes codés en caractères
     const { genres: genresFr, tags: tagsFr, jeux, groupesTags: groupesFr, estimes = [] } = await reponse.json();

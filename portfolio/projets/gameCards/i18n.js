@@ -555,7 +555,7 @@ const EN_PAGE = {
     'intro-catalogue': 'Every card in the game. You can buy the one you are missing directly, but it costs much more than trying your luck with boosters.',
     'duel-intro': 'First to 3 rounds. Each round, a card from your collection faces an opposing card: you see the opposing game but neither its rarity nor its stats, it is up to you to pick the stat that beats it.',
     'regles-intro': `Every card is a real Steam game. The 22 Mythics are the most iconic games, hand-picked.
-        The others are ranked by prestige score: 85% popularity (Steam reviews and estimated players), 15% quality
+        The others are ranked by prestige score: 75% popularity (Steam reviews and estimated players), 25% quality
         (player and critic ratings), plus bonuses (GOTY +3, masterpiece +2, loved +1, poorly rated −3).
         GOTY winners and giants (750,000 reviews or more) are at least Legendary. About sixty cult classics, less present on Steam, are placed by hand in Legendary or Epic. Games without reviews in the Steam data are included too: their reviews and rating are estimated (shown on their card details).`,
     'regle-qualite': 'Comes from the share of positive Steam reviews (pulled toward the average for games with few reviews: 1 review at 100% is not worth 10,000 reviews at 95%).',

@@ -148,6 +148,39 @@ const CORRECTIONS = {
     2444750: { avis: 21407, note: 90 },       // Shape of Dreams
     2429640: { avis: 68963, note: 67 },       // Throne and Liberty
 };
+// Avis en anglais seulement (relevés en novembre 2026). Environ la moitié des avis Steam sont en anglais :
+// le total de toutes les langues est estimé en divisant par PART_AVIS_ANGLAIS
+const PART_AVIS_ANGLAIS = 0.5;
+const CORRECTIONS_ANGLAIS = {
+    1962663: { avis: 21494, note: 28 },       // Call of Duty: Warzone
+    3556750: { avis: 6759, note: 86 },        // Warhammer 40,000: Dawn of War - Definitive Edition
+    2229850: { avis: 10853, note: 93 },       // Command & Conquer Red Alert 2 and Yuri’s Revenge
+    2799860: { avis: 2056, note: 90 },        // Inazuma Eleven: Victory Road
+    3028330: { avis: 9753, note: 42 },        // Battlefield REDSEC
+    3274580: { avis: 5566, note: 65 },        // Anno 117: Pax Romana
+    2397300: { avis: 22565, note: 73 },       // Half Sword
+    2486820: { avis: 8705, note: 93 },        // Sonic Racing: CrossWorlds
+    686060: { avis: 29195, note: 91 },        // Mewgenics
+    2215390: { avis: 7096, note: 86 },        // Five Nights at Freddy's: Secret of the Mimic
+    1392860: { avis: 5030, note: 49 },        // Little Nightmares III
+    2968420: { avis: 7537, note: 92 },        // PowerWash Simulator 2
+    3024040: { avis: 3808, note: 91 },        // Stronghold Crusader: Definitive Edition
+    3472040: { avis: 13988, note: 72 },       // NBA 2K26
+    1757300: { avis: 8447, note: 87 },        // Jump Space
+    3862670: { avis: 316, note: 99 },         // Shelldiver
+    3293260: { avis: 10137, note: 96 },       // Waterpark Simulator
+    3372980: { avis: 7296, note: 96 },        // Tower Wizard
+    2753900: { avis: 3471, note: 90 },        // The King is Watching
+    3036080: { avis: 691, note: 90 },         // Shawarma Legend
+    1857950: { avis: 8738, note: 89 },        // VEIN
+    3769130: { avis: 3111, note: 91 },        // Keep on Mining!
+    1449110: { avis: 6354, note: 73 },        // The Outer Worlds 2
+    2958130: { avis: 7792, note: 93 },        // Jurassic World Evolution 3
+    1904480: { avis: 4796, note: 93 },        // Absolum
+};
+for (const [id, { avis, note }] of Object.entries(CORRECTIONS_ANGLAIS)) {
+    CORRECTIONS[id] = { avis: Math.round(avis / PART_AVIS_ANGLAIS), note };
+}
 
 // Jeux sans avis : on écarte ce qui n'est pas un jeu complet (démos, playtests, bandes-son, serveurs…)
 const PAS_UN_JEU = /\b(playtest|demo|prologue|soundtrack|ost|dedicated server|server|beta|benchmark|sdk)\b|friend'?s pass/i;
