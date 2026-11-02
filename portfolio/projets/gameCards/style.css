@@ -115,7 +115,6 @@ h2 { font-size: 1.15rem; font-weight: 800; }
 .rarete-epique      { --rar: var(--epique); }
 .rarete-legendaire  { --rar: var(--legendaire); --rar-fond: var(--or); }
 .rarete-mythique    { --rar: var(--mythique); --rar-fond: var(--arc-en-ciel); }
-.texte-rare { color: var(--rare); }
 .texte-peu-commune { color: var(--peu-commune); }
 .texte-rarete { color: var(--rar); }
 
@@ -354,11 +353,6 @@ main {
     transition: transform 0.18s ease-out, filter 0.3s;
     filter: drop-shadow(0 22px 34px var(--ombre-paquet));
 }
-.paquet-premium {
-    --fond-paquet: linear-gradient(160deg, #ffe27a 0%, #ffb800 45%, #e0560f 100%);
-    --texte-paquet: #2a1400;
-    --ombre-paquet: rgba(255, 160, 0, 0.4);
-}
 
 /* Bandeau du haut (celui qui se déchire), dents de sertissage en haut.
    Fond « feuille d'aluminium » : grain léger, rayures diagonales discrètes, couleur du paquet */
@@ -491,7 +485,6 @@ main {
     text-transform: uppercase;
     opacity: 0.75;
 }
-.paquet-premium .paquet-type { background: rgba(255, 255, 255, 0.35); }
 
 /* Reflet qui suit la souris */
 .paquet::after {
@@ -585,18 +578,6 @@ main {
 .progression-tete { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
 .progression-tete span { color: var(--texte-doux); }
 .progression-tete b { color: var(--texte); font-family: 'Space Mono', monospace; }
-.barre { height: 10px; margin: 0.9rem 0 1.1rem; border-radius: 999px; background: var(--fond-4); overflow: hidden; }
-.barre i {
-    display: block;
-    height: 100%;
-    width: 0;
-    border-radius: inherit;
-    /* Dégradé des raretés, de la Commune à la Mythique */
-    background: linear-gradient(90deg, var(--commune), var(--peu-commune), var(--rare), var(--epique), var(--legendaire), var(--mythique));
-    background-size: 100vw 100%;
-    box-shadow: 0 0 12px rgba(163, 82, 255, 0.5);
-    transition: width 0.8s cubic-bezier(0.2, 0.8, 0.3, 1);
-}
 
 .puces-raretes { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 
@@ -766,7 +747,7 @@ main {
     box-shadow: 0 0 12px 4px rgba(255, 255, 255, 0.8);
     animation: geste-dechirer 1.6s ease-in-out infinite;
 }
-.paquet-seul.secoue .geste-dechirer, .paquet-seul.dechire .geste-dechirer { display: none; }
+.paquet-seul.dechire .geste-dechirer { display: none; }
 
 /* ── Pile de cartes ── */
 .pile {
@@ -817,7 +798,6 @@ main {
     background: radial-gradient(circle, rgba(255, 220, 130, 0.55), transparent 70%);
     filter: blur(14px);
 }
-.paquet-seul.secoue { animation: secoue 0.25s ease-in-out infinite; }
 .paquet-seul.dechire .paquet-haut { animation: haut-arrache 0.55s cubic-bezier(0.3, 0, 0.7, 1) forwards; }
 .paquet-seul.dechire .paquet-corps { animation: corps-tombe 0.55s 0.1s ease-in forwards; }
 .paquet-seul.dechire { filter: drop-shadow(0 0 60px rgba(255, 255, 255, 0.6)) brightness(1.2); }
@@ -894,19 +874,6 @@ main {
 .ouverture.multiple .ouverture-aide,
 .ouverture.multiple .bilan { flex-basis: auto; margin: 0 auto 0 0; justify-content: flex-start; text-align: left; }
 .ouverture.multiple .ouverture-actions .btn { padding: 0.6rem 1rem; }
-.paquet-multiple {
-    position: absolute;
-    top: -14px;
-    right: -14px;
-    padding: 0.3rem 0.7rem;
-    border-radius: 999px;
-    background: var(--accent-2);
-    color: #fff;
-    font-weight: 900;
-    font-size: 1.2rem;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-}
-.btn-x10 { padding: 0.5rem 1rem; font-size: 0.9rem; }
 .bilan b { color: var(--texte); }
 .bilan-gain { display: inline-flex; align-items: center; gap: 0.3rem; }
 .bilan .bilan-gain b { color: var(--accent); }
@@ -1236,6 +1203,7 @@ main {
 }
 .ruban-goty span {
     position: absolute;
+    overflow: hidden;
     top: 9.6cqi;
     left: -3.5cqi;
     width: 60cqi;
@@ -1261,7 +1229,6 @@ main {
 /* Le second brin, après le texte, est retourné pour pointer vers l'autre bout */
 .ruban-goty .brin:last-child { transform: scaleX(-1); }
 /* Reflet qui traverse le bandeau toutes les 4 secondes */
-.ruban-goty span { overflow: hidden; }
 .ruban-goty span::after {
     content: '';
     position: absolute;
@@ -1540,7 +1507,6 @@ main {
 }
 .tirage .flip { cursor: pointer; }
 .tirage .flip.retournee:hover .carte { transform: translateY(-4px); transition: transform 0.2s; }
-.tirage .flip:not(.retournee):hover .flip-inner { transform: rotateY(180deg) translateY(-8px); }
 .flip:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; border-radius: 14px; }
 
 /* Éclat quand une carte rare se retourne */
@@ -1719,6 +1685,47 @@ main {
 
 /* ── Catalogue ── */
 .intro-catalogue { color: var(--texte-doux); margin: -0.6rem 0 1.2rem; max-width: 720px; }
+
+/* Marché du jour : un encadré néon en haut du catalogue */
+.marche {
+    margin: 0 0 1.8rem;
+    padding: 1.2rem 1.3rem 1.4rem;
+    border-radius: 20px;
+    border: 1px solid color-mix(in srgb, var(--neon-1) 35%, var(--bord));
+    background:
+        radial-gradient(ellipse at top left, color-mix(in srgb, var(--neon-1) 10%, transparent), transparent 60%),
+        radial-gradient(ellipse at bottom right, color-mix(in srgb, var(--neon-2) 10%, transparent), transparent 60%),
+        var(--fond-2);
+}
+.marche-tete { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem 1rem; margin-bottom: 1rem; }
+.marche-tete h2 { margin: 0; font-size: 1.3rem; }
+.marche-tete p { margin: 0; color: var(--texte-doux); font-size: 0.9rem; }
+.marche-offres { display: grid; grid-template-columns: repeat(3, minmax(0, 190px)); gap: 1.2rem; justify-content: center; }
+.offre-marche { display: flex; flex-direction: column; gap: 0.6rem; }
+.offre-marche .btn { justify-content: center; flex-wrap: wrap; gap: 0.3rem; padding-inline: 0.5rem; }
+.offre-marche s { opacity: 0.6; font-weight: 400; }
+.offre-etat { text-align: center; color: var(--texte-doux); font-size: 0.85rem; padding: 0.55rem 0; }
+@media (max-width: 560px) {
+    .marche { padding: 1rem 0.8rem 1.1rem; }
+    .marche-offres { gap: 0.5rem; }
+    .offre-marche .btn { font-size: 0.78rem; padding: 0.45rem 0.3rem; }
+}
+
+/* Code cadeau (Profil) */
+.code-cadeau { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.code-cadeau input {
+    flex: 1 1 200px;
+    padding: 0.6rem 0.9rem;
+    border-radius: 12px;
+    border: 1px solid var(--bord);
+    background: var(--fond-3);
+    color: var(--texte);
+    font: inherit;
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+.code-cadeau input:focus { outline: none; border-color: var(--neon-1); box-shadow: 0 0 0 3px color-mix(in srgb, var(--neon-1) 25%, transparent); }
 .case-carte.non-possedee .carte { filter: saturate(0.75) brightness(0.92); }
 .case-carte.non-possedee:hover .carte { filter: none; }
 /* Badge des cartes déjà dans la collection, posé sur le coin haut gauche */
@@ -1919,7 +1926,7 @@ main {
 .btn-stat small { color: var(--accent); font-size: 0.72rem; font-weight: 600; }
 
 /* =========================================================
-   JOUER : onglets Duel / Plus ou moins
+   JOUER : choix du mode, Duel, Duel de decks, Draft
    ========================================================= */
 
 /* Choix du mode de jeu : trois grandes tuiles */
@@ -1963,26 +1970,6 @@ main {
     .mode-jeu { padding: 1.3rem 1.1rem; }
 }
 
-.onglets {
-    display: flex;
-    justify-content: center;
-    gap: 0.4rem;
-    margin: -0.4rem auto 1.8rem;
-    padding: 0.3rem;
-    width: fit-content;
-    border-radius: 999px;
-    background: var(--fond-2);
-    border: 1px solid var(--bord);
-}
-.onglets button {
-    padding: 0.5rem 1.2rem;
-    border-radius: 999px;
-    color: var(--texte-doux);
-    font-weight: 700;
-    transition: background 0.2s, color 0.2s;
-}
-.onglets button:hover { color: var(--texte); }
-.onglets button.actif { background: var(--fond-4); color: var(--texte); }
 
 /* ── Duel de decks ── */
 .niveaux-deck { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.8rem; max-width: 980px; margin: 0 auto; }
@@ -2038,6 +2025,10 @@ main {
 .deck-slot.plein { border: none; transition: transform 0.15s; }
 .deck-slot.plein:hover { transform: translateY(-4px); }
 .deck-slot.arrive { animation: slot-arrive 0.35s cubic-bezier(0.2, 0.8, 0.3, 1.4); }
+/* Draft : les 3 cartes proposées, en grand sous les emplacements */
+.draft-choix { display: grid; grid-template-columns: repeat(3, minmax(0, 220px)); gap: 1.2rem; justify-content: center; margin-top: 1.4rem; }
+.draft-choix .carte-choix:hover { box-shadow: 0 0 0 2px var(--neon-1), 0 0 26px color-mix(in srgb, var(--neon-1) 35%, transparent); }
+@media (max-width: 560px) { .draft-choix { gap: 0.5rem; } }
 @keyframes slot-arrive { from { transform: scale(0.6); opacity: 0; } }
 .slot-retirer {
     position: absolute;
@@ -2177,26 +2168,7 @@ main {
 .duel-message.resultat-final { animation: resultat-final 0.6s cubic-bezier(0.2, 0.8, 0.3, 1.4); }
 @keyframes resultat-final { from { transform: scale(0.7); opacity: 0; } }
 
-/* ── Plus ou moins ── */
-.pom-question { text-align: center; font-size: clamp(1.2rem, 3vw, 1.6rem); font-weight: 800; margin-bottom: 1.4rem; }
-.pom-plateau {
-    display: grid;
-    grid-template-columns: minmax(0, 230px) auto minmax(0, 230px);
-    justify-content: center;
-    align-items: center;
-    gap: clamp(0.8rem, 4vw, 2.5rem);
-}
-.pom-choix {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.6rem;
-    border-radius: 14px;
-    transition: transform 0.2s, opacity 0.3s;
-}
-.pom-choix:hover:not(:disabled) { transform: translateY(-6px); }
-.pom-choix:disabled { cursor: default; }
-/* Carte aux stats cachées (adversaire du duel, Plus ou moins) : la rareté donnerait un indice, on la neutralise */
+/* Carte aux stats cachées (adversaire du duel) : la rareté donnerait un indice, on la neutralise */
 .carte.stats-cachees {
     --rar: var(--texte-doux);
     background: var(--fond-4);
@@ -2212,21 +2184,6 @@ main {
 .carte.stats-cachees .carte-image { box-shadow: none; }
 .carte.stats-cachees .carte-corps { background: linear-gradient(180deg, var(--fond-3), var(--fond-2)); box-shadow: none; }
 .carte.stats-cachees .carte-nom { font-family: inherit; color: var(--texte); text-shadow: none; }
-.pom-choix.bonne .carte { box-shadow: 0 0 0 3px var(--vert), 0 0 30px rgba(63, 191, 111, 0.55); }
-.pom-choix.mauvaise { opacity: 0.55; }
-.pom-valeur {
-    padding: 0.3rem 0.8rem;
-    border-radius: 999px;
-    background: var(--fond-3);
-    border: 1px solid var(--bord-fort);
-    font-family: 'Space Mono', monospace;
-    font-weight: 700;
-    font-size: 0.9rem;
-    animation: arrivee 0.4s backwards;
-}
-.pom-choix.bonne .pom-valeur { border-color: var(--vert); color: var(--vert); }
-.pom-score { text-align: center; color: var(--texte-doux); margin-top: 1rem; }
-.pom-score b { color: var(--texte); font-family: 'Space Mono', monospace; }
 
 /* =========================================================
    PROFIL
@@ -2474,7 +2431,6 @@ main {
    ANIMATIONS
    ========================================================= */
 
-@keyframes arc-en-ciel { to { background-position: 300% 0; } }
 @keyframes secoue-fort {
     0%, 100% { rotate: 0deg; translate: 0 0; }
     25% { rotate: -5deg; translate: -5px -3px; }
@@ -2519,11 +2475,6 @@ main {
 @keyframes holo { from { transform: translateX(-33.4%); } to { transform: translateX(33.4%); } }
 @keyframes pulse { 50% { transform: scale(1.4); opacity: 0.6; } }
 @keyframes flotte { 50% { translate: 0 -10px; } }
-@keyframes secoue {
-    0%, 100% { rotate: 0deg; translate: 0 0; }
-    25% { rotate: -3deg; translate: -3px -2px; }
-    75% { rotate: 3deg; translate: 3px -2px; }
-}
 @keyframes haut-arrache { to { transform: translate(calc(var(--sens, 1) * 60px), -140px) rotate(calc(var(--sens, 1) * 28deg)); opacity: 0; } }
 @keyframes indice-dechirer {
     25% { translate: 0 -7px; }
@@ -2588,8 +2539,6 @@ main {
 @media (max-width: 760px) {
     /* 6 onglets dans le menu du bas */
     .menu a { font-size: 0.66rem; }
-    .pom-plateau { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 0.5rem; }
-    .pom-valeur { font-size: 0.72rem; padding: 0.25rem 0.5rem; text-align: center; }
     .succes-grille { grid-template-columns: 1fr; }
     body { padding-bottom: var(--hauteur-menu-mobile); }
     /* backdrop-filter piégerait le menu fixe dans l'en-tête : fond opaque à la place */

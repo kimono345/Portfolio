@@ -15,18 +15,19 @@
 //   `chancePrestige`  : les 4 premières cartes d'un Prestige (Peu commune ou mieux)
 //   `chancePrestigeGarantie` : la 5ᵉ carte d'un Prestige (Épique ou mieux)
 //   `chanceDuel`      : les cartes tirées en duel (toi et l'ordinateur)
+//   `chanceDraft`     : les cartes proposées en draft (toi et l'ordinateur)
 // Chaque colonne de chances doit faire 100 au total ; 0 interdit la rareté.
 // `prix` : achat direct dans le catalogue, volontairement bien plus cher que la chance en boosters.
 // `stats` : fourchette des stats de jeu de la rareté ; les vraies données placent la carte dans cette fourchette,
 // Les fourchettes se chevauchent : une carte rare est en général plus forte, mais une excellente Légendaire
 // peut dépasser une Mythique moyenne sur son point fort.
 const RARETES = [
-    { id: 'mythique',    nom: t('Mythique'),    quota: null, stats: [55, 100], chance: 0.1, chanceGarantie: 0.1, chancePrestige: 0.2,  chancePrestigeGarantie: 1,  chanceDuel: 3,  revente: 300, prix: 10000 },
-    { id: 'legendaire',  nom: t('Légendaire'),  quota: 110,  stats: [45, 95],  chance: 0.5, chanceGarantie: 0.9, chancePrestige: 1,    chancePrestigeGarantie: 5,  chanceDuel: 7,  revente: 100, prix: 4000 },
-    { id: 'epique',      nom: t('Épique'),      quota: 600,  stats: [35, 90],  chance: 2, chanceGarantie: 12,  chancePrestige: 6,    chancePrestigeGarantie: 94, chanceDuel: 12, revente: 40,  prix: 1500 },
-    { id: 'rare',        nom: t('Rare'),        quota: 1500, stats: [25, 85],  chance: 6, chanceGarantie: 30,  chancePrestige: 22.8, chancePrestigeGarantie: 0,  chanceDuel: 18, revente: 15,  prix: 600 },
-    { id: 'peu-commune', nom: t('Peu commune'), quota: 3000, stats: [15, 80],  chance: 18, chanceGarantie: 57,  chancePrestige: 70,   chancePrestigeGarantie: 0,  chanceDuel: 25, revente: 5,   prix: 250 },
-    { id: 'commune',     nom: t('Commune'),     quota: null, stats: [5, 75],   chance: 73.4, chanceGarantie: 0,   chancePrestige: 0,    chancePrestigeGarantie: 0,  chanceDuel: 35, revente: 2,   prix: 100 },
+    { id: 'mythique',    nom: t('Mythique'),    quota: null, stats: [55, 100], chance: 0.1, chanceGarantie: 0.1, chancePrestige: 0.2,  chancePrestigeGarantie: 1,  chanceDuel: 3,  chanceDraft: 2,  revente: 300, prix: 10000 },
+    { id: 'legendaire',  nom: t('Légendaire'),  quota: 110,  stats: [45, 95],  chance: 0.5, chanceGarantie: 0.9, chancePrestige: 1,    chancePrestigeGarantie: 5,  chanceDuel: 7,  chanceDraft: 8,  revente: 100, prix: 4000 },
+    { id: 'epique',      nom: t('Épique'),      quota: 600,  stats: [35, 90],  chance: 2, chanceGarantie: 12,  chancePrestige: 6,    chancePrestigeGarantie: 94, chanceDuel: 12, chanceDraft: 20, revente: 40,  prix: 1500 },
+    { id: 'rare',        nom: t('Rare'),        quota: 1500, stats: [25, 85],  chance: 6, chanceGarantie: 30,  chancePrestige: 22.8, chancePrestigeGarantie: 0,  chanceDuel: 18, chanceDraft: 30, revente: 15,  prix: 600 },
+    { id: 'peu-commune', nom: t('Peu commune'), quota: 3000, stats: [15, 80],  chance: 18, chanceGarantie: 57,  chancePrestige: 70,   chancePrestigeGarantie: 0,  chanceDuel: 25, chanceDraft: 25, revente: 5,   prix: 250 },
+    { id: 'commune',     nom: t('Commune'),     quota: null, stats: [5, 75],   chance: 73.4, chanceGarantie: 0,   chancePrestige: 0,    chancePrestigeGarantie: 0,  chanceDuel: 35, chanceDraft: 15, revente: 2,   prix: 100 },
 ];
 const CHANCE_HOLO_PRESTIGE = 0.08; // contre 2 % dans un booster normal
 
@@ -54,9 +55,6 @@ const PART_MYTHIQUE_GOD_PACK = 0.25; // en plus de la Mythique garantie
 
 // Compteur de malchance : après 50 boosters sans Légendaire ni Mythique, le suivant en garantit une
 const MALCHANCE_MAX = 50;
-// Plus ou moins : des pièces aux paliers de la série (5, 10, 20 bonnes réponses), puis toutes les 10 au-delà
-const PALIERS_POM = { 5: 5, 10: 15, 20: 40 };
-const GAIN_POM_AU_DELA = 40;
 
 const CARTES_PAR_BOOSTER = 5;
 const BOOSTERS_PAR_LOT = 10; // ouverture ×10
@@ -287,6 +285,18 @@ const CARTES_PAR_PAGE = 60; // collection affichée par tranches
 const RECOMPENSES_CONNEXION = [
     { pieces: 50 }, { boosters: 2 }, { pieces: 100 }, { boosters: 3 }, { prestiges: 1 }, { pieces: 200 }, { fullArt: true },
 ];
+// Marché du jour (catalogue) : une carte de chacune de ces raretés, pas encore possédée, à prix réduit
+const MARCHE_RARETES = ['rare', 'epique', 'legendaire'];
+const REMISE_MARCHE = 0.5;
+// Codes cadeaux (Profil), un seul usage par sauvegarde. Récompenses : { pieces }, { boosters }, { prestiges },
+// { fullArt } (un paquet Full Art) et { carte: identifiant Steam } (cette carte précise)
+const CODES_CADEAUX = {
+    BIENVENUE: { pieces: 300 },
+    BOOSTERS: { boosters: 10 },
+    PRESTIGE: { prestiges: 2 },
+    FULLART: { fullArt: true },
+    PORTAL: { carte: 620 },
+};
 const URL_IMAGES = 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps';
 
 // Icônes Bootstrap Icons (licence MIT) en SVG : rendu identique sur tous les appareils, contrairement aux emoji
@@ -354,8 +364,21 @@ const STATS = {
 
 const $ = sel => document.querySelector(sel);
 const attendre = ms => new Promise(r => setTimeout(r, ms));
+// Recherche : on attend la fin de la frappe avant de filtrer
+const differer = (fonction, ms = 150) => {
+    let minuteur;
+    return () => {
+        clearTimeout(minuteur);
+        minuteur = setTimeout(fonction, ms);
+    };
+};
 const auHasard = liste => liste[Math.floor(Math.random() * liste.length)];
-const indexRarete = id => RARETES.findIndex(r => r.id === id);
+// Index de chaque rareté dans RARETES (appelé dans les tris : une table plutôt qu'une recherche)
+const INDEX_PAR_RARETE = new Map(RARETES.map((r, i) => [r.id, i]));
+const indexRarete = id => INDEX_PAR_RARETE.get(id) ?? -1;
+const estHauteRarete = id => indexRarete(id) <= INDEX_LEGENDAIRE; // Légendaire ou Mythique
+const HAUTES_RARETES = RARETES.slice(0, INDEX_LEGENDAIRE + 1);
+const comparerNoms = new Intl.Collator(LOCALE).compare;
 const nombre = n => n.toLocaleString(LOCALE);
 const PIECE = '<span class="piece" aria-hidden="true"></span>';
 
@@ -372,6 +395,11 @@ function formatDuree(ms) {
         ? `${Math.floor(s / 3600)}:${deux(Math.floor(s / 60) % 60)}:${deux(s % 60)}`
         : `${Math.floor(s / 60)}:${deux(s % 60)}`;
 }
+
+// Fenêtre principale (fiche, achat, récompense…), son contenu déjà rempli dans #modale-contenu
+const ouvrirModale = () => {
+    if (!$('#modale').open) $('#modale').showModal();
+};
 
 function toast(message, type = 'info') {
     const el = document.createElement('div');
@@ -397,6 +425,8 @@ const CLES = {
     reglages: 'gameCards.reglages',
     connexion: 'gameCards.connexion',
     gainsJour: 'gameCards.gainsJour',
+    marche: 'gameCards.marche',
+    codes: 'gameCards.codes',
 };
 
 function lire(cle, defaut) {
@@ -427,7 +457,7 @@ const etat = {
         ...lire(CLES.charges, {}),
     },
     godPacks: lire(CLES.godPacks, { nombre: 0, premier: null }), // trophée : combien, et la date du premier
-    stats: { boosters: 0, prestiges: 0, duelsGagnes: 0, duelsParfaits: 0, ventes: 0, recordPom: 0, decksGagnes: 0, decksHardcore: 0, ...lire(CLES.stats, {}) },
+    stats: { boosters: 0, prestiges: 0, duelsGagnes: 0, duelsParfaits: 0, ventes: 0, decksGagnes: 0, decksHardcore: 0, draftsGagnes: 0, ...lire(CLES.stats, {}) },
     succes: lire(CLES.succes, {}),        // { id du succès: date d'obtention }
     // { id du succès: date de récupération de la récompense }. Les anciennes sauvegardes avaient reçu
     // leurs récompenses tout de suite : leurs succès déjà obtenus comptent comme récupérés.
@@ -436,6 +466,8 @@ const etat = {
     reglages: { sons: false, ...lire(CLES.reglages, {}) },
     connexion: lire(CLES.connexion, { dernier: null, serie: 0 }), // dernier jour récupéré, et jours d'affilée
     gainsJour: lire(CLES.gainsJour, { jour: null }), // victoires payées aujourd'hui, mode par mode
+    marche: lire(CLES.marche, { jour: null, offres: [], achetes: [] }), // offres du jour (identifiants) et celles achetées
+    codes: lire(CLES.codes, {}),          // { code cadeau utilisé: date }
 };
 
 // Tous les jeux de data/jeux.json (chargés au démarrage), et les mêmes rangés par rareté
@@ -453,7 +485,7 @@ function sauvegarder() {
 // ---------- Cartes ----------
 
 // Popularité sur une échelle logarithmique : 1 avis → 0, 1 000 → 50, 1 million → 100
-const popularite = avis => Math.max(0, Math.min(100, Math.round(Math.log10(Math.max(1, avis)) * 100 / 6)));
+const popularite = avis => Math.round(echelleLog(avis, 1e6));
 // Stat Popularité d'une carte, gardée en mémoire sur le jeu (le tri du catalogue la demande pour 115 000 jeux)
 const statPopularite = jeu => (jeu.statPopularite ??= STATS_FORCEES[jeu.id]?.popularite ?? statDeJeu(popularite(jeu.avis), jeu.rarete));
 // Stat Qualité d'une carte, gardée en mémoire de la même façon (tri du catalogue)
@@ -647,7 +679,8 @@ function imageSecoursHTML(carte) {
 }
 
 // `bonus` : bonus de variante en combat, affiché en pastille à côté de chaque stat (duels)
-function carteHTML(carte, { holo = false, compteur = 0, cachee = false, fullArt = (carte.fullArts || 0) > 0, ex = Boolean(carte.ex), bonus = 0 } = {}) {
+// Holo et Full Art suivent par défaut les exemplaires possédés (carte de la collection)
+function carteHTML(carte, { holo = (carte.holos || 0) > 0, compteur = 0, cachee = false, fullArt = (carte.fullArts || 0) > 0, ex = Boolean(carte.ex), bonus = 0 } = {}) {
     if (fullArt) holo = false;
     const rarete = RARETES[indexRarete(carte.rarete)];
     // Sur la carte adverse du duel, l'année trahirait l'Ancienneté : on la cache aussi
@@ -710,20 +743,13 @@ function flipHTML(carte, { holo = false, fullArt = false, retournee = false, nou
         </div>`;
 }
 
-// Pastilles de rareté (progression de l'accueil et filtre de la collection)
-function pucesRaretesHTML({ boutons = false, actif = '', totaux = !boutons } = {}) {
-    const entrees = Object.values(etat.collection);
-    const puce = (id, nom, possedees, total) => {
-        const contenu = `<i></i>${nom} <b>${nombre(possedees)}${total ? ` / ${nombre(total)}` : ''}</b>`;
-        const classe = `puce${id ? ` rarete-${id}` : ''}${boutons && actif === id ? ' active' : ''}`;
-        return boutons
-            ? `<button class="${classe}" data-rarete="${id}" aria-pressed="${actif === id}">${contenu}</button>`
-            : `<span class="${classe}">${contenu}</span>`;
-    };
-    return (boutons ? puce('', t('Toutes'), entrees.length, totaux ? totalJeux() : 0) : '')
-        + RARETES.map(r => puce(r.id, r.nom,
-            entrees.filter(e => e.rarete === r.id).length,
-            totaux ? jeuxParRarete[r.id]?.length || 0 : 0)).join('');
+// Pastilles de rareté (filtres de la collection et du catalogue) ; `totaux` : nombre de jeux de chaque rareté
+function pucesRaretesHTML({ actif = '', totaux = false } = {}) {
+    const puce = (id, nom, n, total) => `
+        <button class="puce${id ? ` rarete-${id}` : ''}${actif === id ? ' active' : ''}" data-rarete="${id}" aria-pressed="${actif === id}">
+            <i></i>${nom} <b>${nombre(n)}${totaux ? ` / ${nombre(total)}` : ''}</b></button>`;
+    return puce('', t('Toutes'), possedees().length, totalJeux())
+        + RARETES.map(r => puce(r.id, r.nom, nombreDeRarete(r.id), totalDeRarete(r.id))).join('');
 }
 
 // Options du filtre genre / thème, groupées. `presents` (Set) ne garde que les valeurs rencontrées.
@@ -766,7 +792,7 @@ async function chargerJeux() {
     const decoder = (codes, liste) => [...codes].map(c => liste[ALPHABET_CODES.indexOf(c)]);
     for (const r of RARETES) jeuxParRarete[r.id] = [];
     tousLesJeux = jeux.map(([id, nom, annee, avis, note, metacritic, joueurs, codesGenres, codesTags, image]) =>
-        ({ id, nom, annee, avis, note, metacritic, joueurs, genres: decoder(codesGenres, genres), tags: decoder(codesTags, tags), image }));
+        ({ id, nom, nomMin: nom.toLowerCase(), annee, avis, note, metacritic, joueurs, genres: decoder(codesGenres, genres), tags: decoder(codesTags, tags), image }));
     groupesTags = groupes;
     // Jeux sans avis dans le dataset : avis et note estimés, signalé sur leur fiche
     const ensembleEstimes = new Set(estimes);
@@ -776,7 +802,7 @@ async function chargerJeux() {
     jeuxParId = new Map(tousLesJeux.map(jeu => [jeu.id, jeu]));
     calculerAnciennete();
     genresCatalogue = genres;
-    majCollectionDepuisDonnees();
+    majCollectionDepuisDonnees(); 
 }
 
 // Les cartes déjà obtenues gardent une copie de leurs stats : on les recalcule
@@ -785,7 +811,7 @@ async function chargerJeux() {
 function majCollectionDepuisDonnees() {
     let retirees = 0;
     let rembourse = 0;
-    for (const entree of Object.values(etat.collection)) {
+    for (const entree of possedees()) {
         const jeu = jeuxParId.get(entree.id);
         if (!jeu) {
             const copie = { ...entree, holos: entree.holos || 0 };
@@ -808,6 +834,12 @@ function majCollectionDepuisDonnees() {
 
 const donneesPretes = () => tousLesJeux.length > 0;
 const totalJeux = () => tousLesJeux.length;
+const totalDeRarete = id => jeuxParRarete[id]?.length || 0;
+// Cartes de la collection
+const possedees = () => Object.values(etat.collection);
+const nombreDeRarete = id => possedees().filter(e => e.rarete === id).length;
+const nombreCartes = () => possedees().reduce((n, e) => n + e.exemplaires, 0);
+const valeurTousDoublons = () => possedees().reduce((n, e) => n + valeurDoublons(e), 0);
 
 // Tire un index de rareté (dans RARETES) selon la colonne de chances `cle` ;
 // `possibles` limite le tirage à certaines raretés, leurs chances sont alors réparties entre elles
@@ -820,11 +852,13 @@ function tirerRarete(cle = 'chance', possibles = RARETES) {
     return indexRarete(possibles.at(-1).id);
 }
 
-// Pioche un jeu au hasard dans la rareté demandée, tous avec la même chance (sans doublon dans `exclus`)
+// Pioche un jeu au hasard dans la rareté demandée, tous avec la même chance (sans doublon dans `exclus`,
+// où le jeu pioché est ajouté)
 function piocher(index, exclus = new Set()) {
     const bac = jeuxParRarete[RARETES[index].id];
     let jeu = auHasard(bac);
     for (let essai = 0; essai < 20 && exclus.has(jeu.id); essai++) jeu = auHasard(bac);
+    exclus.add(jeu.id);
     return creerCarte(jeu);
 }
 
@@ -854,11 +888,12 @@ function prochaineVente(entree) {
     return ex > 0 ? 'ex' : 'fullArt';
 }
 
+// `champ` : compteur de la variante dans la collection (les exemplaires normaux n'en ont pas)
 const VARIANTES = {
     normale: { nom: t('Normale'), multiplicateur: 1 },
-    holo: { nom: 'Holo', multiplicateur: MULTIPLICATEUR_HOLO },
-    ex: { nom: 'EX', multiplicateur: MULTIPLICATEUR_EX },
-    fullArt: { nom: 'Full Art', multiplicateur: MULTIPLICATEUR_FULL_ART },
+    holo: { nom: 'Holo', multiplicateur: MULTIPLICATEUR_HOLO, champ: 'holos' },
+    ex: { nom: 'EX', multiplicateur: MULTIPLICATEUR_EX, champ: 'exs' },
+    fullArt: { nom: 'Full Art', multiplicateur: MULTIPLICATEUR_FULL_ART, champ: 'fullArts' },
 };
 
 // Nombre d'exemplaires de chaque variante possédés
@@ -869,21 +904,17 @@ function exemplairesParVariante(entree) {
 }
 
 const prixVariante = (entree, variante) => RARETES[indexRarete(entree.rarete)].revente * VARIANTES[variante].multiplicateur;
-const prixRevente = entree => prixVariante(entree, prochaineVente(entree));
 
 // Vend un exemplaire de la variante choisie ; le dernier exemplaire fait sortir la carte de la collection
 function vendreExemplaire(id, variante) {
     const entree = etat.collection[id];
     if (!entree || exemplairesParVariante(entree)[variante] < 1) return 0;
     const prix = prixVariante(entree, variante);
-    if (variante === 'holo') entree.holos--;
-    if (variante === 'fullArt') entree.fullArts--;
-    if (variante === 'ex') {
-        entree.exs--;
-        // Plus aucun exemplaire EX : la carte reprend ses stats normales
-        const jeu = jeuxParId.get(id);
-        if (!entree.exs && jeu) Object.assign(entree, creerCarte(jeu));
-    }
+    const { champ } = VARIANTES[variante];
+    if (champ) entree[champ]--;
+    // Plus aucun exemplaire EX : la carte reprend ses stats normales
+    const jeu = jeuxParId.get(id);
+    if (variante === 'ex' && !entree.exs && jeu) Object.assign(entree, creerCarte(jeu));
     if (--entree.exemplaires === 0) delete etat.collection[id];
     etat.pieces += prix;
     etat.stats.ventes++;
@@ -897,19 +928,13 @@ function vendreDoublon(id) {
     return vendreExemplaire(id, prochaineVente(entree));
 }
 
-// Valeur de tous les doublons : on simule les ventes sur une copie
+// Valeur de tous les doublons : tous les exemplaires, moins celui qu'on garde
+// (le dernier dans l'ordre de revente : le Full Art, sinon l'EX, la holo, la normale)
 function valeurDoublons(entree) {
-    const copie = { ...entree, fullArts: entree.fullArts || 0, exs: entree.exs || 0 };
-    let total = 0;
-    while (copie.exemplaires > 1) {
-        total += prixRevente(copie);
-        const vendue = prochaineVente(copie);
-        if (vendue === 'holo') copie.holos--;
-        if (vendue === 'fullArt') copie.fullArts--;
-        if (vendue === 'ex') copie.exs--;
-        copie.exemplaires--;
-    }
-    return total;
+    const parVariante = exemplairesParVariante(entree);
+    const gardee = ['fullArt', 'ex', 'holo', 'normale'].find(v => parVariante[v] > 0);
+    const total = Object.entries(parVariante).reduce((n, [v, k]) => n + k * prixVariante(entree, v), 0);
+    return gardee ? total - prixVariante(entree, gardee) : 0;
 }
 
 // ---------- En-tête et paquets ----------
@@ -956,8 +981,9 @@ function majEntete() {
 
 // Appelée chaque seconde : réserve et minuteur de chaque paquet, boutons de l'écran de bilan
 function majPaquets() {
+    const dispo = {};
     for (const type of Object.values(TYPES_BOOSTER)) {
-        const charges = chargesDispo(type);
+        const charges = dispo[type.id] = chargesDispo(type);
         const reste = avantRecharge(type);
         const paquet = $(type.paquet);
         paquet.classList.toggle('verrouille', charges === 0);
@@ -973,11 +999,11 @@ function majPaquets() {
     }
 
     // Ouvrir d'un coup toute la réserve de boosters gratuits
-    const reserve = chargesDispo(TYPES_BOOSTER.standard);
+    const reserve = dispo.standard;
     $('#btn-tout-ouvrir').hidden = reserve < 2;
     $('#btn-tout-ouvrir').textContent = t('Ouvrir les {n} boosters gratuits', { n: reserve });
 
-    $('#lien-accueil').classList.toggle('pret', Object.values(TYPES_BOOSTER).some(type => chargesDispo(type) > 0));
+    $('#lien-accueil').classList.toggle('pret', Object.values(dispo).some(n => n > 0));
 }
 
 // Clic sur un paquet de l'accueil : on ouvre un gratuit s'il en reste, sinon on propose d'en acheter
@@ -1000,7 +1026,7 @@ function proposerAchat(type) {
             </div>
             <p class="achat-solde">${t('Tu as')} ${nombre(etat.pieces)} ${PIECE}${etat.pieces < type.prix ? t(' : revends des doublons ou gagne des duels pour en avoir plus.') : ''}</p>
         </div>`;
-    if (!$('#modale').open) $('#modale').showModal();
+    ouvrirModale();
 }
 
 // ---------- Ouverture de boosters ----------
@@ -1014,7 +1040,7 @@ window.forcerGodPack = () => {
 
 // Holo, Full Art ou EX pour une carte tirée (elles ne se cumulent pas)
 function variante(carte, chanceHolo, chanceFullArt) {
-    const fullArt = indexRarete(carte.rarete) <= INDEX_LEGENDAIRE && Math.random() < chanceFullArt;
+    const fullArt = estHauteRarete(carte.rarete) && Math.random() < chanceFullArt;
     const jeu = jeuxParId.get(carte.id);
     const ex = !fullArt && aUneVersionEX(jeu) && Math.random() < CHANCE_EX;
     return { carte: ex ? creerCarte(jeu, { ex }) : carte, fullArt, ex, holo: !fullArt && !ex && Math.random() < chanceHolo };
@@ -1025,9 +1051,7 @@ function tirerGodPack() {
     const exclus = new Set();
     return Array.from({ length: CARTES_PAR_BOOSTER }, (_, i) => {
         const index = i === 0 || Math.random() < PART_MYTHIQUE_GOD_PACK ? INDEX_MYTHIQUE : INDEX_LEGENDAIRE;
-        const carte = piocher(index, exclus);
-        exclus.add(carte.id);
-        return { ...variante(carte, CHANCE_HOLO_GOD_PACK, CHANCE_FULL_ART_GOD_PACK), godPack: true };
+        return { ...variante(piocher(index, exclus), CHANCE_HOLO_GOD_PACK, CHANCE_FULL_ART_GOD_PACK), godPack: true };
     });
 }
 
@@ -1042,14 +1066,10 @@ function tirerBooster(type, legendaireGarantie = false) {
     const indices = Array.from({ length: CARTES_PAR_BOOSTER - 1 }, () => tirerRarete(cleChance));
     // Compteur de malchance atteint : la dernière carte est Légendaire ou mieux
     indices.push(legendaireGarantie
-        ? tirerRarete('chance', RARETES.slice(0, INDEX_LEGENDAIRE + 1))
+        ? tirerRarete('chance', HAUTES_RARETES)
         : tirerRarete(cleGarantie));
     const exclus = new Set();
-    return indices.map(index => {
-        const carte = piocher(index, exclus);
-        exclus.add(carte.id);
-        return variante(carte, chanceHolo, CHANCE_FULL_ART);
-    });
+    return indices.map(index => variante(piocher(index, exclus), chanceHolo, CHANCE_FULL_ART));
 }
 
 // `mode` : 'gratuit' (pris dans la réserve) ou 'achat' (payé en pièces)
@@ -1065,7 +1085,7 @@ async function ouvrirBooster(mode, nombreBoosters = 1, type = TYPES_BOOSTER.stan
     const boosters = [];
     for (let i = 0; i < nombreBoosters; i++) {
         const booster = tirerBooster(type, etat.malchance >= MALCHANCE_MAX - 1);
-        const hauteRarete = booster.some(t => indexRarete(t.carte.rarete) <= INDEX_LEGENDAIRE);
+        const hauteRarete = booster.some(t => estHauteRarete(t.carte.rarete));
         etat.malchance = hauteRarete ? 0 : etat.malchance + 1;
         boosters.push(booster);
     }
@@ -1076,8 +1096,8 @@ async function ouvrirBooster(mode, nombreBoosters = 1, type = TYPES_BOOSTER.stan
     if (mode === 'gratuit') consommerCharges(type, nombreBoosters);
     else etat.pieces -= prix;
     // Chaque booster ouvert rapporte des pièces
-    dernierGain = type.gain * nombreBoosters;
-    etat.pieces += dernierGain;
+    const gain = type.gain * nombreBoosters;
+    etat.pieces += gain;
     if (godPacks) {
         etat.godPacks.nombre += godPacks;
         etat.godPacks.premier ??= Date.now();
@@ -1086,35 +1106,40 @@ async function ouvrirBooster(mode, nombreBoosters = 1, type = TYPES_BOOSTER.stan
     sauvegarder();
     majEntete();
 
-    $('#choix').hidden = true;
-    $('#ouverture').hidden = false;
-    $('#ouverture').classList.toggle('multiple', nombreBoosters > 1);
-    $('#tirage').innerHTML = '';
-    for (const id of ['#bilan', '#btn-retour', '#btn-voir-collection']) $(id).hidden = true;
-    $('#btn-passer').textContent = nombreBoosters > 1 ? t('Tout passer') : t('Passer');
-    $('#btn-passer').hidden = false;
-    $('#ouverture-aide').hidden = false;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
+    debutOuverture(nombreBoosters > 1);
     // Chaque paquet : on le déchire, puis on fait défiler sa pile, la carte la plus rare en dernier
     const modele = $(type.paquet);
-    seance.passer = false;
     for (let i = 0; i < boosters.length && !seance.passer; i++) {
         const cartes = [...boosters[i]].sort((a, b) => indexRarete(b.carte.rarete) - indexRarete(a.carte.rarete));
         const rang = nombreBoosters > 1 ? `${t('Paquet {i} / {n}', { i: i + 1, n: nombreBoosters })} · ` : '';
         await dechirerPaquet(modele, cartes[0].godPack, rang);
         if (!seance.passer) await defilerPile(cartes, rang);
     }
+    finOuverture(tirage, nombreBoosters, gain);
+}
 
+// Écran d'ouverture (boosters ou paquet Full Art) : on cache les paquets, on prépare la scène
+function debutOuverture(multiple) {
+    $('#choix').hidden = true;
+    $('#ouverture').hidden = false;
+    $('#ouverture').classList.toggle('multiple', multiple);
+    $('#tirage').innerHTML = '';
+    for (const id of ['#bilan', '#btn-retour', '#btn-voir-collection']) $(id).hidden = true;
+    $('#btn-passer').textContent = multiple ? t('Tout passer') : t('Passer');
+    $('#btn-passer').hidden = false;
+    $('#ouverture-aide').hidden = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    seance.passer = false;
+}
+
+// Fin de l'ouverture : récapitulatif des cartes et bilan (`gain` : pièces rapportées par les boosters)
+function finOuverture(tirage, nombreBoosters, gain = 0) {
     $('#ouverture-scene').replaceChildren();
     $('#btn-passer').hidden = true;
     afficherRecapitulatif(tirage, nombreBoosters);
     ouvertureEnCours = false;
-    finTirage();
+    finTirage(tirage, gain);
 }
-
-let dernierTirage = [];
-let dernierGain = 0; // pièces gagnées par la dernière ouverture
 
 // Mise en scène du god pack : le paquet devient doré et tremble, flash, pluie d'étincelles, titre géant
 async function revelationGodPack(paquet) {
@@ -1292,7 +1317,7 @@ async function defilerPile(cartes, rang) {
     for (let i = 0; i < elements.length && !seance.passer; i++) {
         elements.forEach((element, k) => element.style.setProperty('--rang', k - i));
         const dessus = elements[i];
-        if (indexRarete(cartes[i].carte.rarete) <= INDEX_LEGENDAIRE || cartes[i].ex) dessus.classList.add(cartes[i].fullArt ? 'apparition-full-art' : 'apparition-rare');
+        if (estHauteRarete(cartes[i].carte.rarete) || cartes[i].ex) dessus.classList.add(cartes[i].fullArt ? 'apparition-full-art' : 'apparition-rare');
         jouerSonRarete(cartes[i].ex ? 'epique' : cartes[i].carte.rarete);
 
         // Si la carte suivante est Épique ou mieux, la pile brille de sa couleur : suspense
@@ -1315,7 +1340,6 @@ async function defilerPile(cartes, rang) {
 // Récapitulatif : toutes les cartes face visible (un clic ouvre la fiche)
 function afficherRecapitulatif(tirage, nombreBoosters) {
     tirage.sort((a, b) => indexRarete(b.carte.rarete) - indexRarete(a.carte.rarete));
-    dernierTirage = tirage;
     const visible = t => flipHTML(t.carte, { ...t, retournee: true });
     if (nombreBoosters > 1) {
         // ×10 : god pack en haut, puis les meilleures cartes, puis le reste en petit
@@ -1349,14 +1373,14 @@ function cliquerCarteTirage(flip) {
     if (flip) afficherFiche(Number(flip.dataset.id));
 }
 
-function finTirage() {
-    const nouvelles = dernierTirage.filter(t => t.nouvelle).length;
-    const meilleure = RARETES[Math.min(...dernierTirage.map(t => indexRarete(t.carte.rarete)))];
-    const holos = dernierTirage.filter(t => t.holo).length;
-    const fullArts = dernierTirage.filter(t => t.fullArt).length;
-    const exs = dernierTirage.filter(t => t.ex).length;
+function finTirage(tirage, gain) {
+    const nouvelles = tirage.filter(t => t.nouvelle).length;
+    const meilleure = RARETES[Math.min(...tirage.map(t => indexRarete(t.carte.rarete)))];
+    const holos = tirage.filter(t => t.holo).length;
+    const fullArts = tirage.filter(t => t.fullArt).length;
+    const exs = tirage.filter(t => t.ex).length;
     $('#ouverture-aide').hidden = true;
-    const divines = dernierTirage.filter(t => t.godPack);
+    const divines = tirage.filter(t => t.godPack);
     const mythiques = divines.filter(t => t.carte.rarete === 'mythique').length;
     $('#bilan').classList.toggle('bilan-divin', divines.length > 0);
     $('#bilan').innerHTML = (divines.length
@@ -1368,7 +1392,7 @@ function finTirage() {
         ${holos ? `<span>✨ ${tn(holos, '<b>{n}</b> holo', '<b>{n}</b> holos')}</span>` : ''}
         ${fullArts ? `<span class="bilan-full-art"><b>${fullArts}</b> Full Art</span>` : ''}
         ${exs ? `<span class="bilan-ex"><b>${exs}</b> EX</span>` : ''}
-        ${dernierGain ? `<span class="bilan-gain">+<b>${nombre(dernierGain)}</b> ${PIECE}</span>` : ''}`;
+        ${gain ? `<span class="bilan-gain">+<b>${nombre(gain)}</b> ${PIECE}</span>` : ''}`;
     majPaquets();
     for (const id of ['#bilan', '#btn-retour', '#btn-voir-collection']) $(id).hidden = false;
     verifierSucces();
@@ -1382,12 +1406,12 @@ function afficherAccueil() {
     $('#ouverture').hidden = true;
     $('#choix').hidden = false;
 
-    const entrees = Object.values(etat.collection);
+    const entrees = possedees();
     const total = totalJeux();
     $('#progression-texte').innerHTML = total
         ? t('<b>{n}</b> / {total} jeux découverts', { n: nombre(entrees.length), total: nombre(total) })
         : t('Chargement des jeux…');
-    $('#progression-raretes').innerHTML = progressionRaretesHTML(entrees);
+    $('#progression-raretes').innerHTML = progressionRaretesHTML();
     majTropheeGodPack();
     majMalchance();
 
@@ -1395,7 +1419,7 @@ function afficherAccueil() {
     $('#bloc-recentes').hidden = !recentes.length;
     $('#recentes').innerHTML = recentes.map(e => `
         <button class="mini" data-fiche="${e.id}" aria-label="${t('Voir {nom}', { nom: echapper(e.nom) })}">
-            ${carteHTML(e, { holo: e.holos > 0 })}
+            ${carteHTML(e)}
         </button>`).join('');
     majPaquets();
 }
@@ -1415,7 +1439,7 @@ const TRIS = {
     anciennete: (a, b) => b.anciennete - a.anciennete,
     popularite: (a, b) => b.popularite - a.popularite,
     annee: (a, b) => (anneeDeCarte(b) || 0) - (anneeDeCarte(a) || 0),
-    nom: (a, b) => a.nom.localeCompare(b.nom, LOCALE),
+    nom: (a, b) => comparerNoms(a.nom, b.nom),
     exemplaires: (a, b) => b.exemplaires - a.exemplaires,
 };
 
@@ -1426,32 +1450,35 @@ function caseCollectionHTML(entree) {
     return `
         <div class="case" data-id="${entree.id}">
             <button class="case-carte" data-fiche="${entree.id}" aria-label="${t('Voir {nom}', { nom: echapper(entree.nom) })}">
-                ${carteHTML(entree, { holo: entree.holos > 0, compteur: entree.exemplaires })}
+                ${carteHTML(entree, { compteur: entree.exemplaires })}
             </button>
         </div>`;
 }
 
-function afficherCollection() {
-    const entrees = Object.values(etat.collection);
-    $('#filtre-raretes').innerHTML = pucesRaretesHTML({ boutons: true, actif: filtreRarete });
-
-    // Le menu des genres se construit à partir de la collection
-    const selGenre = $('#filtre-genre');
-    const genreChoisi = selGenre.value;
-    selGenre.innerHTML = optionsGenresHTML(genreChoisi, new Set(entrees.flatMap(e => [...e.genres, ...(e.tags || []), ...distinctionsDe(e)])));
-
+// Filtres de la collection (rareté, recherche, genre, cases à cocher) : une carte passe-t-elle ?
+function filtreCollection() {
     const recherche = $('#filtre-nom').value.trim().toLowerCase();
+    const genre = $('#filtre-genre').value;
     const doublons = $('#filtre-doublons').checked;
     const seulementFullArt = $('#filtre-fullart').checked;
     const seulementEX = $('#filtre-ex').checked;
-    const visibles = entrees
-        .filter(e => !recherche || e.nom.toLowerCase().includes(recherche))
-        .filter(e => !filtreRarete || e.rarete === filtreRarete)
-        .filter(e => !genreChoisi || aLeGenre(e, genreChoisi))
-        .filter(e => !doublons || e.exemplaires > 1)
-        .filter(e => !seulementFullArt || e.fullArts > 0)
-        .filter(e => !seulementEX || e.exs > 0)
-        .sort(TRIS[$('#tri').value]);
+    return e => (!recherche || e.nom.toLowerCase().includes(recherche))
+        && (!filtreRarete || e.rarete === filtreRarete)
+        && (!genre || aLeGenre(e, genre))
+        && (!doublons || e.exemplaires > 1)
+        && (!seulementFullArt || e.fullArts > 0)
+        && (!seulementEX || e.exs > 0);
+}
+
+function afficherCollection() {
+    const entrees = possedees();
+    $('#filtre-raretes').innerHTML = pucesRaretesHTML({ actif: filtreRarete });
+
+    // Le menu des genres se construit à partir de la collection
+    const selGenre = $('#filtre-genre');
+    selGenre.innerHTML = optionsGenresHTML(selGenre.value, new Set(entrees.flatMap(e => [...e.genres, ...(e.tags || []), ...distinctionsDe(e)])));
+
+    const visibles = entrees.filter(filtreCollection()).sort(TRIS[$('#tri').value]);
 
     const grille = $('#grille-collection');
     if (!entrees.length) {
@@ -1473,11 +1500,11 @@ function filtrerCollection() {
 }
 
 function majResumeCollection() {
-    const entrees = Object.values(etat.collection);
-    const total = entrees.reduce((n, e) => n + e.exemplaires, 0);
-    const valeur = entrees.reduce((n, e) => n + valeurDoublons(e), 0);
+    const jeux = possedees().length;
+    const total = nombreCartes();
+    const valeur = valeurTousDoublons();
     $('#resume-collection').textContent =
-        t('{jeux} jeux différents · {cartes} cartes · {doublons} doublons', { jeux: nombre(entrees.length), cartes: nombre(total), doublons: nombre(total - entrees.length) });
+        t('{jeux} jeux différents · {cartes} cartes · {doublons} doublons', { jeux: nombre(jeux), cartes: nombre(total), doublons: nombre(total - jeux) });
     const bouton = $('#btn-vendre-tout');
     bouton.disabled = valeur === 0;
     bouton.innerHTML = valeur ? `${t('Revendre les doublons')} · +${nombre(valeur)} ${PIECE}` : t('Aucun doublon');
@@ -1495,8 +1522,7 @@ function vendreDepuisFiche(id, variante) {
     const reste = etat.collection[id];
     const caseCarte = document.querySelector(`.case[data-id="${id}"]`);
     if (caseCarte) {
-        if (!reste || ($('#filtre-doublons').checked && reste.exemplaires < 2) || ($('#filtre-fullart').checked && !reste.fullArts)
-            || ($('#filtre-ex').checked && !reste.exs)) caseCarte.remove();
+        if (!reste || !filtreCollection()(reste)) caseCarte.remove();
         else caseCarte.outerHTML = caseCollectionHTML(reste);
         majResumeCollection();
     }
@@ -1506,10 +1532,9 @@ function vendreDepuisFiche(id, variante) {
 }
 
 function vendreTousLesDoublons() {
-    const entrees = Object.values(etat.collection);
-    const valeur = entrees.reduce((n, e) => n + valeurDoublons(e), 0);
+    const valeur = valeurTousDoublons();
     if (!valeur || !confirm(t('Revendre tous tes doublons pour {n} pièces ? Tu gardes un exemplaire de chaque jeu (la holo en priorité).', { n: nombre(valeur) }))) return;
-    for (const e of entrees) while (e.exemplaires > 1) vendreDoublon(e.id);
+    for (const e of possedees()) while (e.exemplaires > 1) vendreDoublon(e.id);
     sauvegarder();
     majEntete();
     afficherCollection();
@@ -1612,7 +1637,7 @@ function afficherFiche(id) {
             </div>
             ${!e && manque > 0 ? `<p class="fiche-note">${t('Il te manque {n} pièces.', { n: nombre(manque) })}</p>` : ''}
         </div>`;
-    if (!$('#modale').open) $('#modale').showModal();
+    ouvrirModale();
 }
 
 // ---------- Écran catalogue ----------
@@ -1628,10 +1653,12 @@ const TRIS_CATALOGUE = {
     // Année qui fait l'Ancienneté (sortie d'origine, année du GOTY), pas celle de la version Steam
     recent: (a, b) => (anneeOriginale(b) || 0) - (anneeOriginale(a) || 0),
     ancien: (a, b) => (anneeOriginale(a) || 9999) - (anneeOriginale(b) || 9999),
-    nom: (a, b) => a.nom.localeCompare(b.nom, LOCALE),
+    nom: (a, b) => comparerNoms(a.nom, b.nom),
 };
 
 let filtreRareteCatalogue = '';
+// Dernière liste filtrée et triée : « Afficher plus », une vente ou un achat ne refont pas le tri des 115 000 jeux
+let cacheCatalogue = { cle: null, jeux: [] };
 let limiteCatalogue = CARTES_PAR_PAGE;
 
 function caseCatalogueHTML(jeu) {
@@ -1651,21 +1678,24 @@ function afficherCatalogue() {
         $('#grille-catalogue').innerHTML = `<p class="vide">${t('Chargement des jeux…')}</p>`;
         return;
     }
-    $('#catalogue-raretes').innerHTML = pucesRaretesHTML({ boutons: true, actif: filtreRareteCatalogue, totaux: true });
+    afficherMarche();
+    $('#catalogue-raretes').innerHTML = pucesRaretesHTML({ actif: filtreRareteCatalogue, totaux: true });
 
     const selGenre = $('#catalogue-genre');
     if (selGenre.options.length <= 1) selGenre.innerHTML = optionsGenresHTML(selGenre.value);
 
     const recherche = $('#catalogue-nom').value.trim().toLowerCase();
     const genre = selGenre.value;
-    const manquantes = $('#catalogue-manquantes').checked;
-    const bac = filtreRareteCatalogue ? jeuxParRarete[filtreRareteCatalogue] : tousLesJeux;
-    const visibles = bac.filter(j =>
-        (!recherche || j.nom.toLowerCase().includes(recherche))
-        && (!genre || aLeGenre(j, genre))
-        && (!manquantes || !etat.collection[j.id]));
-    const tri = TRIS_CATALOGUE[$('#catalogue-tri').value];
-    if (tri) visibles.sort(tri);
+    const tri = $('#catalogue-tri').value;
+    const cle = JSON.stringify([filtreRareteCatalogue, recherche, genre, tri]);
+    if (cacheCatalogue.cle !== cle) {
+        const bac = filtreRareteCatalogue ? jeuxParRarete[filtreRareteCatalogue] : tousLesJeux;
+        const jeux = bac.filter(j => (!recherche || j.nomMin.includes(recherche)) && (!genre || aLeGenre(j, genre)));
+        if (TRIS_CATALOGUE[tri]) jeux.sort(TRIS_CATALOGUE[tri]);
+        cacheCatalogue = { cle, jeux };
+    }
+    // Le filtre « manquantes » dépend de la collection : appliqué à chaque fois, sans trier
+    const visibles = $('#catalogue-manquantes').checked ? cacheCatalogue.jeux.filter(j => !etat.collection[j.id]) : cacheCatalogue.jeux;
 
     $('#grille-catalogue').innerHTML = visibles.length
         ? visibles.slice(0, limiteCatalogue).map(caseCatalogueHTML).join('')
@@ -1673,7 +1703,7 @@ function afficherCatalogue() {
     const restantes = visibles.length - limiteCatalogue;
     $('#btn-catalogue-plus').hidden = restantes <= 0;
     $('#btn-catalogue-plus').textContent = t('Afficher plus ({n} restants)', { n: nombre(restantes) });
-    $('#resume-catalogue').textContent = t('{total} jeux · tu en possèdes {n}', { total: nombre(totalJeux()), n: nombre(Object.keys(etat.collection).length) })
+    $('#resume-catalogue').textContent = t('{total} jeux · tu en possèdes {n}', { total: nombre(totalJeux()), n: nombre(possedees().length) })
         + (visibles.length !== totalJeux() ? ` · ${t('{n} avec ces filtres', { n: nombre(visibles.length) })}` : '');
 }
 
@@ -1699,13 +1729,87 @@ function acheterCarte(id) {
     if ($('#modale').open) afficherFiche(id);
 }
 
+// ---------- Marché du jour ----------
+
+// Offres du jour, tirées au premier passage de la journée puis gardées (elles ne bougent plus si ta collection change)
+function offresDuJour() {
+    if (etat.marche.jour !== jourLocal()) {
+        const offres = MARCHE_RARETES.map(rarete => {
+            const bac = jeuxParRarete[rarete];
+            let jeu = auHasard(bac);
+            for (let essai = 0; essai < 30 && etat.collection[jeu.id]; essai++) jeu = auHasard(bac);
+            return jeu.id;
+        });
+        etat.marche = { jour: jourLocal(), offres, achetes: [] };
+        sauvegarder();
+    }
+    return etat.marche.offres.map(id => jeuxParId.get(id)).filter(Boolean).map(jeu => creerCarte(jeu));
+}
+
+const prixNormal = carte => RARETES[indexRarete(carte.rarete)].prix;
+const prixMarche = carte => Math.round(prixNormal(carte) * (1 - REMISE_MARCHE));
+
+function afficherMarche() {
+    $('#marche-offres').innerHTML = offresDuJour().map(carte => {
+        const prix = prixMarche(carte);
+        const achetee = etat.marche.achetes.includes(carte.id);
+        const action = achetee
+            ? `<span class="offre-etat">${t('Achetée ✓')}</span>`
+            : etat.collection[carte.id]
+                ? `<span class="offre-etat">${t('Déjà dans ta collection')}</span>`
+                : `<button class="btn btn-or" data-marche="${carte.id}"${etat.pieces < prix ? ' disabled' : ''}>
+                       <s>${nombre(prixNormal(carte))}</s> ${nombre(prix)} ${PIECE}</button>`;
+        return `
+            <div class="offre-marche">
+                <button class="case-carte" data-fiche="${carte.id}" aria-label="${t('Voir {nom}', { nom: echapper(carte.nom) })}">${carteHTML(carte)}</button>
+                ${action}
+            </div>`;
+    }).join('');
+}
+
+function acheterMarche(id) {
+    const offre = offresDuJour().find(carte => carte.id === id);
+    if (!offre || etat.marche.achetes.includes(id) || etat.collection[id]) return;
+    const prix = prixMarche(offre);
+    if (etat.pieces < prix) return toast(t('Il te manque {n} pièces pour acheter {nom}', { n: nombre(prix - etat.pieces), nom: offre.nom }));
+    if (!confirm(t('Acheter {nom} pour {n} pièces ?', { nom: offre.nom, n: nombre(prix) }))) return;
+    etat.pieces -= prix;
+    etat.marche.achetes.push(id);
+    ajouterACollection(offre, false);
+    sauvegarder();
+    majEntete();
+    toast(t('{nom} rejoint ta collection !', { nom: offre.nom }), 'gain');
+    verifierSucces();
+    afficherCatalogue();
+}
+
+// ---------- Codes cadeaux ----------
+
+function utiliserCode() {
+    const champ = $('#code-cadeau');
+    const code = champ.value.toUpperCase().replace(/\s+/g, '');
+    if (!code || !donneesPretes()) return;
+    const recompense = CODES_CADEAUX[code];
+    if (!recompense) return toast(t('Ce code n’existe pas'), 'erreur');
+    if (etat.codes[code]) return toast(t('Tu as déjà utilisé ce code'), 'erreur');
+    etat.codes[code] = Date.now();
+    champ.value = '';
+    // Une carte précise : elle rejoint la collection, le reste se verse comme une récompense de succès
+    const { carte: idCarte, ...reste } = recompense;
+    const jeu = jeuxParId.get(idCarte);
+    if (jeu) {
+        ajouterACollection(creerCarte(jeu), false);
+        toast(t('{nom} rejoint ta collection !', { nom: jeu.nom }), 'gain');
+    }
+    encaisserRecompense(reste, t('Code cadeau'));
+}
+
 // ---------- Écran règles ----------
 
 const chanceRarete = rarete => `${nombre(rarete.chance)} %`;
 
 function afficherRegles() {
-    const entrees = Object.values(etat.collection);
-    $('#legende-raretes').innerHTML = RARETES.map((r, i) => `
+    $('#legende-raretes').innerHTML = RARETES.map(r => `
         <tr class="rarete-${r.id}">
             <td><span class="pastille"></span>${r.nom}</td>
             <td>${r.id === 'mythique' ? t('choisis à la main') : r.quota ? t('{n} suivants', { n: nombre(r.quota) }) : t('tous les autres')}</td>
@@ -1714,21 +1818,25 @@ function afficherRegles() {
             <td>${nombre(r.chanceDuel)} %</td>
             <td>${r.revente} ${PIECE}</td>
             <td>${nombre(r.prix)} ${PIECE}</td>
-            <td>${entrees.filter(e => e.rarete === r.id).length} / ${nombre(jeuxParRarete[r.id]?.length || 0)}</td>
+            <td>${nombreDeRarete(r.id)} / ${nombre(totalDeRarete(r.id))}</td>
         </tr>`).join('');
 }
 
-// Efface tout ce que le jeu a enregistré (clés "gameCards.") et repart de zéro
-function reinitialiser() {
-    const cartes = Object.values(etat.collection).reduce((n, e) => n + e.exemplaires, 0);
-    const message = t('Supprimer définitivement ta sauvegarde ?\n\nTu perdras tes {cartes} cartes et tes {pieces} pièces. Cette action ne peut pas être annulée.',
-        { cartes: nombre(cartes), pieces: nombre(etat.pieces) });
-    if (!confirm(message)) return;
+// Efface tout ce que le jeu a enregistré (clés "gameCards.")
+function effacerSauvegarde() {
     try {
         Object.keys(localStorage).filter(cle => cle.startsWith('gameCards.')).forEach(cle => localStorage.removeItem(cle));
     } catch (e) {
         console.warn('Suppression impossible', e);
     }
+}
+
+// Efface la sauvegarde et repart de zéro
+function reinitialiser() {
+    const message = t('Supprimer définitivement ta sauvegarde ?\n\nTu perdras tes {cartes} cartes et tes {pieces} pièces. Cette action ne peut pas être annulée.',
+        { cartes: nombre(nombreCartes()), pieces: nombre(etat.pieces) });
+    if (!confirm(message)) return;
+    effacerSauvegarde();
     location.hash = '#accueil';
     location.reload();
 }
@@ -1737,31 +1845,50 @@ function reinitialiser() {
 
 // Bonus des variantes en combat (duel et duel de decks), sur chaque stat : Full Art +3, Holo +2
 const BONUS_COMBAT = { fullArt: 3, holo: 2 };
-const bonusCombat = carte => (carte.fullArts > 0 ? BONUS_COMBAT.fullArt : carte.holos > 0 ? BONUS_COMBAT.holo : 0);
+// Variante qui compte en combat : le Full Art passe avant la holo
+const varianteCombat = carte => (carte.fullArts > 0 ? 'fullArt' : carte.holos > 0 ? 'holo' : null);
+const bonusCombat = carte => BONUS_COMBAT[varianteCombat(carte)] ?? 0;
 const valeurCombat = (carte, stat) => carte[stat] + bonusCombat(carte);
 // « (bonus Holo +2 compris) » après le score, quand ta carte en a un
 function noteBonusCombat(carte) {
     const bonus = bonusCombat(carte);
     if (!bonus) return '';
-    return ` ${t('(bonus {variante} +{n} compris)', { variante: carte.fullArts > 0 ? 'Full Art' : 'Holo', n: bonus })}`;
+    return ` ${t('(bonus {variante} +{n} compris)', { variante: VARIANTES[varianteCombat(carte)].nom, n: bonus })}`;
+}
+
+// Boutons d'attaque : une stat par bouton, avec sa valeur sur la carte (`attribut` : data-stat ou data-stat-deck)
+const boutonsStatsHTML = (carte, attribut) => Object.entries(STATS).map(([cle, stat]) => `
+        <button class="btn-stat" ${attribut}="${cle}"><span>${stat.icone} ${stat.nom}</span><b>${carte[cle]}</b></button>`).join('');
+
+// Victoire payée selon les gains du jour du mode ; renvoie { pieces, taux }
+function payerVictoire(mode, base) {
+    const gain = gainDuJour(mode, base);
+    etat.pieces += gain.pieces;
+    sauvegarder();
+    majEntete();
+    return gain;
+}
+
+// Annonce d'une victoire en duel ou en duel de decks : toast et ligne de résultat
+function annoncerVictoire(gain, a, b) {
+    toast(t('Victoire ! +{n} pièces', { n: gain.pieces }) + noteGain(gain.taux), 'gain');
+    return t('<br><b class="victoire">Victoire {a} à {b} !</b> Tu gagnes {n} pièces.', { a, b, n: gain.pieces }) + noteGain(gain.taux);
 }
 
 // Tirage d'une carte de duel : une rareté selon `chanceDuel`, puis une carte au hasard dedans.
 // Pour toi, seules les raretés que tu possèdes comptent (leurs chances se répartissent entre elles).
 function tirerCarteJoueur() {
     const parRarete = {};
-    for (const e of Object.values(etat.collection)) (parRarete[e.rarete] ??= []).push(e);
+    for (const e of possedees()) (parRarete[e.rarete] ??= []).push(e);
     const rarete = RARETES[tirerRarete('chanceDuel', RARETES.filter(r => parRarete[r.id]))];
     return auHasard(parRarete[rarete.id]);
 }
 // L'ordinateur peut aussi tomber sur une version EX
 function tirerCarteOrdi(exclus) {
-    const carte = piocher(tirerRarete('chanceDuel'), exclus);
-    const jeu = jeuxParId.get(carte.id);
-    return aUneVersionEX(jeu) && Math.random() < CHANCE_EX ? creerCarte(jeu, { ex: true }) : carte;
+    return variante(piocher(tirerRarete('chanceDuel'), exclus), 0, 0).carte;
 }
 
-const duel = { joueur: 0, ordi: 0, carteJoueur: null, carteOrdi: null, verrou: false };
+const duel = { joueur: 0, ordi: 0, manche: 0, carteJoueur: null, carteOrdi: null, verrou: false };
 
 function actionsDuel(html) {
     $('#duel-actions').innerHTML = html;
@@ -1769,15 +1896,15 @@ function actionsDuel(html) {
 
 function majScoreDuel() {
     const pips = n => Array.from({ length: MANCHES_GAGNANTES }, (_, i) => `<i${i < n ? ' class="plein"' : ''}></i>`).join('');
-    $('#pips-joueur').innerHTML = pips(duel.joueur);
-    $('#pips-ordi').innerHTML = pips(duel.ordi);
-    $('#pips-joueur').setAttribute('aria-label', t('{n} manche(s) gagnée(s)', { n: duel.joueur }));
-    $('#pips-ordi').setAttribute('aria-label', t('{n} manche(s) gagnée(s)', { n: duel.ordi }));
+    for (const qui of ['joueur', 'ordi']) {
+        $(`#pips-${qui}`).innerHTML = pips(duel[qui]);
+        $(`#pips-${qui}`).setAttribute('aria-label', t('{n} manche(s) gagnée(s)', { n: duel[qui] }));
+    }
 }
 
 function demarrerDuel() {
     if (!donneesPretes()) return;
-    if (!Object.keys(etat.collection).length) {
+    if (!possedees().length) {
         toast(t('Ouvre d’abord un booster pour avoir des cartes'), 'erreur');
         return;
     }
@@ -1800,10 +1927,7 @@ function nouvelleManche() {
     $('#duel-ordi').innerHTML = flipHTML(duel.carteOrdi, { retournee: true, cachee: true });
     $('#duel-manche').textContent = t('Manche {n}', { n: duel.manche });
     $('#duel-message').innerHTML = t('L’ordinateur joue <b>{nom}</b>. Sur quelle stat penses-tu le battre ?', { nom: echapper(duel.carteOrdi.nom) });
-    actionsDuel(Object.entries(STATS).map(([cle, stat]) => `
-        <button class="btn-stat" data-stat="${cle}">
-            <span>${stat.icone} ${stat.nom}</span><b>${duel.carteJoueur[cle]}</b>
-        </button>`).join(''));
+    actionsDuel(boutonsStatsHTML(duel.carteJoueur, 'data-stat'));
     majScoreDuel();
 }
 
@@ -1854,18 +1978,13 @@ async function choisirStat(stat) {
 
 function finDuel() {
     const victoire = duel.joueur >= MANCHES_GAGNANTES;
-    const gain = victoire ? gainDuJour('duel', GAIN_DUEL) : null;
     if (victoire) {
         etat.stats.duelsGagnes++;
         if (duel.ordi === 0) etat.stats.duelsParfaits++;
-        etat.pieces += gain.pieces;
-        sauvegarder();
-        majEntete();
-        toast(t('Victoire ! +{n} pièces', { n: gain.pieces }) + noteGain(gain.taux), 'gain');
     }
     // Le détail de la dernière manche reste affiché au-dessus du résultat
     $('#duel-message').innerHTML += victoire
-        ? t('<br><b class="victoire">Victoire {a} à {b} !</b> Tu gagnes {n} pièces.', { a: duel.joueur, b: duel.ordi, n: gain.pieces }) + noteGain(gain.taux)
+        ? annoncerVictoire(payerVictoire('duel', GAIN_DUEL), duel.joueur, duel.ordi)
         : t('<br><b class="defaite">Défaite {a} à {b}.</b> Retente ta chance !', { a: duel.joueur, b: duel.ordi });
     actionsDuel(`<button class="btn btn-principal btn-grand" data-action="demarrer">${t('Rejouer')}</button>`);
     jouerSon(victoire ? 'succes' : 'mauvaise');
@@ -1884,16 +2003,16 @@ function majMalchance() {
 }
 
 // Progression de l'accueil : une tuile par rareté (possédées / total, jauge et pourcentage)
-function progressionRaretesHTML(entrees) {
+function progressionRaretesHTML() {
     const pourcent = p => `${p > 0 && p < 0.1 ? '< ' + (0.1).toLocaleString(LOCALE) : p.toLocaleString(LOCALE, { maximumFractionDigits: p < 10 ? 1 : 0 })} %`;
     return RARETES.map(r => {
-        const possedees = entrees.filter(e => e.rarete === r.id).length;
-        const total = jeuxParRarete[r.id]?.length || 0;
-        const p = total ? (possedees / total) * 100 : 0;
+        const n = nombreDeRarete(r.id);
+        const total = totalDeRarete(r.id);
+        const p = total ? (n / total) * 100 : 0;
         return `
             <div class="tuile-rarete rarete-${r.id}">
                 <span class="tuile-nom"><i></i>${r.nom}</span>
-                <b>${nombre(possedees)}<small> / ${nombre(total)}</small></b>
+                <b>${nombre(n)}<small> / ${nombre(total)}</small></b>
                 <div class="tuile-jauge"><i style="--v: ${p > 0 ? Math.max(2, p) : 0}%"></i></div>
                 <span class="tuile-pourcent">${pourcent(p)}</span>
             </div>`;
@@ -1902,8 +2021,6 @@ function progressionRaretesHTML(entrees) {
 
 // ---------- Succès ----------
 
-const possedees = () => Object.values(etat.collection);
-const nombreDeRarete = id => possedees().filter(e => e.rarete === id).length;
 // Années de GOTY couvertes par la collection (plusieurs éditions d'un même GOTY comptent pour une)
 const anneesGotyPossedees = () => new Set(possedees().filter(e => GOTY[e.id]).map(e => GOTY[e.id][0])).size;
 const ANNEES_GOTY = new Set(Object.values(GOTY).map(g => g[0])).size;
@@ -1947,9 +2064,9 @@ const SUCCES = [
     { id: 'duelliste', nom: t('Duelliste'), description: t('Gagner 10 duels'), cible: 10, recompense: { pieces: 100 }, valeur: () => etat.stats.duelsGagnes },
     { id: 'champion', nom: t('Champion'), description: t('Gagner 50 duels'), cible: 50, recompense: { prestiges: 1 }, valeur: () => etat.stats.duelsGagnes },
     { id: 'sans-appel', nom: t('Sans appel'), description: t('Gagner un duel 3 à 0'), cible: 1, recompense: { pieces: 50 }, valeur: () => etat.stats.duelsParfaits },
-    { id: 'bon-instinct', nom: t('Bon instinct'), description: t('Enchaîner 5 bonnes réponses au Plus ou moins'), cible: 5, recompense: { boosters: 10 }, valeur: () => etat.stats.recordPom },
-    { id: 'encyclopedie', nom: t('Encyclopédie'), description: t('Enchaîner 15 bonnes réponses au Plus ou moins'), cible: 15, recompense: { pieces: 100 }, valeur: () => etat.stats.recordPom },
-    { id: 'oracle', nom: t('Oracle'), description: t('Enchaîner 30 bonnes réponses au Plus ou moins'), cible: 30, recompense: { prestiges: 1 }, valeur: () => etat.stats.recordPom },
+    { id: 'improvisateur', nom: t('Improvisateur'), description: t('Gagner un draft'), cible: 1, recompense: { boosters: 10 }, valeur: () => etat.stats.draftsGagnes },
+    { id: 'maitre-draft', nom: t('Maître du draft'), description: t('Gagner 10 drafts'), cible: 10, recompense: { pieces: 100 }, valeur: () => etat.stats.draftsGagnes },
+    { id: 'roi-draft', nom: t('Roi du draft'), description: t('Gagner 30 drafts'), cible: 30, recompense: { prestiges: 1 }, valeur: () => etat.stats.draftsGagnes },
     // Commerce
     { id: 'marchand', nom: t('Marchand'), description: t('Revendre un doublon'), cible: 1, recompense: { pieces: 10 }, valeur: () => etat.stats.ventes },
     { id: 'grossiste', nom: t('Grossiste'), description: t('Revendre 100 doublons'), cible: 100, recompense: { pieces: 100 }, valeur: () => etat.stats.ventes },
@@ -1987,8 +2104,8 @@ function texteRecompense(r, piece = true) {
 }
 
 // Verse une récompense (succès ou connexion) et l'annonce ; renvoie la carte Full Art gagnée, s'il y en a une
-// `paquet` : la carte Full Art n'est pas annoncée, elle arrive dans un paquet à ouvrir (succès)
-function verserRecompense(r, { paquet = false } = {}) {
+// (pas annoncée : elle arrive dans un paquet à ouvrir)
+function verserRecompense(r) {
     let carte = null;
     let nouvelle = false;
     if (r.pieces) etat.pieces += r.pieces;
@@ -1996,7 +2113,7 @@ function verserRecompense(r, { paquet = false } = {}) {
     if (r.boosters) etat.charges.standard.charges += r.boosters;
     if (r.prestiges) etat.charges.prestige.charges += r.prestiges;
     if (r.fullArt) {
-        carte = piocher(tirerRarete('chance', RARETES.slice(0, INDEX_LEGENDAIRE + 1)));
+        carte = piocher(tirerRarete('chance', HAUTES_RARETES));
         nouvelle = ajouterACollection(carte, false, true);
     }
     sauvegarder();
@@ -2006,8 +2123,16 @@ function verserRecompense(r, { paquet = false } = {}) {
     if (r.pieces) toast(texteRecompense(r, false), 'gain');
     if (r.boosters) toast(tn(r.boosters, '+{n} booster ajouté à ta réserve', '+{n} boosters ajoutés à ta réserve'), 'gain');
     if (r.prestiges) toast(tn(r.prestiges, '+{n} Prestige ajouté à ta réserve', '+{n} Prestiges ajoutés à ta réserve'), 'gain');
-    if (carte && !paquet) toast(t('{nom} en Full Art rejoint ta collection !', { nom: carte.nom }), 'gain');
     return { carte, nouvelle };
+}
+
+// Récompense (succès ou connexion) versée, profil et succès à jour ; une carte Full Art s'ouvre en paquet.
+// Une à la fois : avec « Tout récupérer », les paquets s'ouvrent l'un après l'autre
+function encaisserRecompense(r, origine) {
+    const { carte, nouvelle } = verserRecompense(r);
+    if (!$('#ecran-profil').hidden) afficherProfil();
+    verifierSucces(); // la carte gagnée peut débloquer d'autres succès
+    if (carte) fileFullArt = fileFullArt.then(() => ouvrirPaquetFullArt(carte, nouvelle, origine));
 }
 
 // Verse la récompense d'un succès obtenu (une seule fois)
@@ -2015,11 +2140,7 @@ function recupererSucces(id) {
     const succes = SUCCES.find(s => s.id === id);
     if (!succes || !etat.succes[id] || etat.succesRecuperes[id] || !donneesPretes()) return;
     etat.succesRecuperes[id] = Date.now();
-    const { carte, nouvelle } = verserRecompense(succes.recompense, { paquet: true });
-    afficherProfil();
-    verifierSucces(); // la carte gagnée peut débloquer d'autres succès
-    // Une à la fois : avec « Tout récupérer », les paquets s'ouvrent l'un après l'autre
-    if (carte) fileFullArt = fileFullArt.then(() => ouvrirPaquetFullArt(carte, nouvelle, t('Récompense de succès')));
+    encaisserRecompense(succes.recompense, t('Récompense de succès'));
 }
 
 // ---------- Paquet Full Art (récompense de succès ou du 7ᵉ jour de connexion) ----------
@@ -2034,19 +2155,8 @@ async function ouvrirPaquetFullArt(carte, nouvelle, origine) {
     location.hash = '#accueil';
     afficherEcran('accueil');
     const tirage = [{ carte, fullArt: true, holo: false, ex: false, nouvelle }];
-    dernierGain = 0;
 
-    $('#choix').hidden = true;
-    $('#ouverture').hidden = false;
-    $('#ouverture').classList.remove('multiple');
-    $('#tirage').innerHTML = '';
-    for (const id of ['#bilan', '#btn-retour', '#btn-voir-collection']) $(id).hidden = true;
-    $('#btn-passer').textContent = t('Passer');
-    $('#btn-passer').hidden = false;
-    $('#ouverture-aide').hidden = false;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    seance.passer = false;
+    debutOuverture(false);
     await dechirerPaquet($('#paquet-full-art'), false, `${origine} · `);
     if (!seance.passer) {
         // Le dos de la carte brille de plus en plus fort… puis elle se retourne dans un éclair
@@ -2061,12 +2171,7 @@ async function ouvrirPaquetFullArt(carte, nouvelle, origine) {
             await attendre(1800);
         }
     }
-
-    $('#ouverture-scene').replaceChildren();
-    $('#btn-passer').hidden = true;
-    afficherRecapitulatif(tirage, 1);
-    ouvertureEnCours = false;
-    finTirage();
+    finOuverture(tirage, 1);
 }
 
 function toutRecuperer() {
@@ -2075,7 +2180,7 @@ function toutRecuperer() {
 
 // ---------- Gains du jour ----------
 
-// Pièces d'une victoire dans un mode ('duel', 'decks', 'pom'), selon le nombre de victoires déjà payées aujourd'hui
+// Pièces d'une victoire dans un mode ('duel', 'decks', 'draft'), selon le nombre de victoires déjà payées aujourd'hui
 function gainDuJour(mode, base) {
     if (etat.gainsJour.jour !== jourLocal()) etat.gainsJour = { jour: jourLocal() };
     const n = etat.gainsJour[mode] = (etat.gainsJour[mode] || 0) + 1;
@@ -2100,7 +2205,7 @@ const ETAPES_GUIDE = [
     { ecran: 'collection', titre: t('Collectionne'),
       texte: t('Les cartes vont de Commune à Mythique, et leurs 3 stats (Qualité, Popularité, Ancienneté) viennent des vraies données Steam. Holo, EX et Full Art sont des versions rares. Revends tes doublons pour gagner des pièces.') },
     { ecran: 'duel', titre: t('Affronte l’ordinateur'),
-      texte: t('Duel, duel de decks et Plus ou moins rapportent des pièces, surtout ta première victoire du jour. Les règles complètes sont dans l’onglet Règles.') },
+      texte: t('Duel, duel de decks et draft rapportent des pièces, surtout ta première victoire du jour. Les règles complètes sont dans l’onglet Règles.') },
 ];
 let etapeGuide = 0;
 
@@ -2123,7 +2228,7 @@ function afficherGuide(etape = 0) {
                 <button class="btn btn-principal" data-guide="${derniere ? 'fin' : 'suivant'}">${derniere ? t('C’est parti !') : t('Suivant')}</button>
             </div>
         </div>`;
-    if (!$('#modale').open) $('#modale').showModal();
+    ouvrirModale();
 }
 
 // ---------- Récompense de connexion quotidienne ----------
@@ -2184,11 +2289,7 @@ function recupererConnexion() {
     if (!jour || !donneesPretes()) return;
     etat.connexion = { dernier: jourLocal(), serie: serieConnexion() };
     if ($('#modale').open && $('#modale-contenu .connexion')) $('#modale').close();
-    const { carte, nouvelle } = verserRecompense(RECOMPENSES_CONNEXION[jour - 1], { paquet: true });
-    majBadgeSucces();
-    if (!$('#ecran-profil').hidden) afficherProfil();
-    verifierSucces();
-    if (carte) fileFullArt = fileFullArt.then(() => ouvrirPaquetFullArt(carte, nouvelle, t('Récompense du jour')));
+    encaisserRecompense(RECOMPENSES_CONNEXION[jour - 1], t('Récompense du jour'));
 }
 
 // ---------- Écran profil ----------
@@ -2196,8 +2297,8 @@ function recupererConnexion() {
 function afficherProfil() {
     const faits = SUCCES.filter(s => etat.succes[s.id]).length;
     const stats = etat.stats;
-    $('#resume-profil').textContent = t('{boosters} boosters ouverts · {duels} duels gagnés · record au Plus ou moins : {record}',
-        { boosters: nombre(stats.boosters), duels: nombre(stats.duelsGagnes), record: stats.recordPom });
+    $('#resume-profil').textContent = t('{boosters} boosters ouverts · {duels} duels gagnés · {drafts} drafts gagnés',
+        { boosters: nombre(stats.boosters), duels: nombre(stats.duelsGagnes), drafts: nombre(stats.draftsGagnes) });
     $('#succes-compte').textContent = `${faits} / ${SUCCES.length}`;
     $('#succes-grille').innerHTML = SUCCES.map(succes => {
         const obtenu = etat.succes[succes.id];
@@ -2224,100 +2325,17 @@ function afficherProfil() {
     $('#reglage-langue').value = LANGUE;
 }
 
-// ---------- Mini-jeu « Plus ou moins » ----------
-
-// `different` : écart minimal pour que la question ait une vraie réponse
-const QUESTIONS_POM = [
-    { question: t('Lequel a le plus d’avis Steam ?'), valeur: j => j.avis, gagnant: 'max',
-      different: (a, b) => Math.max(a, b) >= Math.min(a, b) * 1.15, texte: j => t('{n} avis', { n: nombre(j.avis) }) },
-    { question: t('Lequel est le mieux noté par les joueurs ?'), valeur: j => j.note, gagnant: 'max',
-      different: (a, b) => Math.abs(a - b) >= 3, texte: j => t('{n} % d’avis positifs', { n: j.note }) },
-    { question: t('Lequel est sorti en premier ?'), valeur: j => j.annee, gagnant: 'min',
-      different: (a, b) => a !== b, texte: j => t('sorti en {annee}', { annee: j.annee }) },
-];
-const pom = { serie: 0, paire: null, question: null, verrou: false };
-let jeuxPom = null;
-
-// Prochain palier de série qui rapporte des pièces
-function prochainPalierPom(serie) {
-    const palier = Object.keys(PALIERS_POM).map(Number).find(p => p > serie);
-    return palier ?? (Math.floor(serie / 10) + 1) * 10;
-}
-
-function majScorePom() {
-    $('#pom-serie').textContent = pom.serie;
-    $('#pom-record').textContent = etat.stats.recordPom;
-}
-
-function nouvelleQuestionPom() {
-    if (!donneesPretes()) return;
-    // Des jeux assez connus pour qu'on puisse deviner (au moins 3 000 avis réels)
-    jeuxPom ??= tousLesJeux.filter(j => !j.estime && j.avis >= 3000 && j.annee);
-    const question = auHasard(QUESTIONS_POM);
-    let a, b;
-    do {
-        a = auHasard(jeuxPom);
-        b = auHasard(jeuxPom);
-    } while (a.id === b.id || !question.different(question.valeur(a), question.valeur(b)));
-    Object.assign(pom, { question, paire: [a, b], verrou: false });
-
-    $('#pom-question').textContent = question.question;
-    $('#pom-plateau').innerHTML = pom.paire.map((jeu, i) => `
-        <button class="pom-choix" data-pom="${i}" aria-label="${echapper(jeu.nom)}">
-            ${carteHTML(creerCarte(jeu), { cachee: true })}
-            <span class="pom-valeur" hidden>${question.texte(jeu)}</span>
-        </button>`).join(`<span class="duel-vs">${t('OU')}</span>`);
-    $('#pom-message').textContent = t('Clique sur la bonne carte.');
-    $('#pom-actions').innerHTML = '';
-    majScorePom();
-}
-
-function repondrePom(choix) {
-    if (pom.verrou || !pom.paire) return;
-    pom.verrou = true;
-    const [va, vb] = pom.paire.map(pom.question.valeur);
-    const bonne = pom.question.gagnant === 'max' ? (va > vb ? 0 : 1) : (va < vb ? 0 : 1);
-    document.querySelectorAll('.pom-choix').forEach((bouton, i) => {
-        bouton.disabled = true;
-        bouton.classList.add(i === bonne ? 'bonne' : 'mauvaise');
-        bouton.querySelector('.pom-valeur').hidden = false;
-    });
-
-    if (choix === bonne) {
-        pom.serie++;
-        etat.stats.recordPom = Math.max(etat.stats.recordPom, pom.serie);
-        // Palier de série atteint : il compte comme une victoire dans les gains du jour
-        const base = PALIERS_POM[pom.serie] ?? (pom.serie > 20 && pom.serie % 10 === 0 ? GAIN_POM_AU_DELA : 0);
-        const gain = base ? gainDuJour('pom', base) : null;
-        if (gain) etat.pieces += gain.pieces;
-        sauvegarder();
-        majEntete();
-        jouerSon('bonne');
-        $('#pom-message').innerHTML = gain
-            ? t('<b class="victoire">Bonne réponse !</b> Palier de {s} : +{n} pièces', { s: pom.serie, n: gain.pieces }) + noteGain(gain.taux)
-            : t('<b class="victoire">Bonne réponse !</b> Prochain palier : {p} bonnes réponses', { p: prochainPalierPom(pom.serie) });
-        $('#pom-actions').innerHTML = `<button class="btn btn-principal btn-grand" data-pom-action="suivant">${t('Question suivante')}</button>`;
-    } else {
-        jouerSon('mauvaise');
-        const serie = pom.serie;
-        $('#pom-message').innerHTML = tn(serie, '<b class="defaite">Raté !</b> Série terminée : {n} bonne réponse.', '<b class="defaite">Raté !</b> Série terminée : {n} bonnes réponses.');
-        pom.serie = 0;
-        $('#pom-actions').innerHTML = `<button class="btn btn-principal btn-grand" data-pom-action="suivant">${t('Rejouer')}</button>`;
-    }
-    majScorePom();
-    verifierSucces();
-}
-
-// Écran « Jouer » : d'abord le choix du mode (mode = null), puis Duel, Duel de decks ou Plus ou moins.
+// Écran « Jouer » : d'abord le choix du mode (mode = null), puis Duel, Duel de decks ou Draft.
 // Une partie en cours reste en mémoire : la reprendre, c'est rechoisir son mode.
+// Le Draft se joue sur la table du duel de decks : passer de l'un à l'autre abandonne la partie en cours.
 function changerModeJeu(mode) {
     $('#modes-jeu').hidden = Boolean(mode);
     $('#retour-modes').hidden = !mode;
     $('#mode-duel').hidden = mode !== 'duel';
-    $('#mode-pom').hidden = mode !== 'pom';
-    $('#mode-decks').hidden = mode !== 'decks';
-    if (mode === 'pom' && !pom.paire) nouvelleQuestionPom();
-    if (mode === 'decks') afficherDuelDecks();
+    $('#mode-decks').hidden = mode !== 'decks' && mode !== 'draft';
+    if (mode === 'decks' && deckDuel.mode !== 'decks') Object.assign(deckDuel, { mode: 'decks', etape: 'niveau' });
+    if (mode === 'draft' && deckDuel.mode !== 'draft') nouveauDraft();
+    if (mode === 'decks' || mode === 'draft') afficherDuelDecks();
 }
 
 // ---------- Duel de decks ----------
@@ -2329,14 +2347,20 @@ function changerModeJeu(mode) {
 const TAILLE_DECK = 3;
 const POINTS_VICTOIRE_DECK = Math.floor(TAILLE_DECK / 2) + 1;
 // `intelligence` : probabilité que l'ordinateur joue son meilleur coup (sinon il joue au hasard)
-// `elite` : son deck est tiré parmi les N meilleures cartes du jeu sous le plafond (sinon au hasard, selon chanceDuel)
+// `elite` : son deck est tiré parmi les N meilleures cartes du jeu sous le plafond
+// `deck` : sinon, la rareté de chacune de ses 3 cartes ; `meilleures` : part de la rareté où il pioche
+// (0,5 = la meilleure moitié, au total des stats ; absente = toute la rareté)
 const NIVEAUX_DECK = [
-    { id: 'facile', nom: t('Facile'), max: 'peu-commune', gain: 5, intelligence: 0 },
-    { id: 'normal', nom: t('Normal'), max: 'rare', gain: 10, intelligence: 0.35 },
-    { id: 'difficile', nom: t('Difficile'), max: 'epique', gain: 20, intelligence: 0.6 },
-    { id: 'impossible', nom: t('Impossible'), max: 'legendaire', gain: 40, intelligence: 0.85, elite: 100 },
-    { id: 'hardcore', nom: t('Hardcore'), max: 'mythique', gain: 80, intelligence: 1, elite: 30 },
+    { id: 'facile', nom: t('Facile'), max: 'peu-commune', gain: 5, intelligence: 0, deck: ['peu-commune', 'commune', 'commune'] },
+    { id: 'normal', nom: t('Normal'), max: 'rare', gain: 10, intelligence: 0.5, deck: ['rare', 'rare', 'peu-commune'], meilleures: 0.5 },
+    { id: 'difficile', nom: t('Difficile'), max: 'epique', gain: 20, intelligence: 0.8, deck: ['epique', 'epique', 'epique'], meilleures: 0.33 },
+    { id: 'impossible', nom: t('Impossible'), max: 'legendaire', gain: 40, intelligence: 0.95, elite: 50 },
+    { id: 'hardcore', nom: t('Hardcore'), max: 'mythique', gain: 80, intelligence: 1, elite: 15 },
 ];
+// Draft : pas de collection ni de plafond. Chacun prend 1 carte parmi 3, trois fois (raretés selon `chanceDraft`).
+// `seuil` : l'ordinateur défend comme s'il attendait une bonne Épique
+const NIVEAU_DRAFT = { id: 'draft', nom: 'Draft', max: 'mythique', seuil: 'epique', gain: 15, intelligence: 0.8 };
+const CHANCE_HOLO_DRAFT = 0.1;
 const CARTES_CHOIX_DECK = 40; // cartes affichées à la fois pendant la composition du deck
 const STATS_DECK = Object.keys(STATS);
 // Tris de la composition du deck : une stat de la carte, ou le total des trois
@@ -2348,6 +2372,9 @@ const TRIS_DECK = {
 };
 
 const deckDuel = {
+    mode: 'decks',   // 'decks' (deck de ta collection) ou 'draft'
+    // Draft en cours : { propositions (les 3 cartes du choix), moi, ordi (cartes prises), exclus (jeux déjà sortis) }
+    draft: null,
     etape: 'niveau', niveau: null, choix: [], dernierAjout: null, recherche: '', tri: 'total', limite: CARTES_CHOIX_DECK,
     moi: [], ordi: [], score: { moi: 0, ordi: 0 }, attaquant: 'moi',
     attente: null,   // 'attaque' (choisir une carte puis une stat), 'defense' (choisir une carte), ou rien
@@ -2361,9 +2388,11 @@ const deckDuel = {
     message: '',
 };
 
-const totalStats = c => valeurCombat(c, 'attaque') + valeurCombat(c, 'popularite') + valeurCombat(c, 'anciennete');
+const totalStats = c => STATS_DECK.reduce((n, s) => n + valeurCombat(c, s), 0);
 const autoriseeAuNiveau = (rarete, niveau) => indexRarete(rarete) >= indexRarete(niveau.max);
-const cartesDuNiveau = niveau => Object.values(etat.collection).filter(e => autoriseeAuNiveau(e.rarete, niveau));
+const cartesDuNiveau = niveau => possedees().filter(e => autoriseeAuNiveau(e.rarete, niveau));
+// Cartes de ces jeux, de la meilleure à la moins bonne (total des stats)
+const classerParTotal = jeux => jeux.map(j => creerCarte(j)).sort((a, b) => totalStats(b) - totalStats(a));
 
 function melanger(liste) {
     const copie = [...liste];
@@ -2377,19 +2406,53 @@ function melanger(liste) {
 // Les meilleures cartes du jeu sous un plafond, calculées une seule fois par niveau
 const meilleuresParNiveau = {};
 
+// Cartes d'une rareté, de la meilleure à la moins bonne (total des stats), calculées une seule fois
+const classementParRarete = {};
+function meilleuresDeRarete(rarete, part = 1) {
+    classementParRarete[rarete] ??= classerParTotal(jeuxParRarete[rarete]);
+    const liste = classementParRarete[rarete];
+    return liste.slice(0, Math.max(TAILLE_DECK * 2, Math.round(liste.length * part)));
+}
+
+// Ce que l'ordinateur cherche dans un deck : une carte forte dans chaque stat, puis le meilleur total
+const noteDeck = cartes => STATS_DECK.reduce((n, s) => n + Math.max(...cartes.map(c => c[s])), 0)
+    + cartes.reduce((n, c) => n + totalStats(c), 0) / 10;
+
+// L'ordinateur tire plus de cartes qu'il n'en faut, puis garde les 3 qui se complètent le mieux
 function deckOrdinateur(niveau) {
+    let combinaisons;
     if (niveau.elite) {
-        meilleuresParNiveau[niveau.id] ??= tousLesJeux.filter(j => autoriseeAuNiveau(j.rarete, niveau))
-            .map(j => creerCarte(j)).sort((a, b) => totalStats(b) - totalStats(a)).slice(0, niveau.elite);
-        return melanger(meilleuresParNiveau[niveau.id]).slice(0, TAILLE_DECK);
+        meilleuresParNiveau[niveau.id] ??= classerParTotal(tousLesJeux.filter(j => autoriseeAuNiveau(j.rarete, niveau))).slice(0, niveau.elite);
+        // 5 candidats : toutes les façons d'en garder 3
+        const [a, b, c, d, e] = melanger(meilleuresParNiveau[niveau.id]).slice(0, 5);
+        combinaisons = [[a, b, c], [a, b, d], [a, b, e], [a, c, d], [a, c, e], [a, d, e], [b, c, d], [b, c, e], [b, d, e], [c, d, e]];
+    } else {
+        // 2 candidats par emplacement, chacun dans la rareté prévue (et dans le haut de cette rareté)
+        const exclus = new Set();
+        const tirer = rarete => {
+            const bac = niveau.meilleures ? meilleuresDeRarete(rarete, niveau.meilleures) : null;
+            if (!bac) return piocher(indexRarete(rarete), exclus);
+            let carte = auHasard(bac);
+            for (let essai = 0; essai < 20 && exclus.has(carte.id); essai++) carte = auHasard(bac);
+            exclus.add(carte.id);
+            return carte;
+        };
+        const [[a1, a2], [b1, b2], [c1, c2]] = niveau.deck.map(rarete => [tirer(rarete), tirer(rarete)]);
+        combinaisons = [a1, a2].flatMap(a => [b1, b2].flatMap(b => [c1, c2].map(c => [a, b, c])));
     }
-    const raretes = RARETES.filter(r => autoriseeAuNiveau(r.id, niveau));
-    const exclus = new Set();
-    return Array.from({ length: TAILLE_DECK }, () => {
-        const carte = piocher(tirerRarete('chanceDuel', raretes), exclus);
-        exclus.add(carte.id);
-        return carte;
-    });
+    return combinaisons.reduce((meilleur, deck) => (noteDeck(deck) > noteDeck(meilleur) ? deck : meilleur));
+}
+
+// Défense : valeur que l'ordinateur s'attend à affronter dans une stat. Ton attaque vient de ta meilleure carte,
+// on prend donc le haut de la rareté maximale du niveau (70 % des cartes font moins)
+const seuilsDefense = {};
+function seuilDefense(niveau, stat) {
+    const cle = `${niveau.id}-${stat}`;
+    if (seuilsDefense[cle] === undefined) {
+        const valeurs = meilleuresDeRarete(niveau.seuil ?? niveau.max).map(c => c[stat]).sort((a, b) => a - b);
+        seuilsDefense[cle] = valeurs[Math.floor(valeurs.length * 0.7)];
+    }
+    return seuilsDefense[cle];
 }
 
 // Coup de l'ordinateur : le meilleur avec la probabilité `intelligence` du niveau, sinon au hasard
@@ -2404,8 +2467,11 @@ function coupOrdi(role, stat) {
         }
         return meilleur;
     }
-    // Défense : il ne voit pas ta carte, il répond avec sa meilleure valeur dans la stat annoncée
-    return malin ? d.ordi.reduce((m, c) => (c[stat] > m[stat] ? c : m)) : auHasard(d.ordi);
+    // Défense : il ne voit pas ta carte. Il répond avec sa plus petite carte qui dépasse la valeur qu'il attend ;
+    // si aucune ne la dépasse, il sacrifie sa plus faible et garde ses atouts pour la suite
+    if (!malin) return auHasard(d.ordi);
+    const triees = [...d.ordi].sort((a, b) => a[stat] - b[stat]);
+    return triees.find(c => c[stat] >= seuilDefense(d.niveau, stat)) ?? triees[0];
 }
 
 function niveauxDeckHTML() {
@@ -2441,7 +2507,7 @@ function choixDeckHTML() {
             return carte
                 ? `<button class="deck-slot plein${carte.id === d.dernierAjout ? ' arrive' : ''}" data-choix-deck="${carte.id}"
                         aria-label="${t('Retirer {nom} du deck', { nom: echapper(carte.nom) })}">
-                        ${carteHTML(carte, { holo: carte.holos > 0, bonus: bonusCombat(carte) })}<span class="slot-retirer" aria-hidden="true">✕</span>
+                        ${carteHTML(carte, { bonus: bonusCombat(carte) })}<span class="slot-retirer" aria-hidden="true">✕</span>
                     </button>`
                 : `<div class="deck-slot"><span>${i + 1}</span></div>`;
         }).join('')}</div>
@@ -2460,7 +2526,7 @@ function choixDeckHTML() {
         </div>
         <div class="grille">${cartes.slice(0, d.limite).map(e => `
             <button class="carte-choix${d.choix.includes(e.id) ? ' choisie' : ''}" data-choix-deck="${e.id}" aria-pressed="${d.choix.includes(e.id)}">
-                ${carteHTML(e, { holo: e.holos > 0, bonus: bonusCombat(e) })}
+                ${carteHTML(e, { bonus: bonusCombat(e) })}
             </button>`).join('')}</div>
         ${cartes.length > d.limite ? `<div class="plus"><button class="btn" data-deck-action="plus">${t('Afficher plus')}</button></div>` : ''}`;
 }
@@ -2469,12 +2535,13 @@ function actionsDeckHTML() {
     const d = deckDuel;
     if (d.verrou) return '';
     if (d.attente === 'attaque' && d.carte !== null) {
-        const carte = d.moi[d.carte];
-        return STATS_DECK.map(s => `
-            <button class="btn-stat" data-stat-deck="${s}"><span>${STATS[s].icone} ${STATS[s].nom}</span><b>${carte[s]}</b></button>`).join('');
+        return boutonsStatsHTML(d.moi[d.carte], 'data-stat-deck');
     }
     if (d.actions === 'suivante') return `<button class="btn btn-principal btn-grand" data-deck-action="suivante">${t('Manche suivante')}</button>`;
     if (d.actions === 'decisive') return `<button class="btn btn-principal btn-grand" data-deck-action="decisive">${t('Révéler les dernières cartes')}</button>`;
+    if (d.actions === 'fin' && d.mode === 'draft') {
+        return `<button class="btn btn-principal btn-grand" data-deck-action="draft">${t('Nouveau draft')}</button>`;
+    }
     if (d.actions === 'fin') {
         return `<button class="btn btn-principal btn-grand" data-deck-action="rejouer">${t('Rejouer')}</button>
             <button class="btn" data-deck-action="niveaux">${t('Changer de difficulté')}</button>`;
@@ -2519,7 +2586,7 @@ function plateauDeckHTML() {
     const table = `${annonceStatHTML()}
         <div class="decks-combat${c?.ecart !== undefined ? ' compare' : ''}">
             <div class="duel-emplacement${resultat('moi')}${['moi', 'les-deux'].includes(c?.arrivee) ? ' arrivee-moi' : ''}" data-titre="${t('Ta carte')}">
-                ${c?.moi ? carteHTML(c.moi, { holo: c.moi.holos > 0, bonus: bonusCombat(c.moi) }) : ''}${total(c?.moi)}
+                ${c?.moi ? carteHTML(c.moi, { bonus: bonusCombat(c.moi) }) : ''}${total(c?.moi)}
             </div>
             <div class="duel-emplacement${resultat('ordi')}${['ordi', 'les-deux'].includes(c?.arrivee) ? ' arrivee-ordi' : ''}" data-titre="${t('Ordinateur')}">
                 ${carteOrdi}${total(c?.ordi)}
@@ -2537,7 +2604,7 @@ function plateauDeckHTML() {
         <div class="duel-actions">${actionsDeckHTML()}</div>
         <div class="decks-main">${d.moi.map((carte, i) => `
             <button class="carte-main${d.carte === i ? ' choisie' : ''}" data-carte-main="${i}"${d.attente && !d.verrou ? '' : ' disabled'}>
-                ${carteHTML(carte, { holo: carte.holos > 0, bonus: bonusCombat(carte) })}
+                ${carteHTML(carte, { bonus: bonusCombat(carte) })}
             </button>`).join('')}</div>`;
 }
 
@@ -2546,6 +2613,7 @@ function afficherDuelDecks() {
     const zone = $('#mode-decks');
     if (d.etape === 'niveau') zone.innerHTML = niveauxDeckHTML();
     else if (d.etape === 'deck') zone.innerHTML = choixDeckHTML();
+    else if (d.etape === 'draft') zone.innerHTML = draftHTML();
     else {
         zone.innerHTML = plateauDeckHTML();
         // La stat comparée ressort sur les deux cartes de la table
@@ -2560,15 +2628,67 @@ function lancerPartieDecks() {
     const d = deckDuel;
     d.choix = d.choix.filter(id => etat.collection[id]);
     if (!donneesPretes() || d.choix.length < TAILLE_DECK) return afficherDuelDecks();
-    Object.assign(d, {
-        moi: d.choix.map(id => ({ ...etat.collection[id] })),
-        ordi: deckOrdinateur(d.niveau),
+    demarrerPartieDecks(d.choix.map(id => ({ ...etat.collection[id] })), deckOrdinateur(d.niveau));
+}
+
+// Début d'une partie (duel de decks ou draft) : le premier attaquant est tiré au sort,
+// le gros message de la première manche l'annonce
+function demarrerPartieDecks(moi, ordi) {
+    Object.assign(deckDuel, {
+        moi, ordi,
         score: { moi: 0, ordi: 0 },
         attaquant: Math.random() < 0.5 ? 'moi' : 'ordi',
         etape: 'partie', combat: null, actions: null, attente: null, pointMarque: null,
     });
-    // Le premier attaquant est tiré au sort, le gros message de la première manche l'annonce
     mancheDecks(true);
+}
+
+// ---------- Draft ----------
+
+// Une carte proposée : rareté selon `chanceDraft`, parfois holo (bonus en combat) ou EX
+function carteDraft(exclus) {
+    const { carte, holo } = variante(piocher(tirerRarete('chanceDraft'), exclus), CHANCE_HOLO_DRAFT, 0);
+    return holo ? { ...carte, holos: 1 } : carte;
+}
+const propositionsDraft = exclus => Array.from({ length: 3 }, () => carteDraft(exclus));
+
+// L'ordinateur fait son draft d'un coup, avec les mêmes chances : à chaque tour, il prend la carte
+// qui complète le mieux son deck (ou, parfois, une au hasard)
+function nouveauDraft() {
+    if (!donneesPretes()) return;
+    const exclus = new Set();
+    const ordi = [];
+    for (let i = 0; i < TAILLE_DECK; i++) {
+        const choix = propositionsDraft(exclus);
+        ordi.push(Math.random() < NIVEAU_DRAFT.intelligence
+            ? choix.reduce((m, c) => (noteDeck([...ordi, c]) > noteDeck([...ordi, m]) ? c : m))
+            : auHasard(choix));
+    }
+    Object.assign(deckDuel, {
+        mode: 'draft', niveau: NIVEAU_DRAFT, etape: 'draft', actions: null,
+        draft: { propositions: propositionsDraft(exclus), moi: [], ordi, exclus },
+    });
+}
+
+function choisirDraft(i) {
+    const draft = deckDuel.draft;
+    draft.moi.push(draft.propositions[i]);
+    if (draft.moi.length === TAILLE_DECK) return demarrerPartieDecks(draft.moi.map(c => ({ ...c })), draft.ordi);
+    draft.propositions = propositionsDraft(draft.exclus);
+    afficherDuelDecks();
+}
+
+function draftHTML() {
+    const { propositions, moi } = deckDuel.draft;
+    return `
+        <p class="duel-message">${t('Choix {i} / {n} : prends une carte. L’ordinateur fait son draft de son côté, avec les mêmes chances.', { i: moi.length + 1, n: TAILLE_DECK })}</p>
+        <div class="deck-slots">${Array.from({ length: TAILLE_DECK }, (_, i) => moi[i]
+            ? `<div class="deck-slot plein${i === moi.length - 1 ? ' arrive' : ''}">${carteHTML(moi[i], { bonus: bonusCombat(moi[i]) })}</div>`
+            : `<div class="deck-slot"><span>${i + 1}</span></div>`).join('')}</div>
+        <div class="draft-choix">${propositions.map((carte, i) => `
+            <button class="carte-choix" data-draft="${i}" aria-label="${t('Prendre {nom}', { nom: echapper(carte.nom) })}">
+                ${carteHTML(carte, { bonus: bonusCombat(carte) })}
+            </button>`).join('')}</div>`;
 }
 
 // `premiere` : première manche, le gros message dit qui commence
@@ -2628,17 +2748,17 @@ async function resoudreMancheDecks(carteMoi, carteOrdi, stat) {
     // Égalité sur une stat annoncée : le défenseur l'emporte (la manche décisive au total reste nulle)
     const egaliteDefendue = !ecart && stat;
     if (egaliteDefendue) ecart = d.combat.par === 'moi' ? -1 : 1;
-    if (ecart > 0) d.score.moi++;
-    else if (ecart < 0) d.score.ordi++;
+    const gagnant = ecart > 0 ? 'moi' : ecart < 0 ? 'ordi' : null;
+    if (gagnant) d.score[gagnant]++;
     const resultat = (egaliteDefendue ? `${t('Égalité : le défenseur l’emporte.')} ` : '')
-        + (ecart > 0 ? t('Manche gagnée !') : ecart < 0 ? t('Manche perdue.') : t('Égalité parfaite, personne ne marque.'));
+        + ({ moi: t('Manche gagnée !'), ordi: t('Manche perdue.') }[gagnant] ?? t('Égalité parfaite, personne ne marque.'));
     Object.assign(d, {
         combat: { moi: carteMoi, ordi: carteOrdi, stat, ecart, par: d.combat.par },
-        pointMarque: ecart > 0 ? 'moi' : ecart < 0 ? 'ordi' : null,
+        pointMarque: gagnant,
         message: `${t('{stat} : <b>{a}</b> contre <b>{b}</b>.', { stat: nomStat, a: valeur(carteMoi), b: valeur(carteOrdi) })}${noteBonusCombat(carteMoi)} <b>${resultat}</b>`,
         verrou: false,
     });
-    jouerSon(ecart > 0 ? 'bonne' : ecart < 0 ? 'mauvaise' : 'carte');
+    jouerSon({ moi: 'bonne', ordi: 'mauvaise' }[gagnant] ?? 'carte');
     if (d.score.moi >= POINTS_VICTOIRE_DECK || d.score.ordi >= POINTS_VICTOIRE_DECK || !d.moi.length) {
         finPartieDecks(carteMoi, carteOrdi, stat);
     } else {
@@ -2659,20 +2779,16 @@ function finPartieDecks(carteMoi, carteOrdi, stat) {
         d.message += ` ${t('Score à égalité : départage au total des stats des dernières cartes ({a} contre {b}).', { a: totalStats(carteMoi), b: totalStats(carteOrdi) })}`;
     }
     if (gagnant === 'moi') {
-        const gain = gainDuJour('decks', d.niveau.gain);
-        etat.pieces += gain.pieces;
-        etat.stats.decksGagnes++;
+        if (d.mode === 'draft') etat.stats.draftsGagnes++;
+        else etat.stats.decksGagnes++;
         if (d.niveau.id === 'hardcore') etat.stats.decksHardcore++;
-        sauvegarder();
-        majEntete();
-        toast(t('Victoire ! +{n} pièces', { n: gain.pieces }) + noteGain(gain.taux), 'gain');
-        d.message += t('<br><b class="victoire">Victoire {a} à {b} !</b> Tu gagnes {n} pièces.', { a: moi, b: ordi, n: gain.pieces }) + noteGain(gain.taux);
+        d.message += annoncerVictoire(payerVictoire(d.mode, d.niveau.gain), moi, ordi);
     } else if (gagnant === 'ordi') {
         d.message += t('<br><b class="defaite">Défaite {a} à {b}.</b> Retente ta chance !', { a: moi, b: ordi });
     } else {
         d.message += t('<br><b>Match nul.</b>');
     }
-    jouerSon(gagnant === 'moi' ? 'succes' : gagnant === 'ordi' ? 'mauvaise' : 'carte');
+    jouerSon({ moi: 'succes', ordi: 'mauvaise' }[gagnant] ?? 'carte');
     d.actions = 'fin';
     verifierSucces();
 }
@@ -2680,8 +2796,12 @@ function finPartieDecks(carteMoi, carteOrdi, stat) {
 function actionDuelDecks(element) {
     const d = deckDuel;
     if (d.verrou) return;
-    const { niveau, choixDeck, carteMain, statDeck, deckAction } = element.dataset;
-    if (niveau) {
+    const { niveau, choixDeck, carteMain, statDeck, deckAction, draft } = element.dataset;
+    if (draft !== undefined) {
+        return choisirDraft(Number(draft));
+    } else if (deckAction === 'draft') {
+        nouveauDraft();
+    } else if (niveau) {
         Object.assign(d, { niveau: NIVEAUX_DECK.find(n => n.id === niveau), choix: [], recherche: '', limite: CARTES_CHOIX_DECK, etape: 'deck' });
     } else if (choixDeck) {
         const id = Number(choixDeck);
@@ -2812,7 +2932,7 @@ async function importerSauvegarde(fichier) {
         if (!cles.length) throw new Error('sauvegarde vide');
         const date = new Date(contenu.date).toLocaleDateString(LOCALE);
         if (!confirm(t('Remplacer ta progression actuelle par la sauvegarde du {date} ?', { date }))) return;
-        Object.keys(localStorage).filter(cle => cle.startsWith('gameCards.')).forEach(cle => localStorage.removeItem(cle));
+        effacerSauvegarde();
         for (const cle of cles) localStorage.setItem(cle, donnees[cle]);
         location.hash = '#accueil';
         location.reload();
@@ -2852,14 +2972,19 @@ function afficherEcran(nom) {
         else a.removeAttribute('aria-current');
     });
     if ($('#modale').open) $('#modale').close();
-    if (nom === 'accueil') afficherAccueil();
-    if (nom === 'collection') afficherCollection();
-    if (nom === 'regles') afficherRegles();
-    if (nom === 'catalogue') afficherCatalogue();
-    if (nom === 'profil') afficherProfil();
+    RENDUS_ECRAN[nom]?.();
     if (nom === 'duel') changerModeJeu(null);
     window.scrollTo(0, 0);
 }
+
+// Écrans dont le contenu se recalcule à l'affichage (et une fois les jeux chargés)
+const RENDUS_ECRAN = {
+    accueil: afficherAccueil,
+    collection: afficherCollection,
+    regles: afficherRegles,
+    catalogue: afficherCatalogue,
+    profil: afficherProfil,
+};
 
 // ---------- Démarrage ----------
 
@@ -2905,7 +3030,7 @@ function init() {
         filtrerCollection();
     });
     for (const id of ['#filtre-genre', '#tri', '#filtre-doublons', '#filtre-fullart', '#filtre-ex']) $(id).addEventListener('change', filtrerCollection);
-    $('#filtre-nom').addEventListener('input', filtrerCollection);
+    $('#filtre-nom').addEventListener('input', differer(filtrerCollection));
     $('#btn-plus').addEventListener('click', () => {
         limiteCollection += CARTES_PAR_PAGE;
         afficherCollection();
@@ -2921,11 +3046,7 @@ function init() {
         filtrerCatalogue();
     });
     for (const id of ['#catalogue-genre', '#catalogue-tri', '#catalogue-manquantes']) $(id).addEventListener('change', filtrerCatalogue);
-    let attenteRecherche;
-    $('#catalogue-nom').addEventListener('input', () => {
-        clearTimeout(attenteRecherche);
-        attenteRecherche = setTimeout(filtrerCatalogue, 150); // 81 000 jeux : on attend la fin de la frappe
-    });
+    $('#catalogue-nom').addEventListener('input', differer(filtrerCatalogue));
     $('#btn-catalogue-plus').addEventListener('click', () => {
         limiteCatalogue += CARTES_PAR_PAGE;
         afficherCatalogue();
@@ -2943,6 +3064,8 @@ function init() {
             if ($('#modale').open) afficherFiche(id);
             return;
         }
+        const marche = e.target.closest('[data-marche]');
+        if (marche) return acheterMarche(Number(marche.dataset.marche));
         const choixVente = e.target.closest('[data-choix-vente]');
         if (choixVente) return choisirVente(Number(choixVente.dataset.choixVente));
         const fiche = e.target.closest('[data-fiche]');
@@ -2991,14 +3114,14 @@ function init() {
         else if (bouton.dataset.action === 'manche') nouvelleManche();
     });
 
-    // Jouer : onglets, Plus ou moins
+    // Jouer : choix du mode, Duel de decks et Draft
     $('#modes-jeu').addEventListener('click', e => {
         const mode = e.target.closest('[data-mode]');
         if (mode) changerModeJeu(mode.dataset.mode);
     });
     $('#retour-modes').addEventListener('click', () => changerModeJeu(null));
     $('#mode-decks').addEventListener('click', e => {
-        const element = e.target.closest('[data-niveau], [data-choix-deck], [data-carte-main], [data-stat-deck], [data-deck-action]');
+        const element = e.target.closest('[data-niveau], [data-choix-deck], [data-carte-main], [data-stat-deck], [data-deck-action], [data-draft]');
         if (element && !element.disabled) actionDuelDecks(element);
     });
     // Recherche pendant la composition du deck : on garde le curseur dans le champ
@@ -3014,13 +3137,6 @@ function init() {
         const champ = $('#deck-recherche');
         champ.focus();
         champ.setSelectionRange(champ.value.length, champ.value.length);
-    });
-    $('#pom-plateau').addEventListener('click', e => {
-        const choix = e.target.closest('[data-pom]');
-        if (choix) repondrePom(Number(choix.dataset.pom));
-    });
-    $('#pom-actions').addEventListener('click', e => {
-        if (e.target.closest('[data-pom-action]')) nouvelleQuestionPom();
     });
 
     // Profil : sons, sauvegarde dans un fichier
@@ -3042,6 +3158,10 @@ function init() {
         if (bouton) recupererSucces(bouton.dataset.recuperer);
     });
     $('#btn-tout-recuperer').addEventListener('click', toutRecuperer);
+    $('#form-code').addEventListener('submit', e => {
+        e.preventDefault();
+        utiliserCode();
+    });
     $('#btn-exporter').addEventListener('click', exporterSauvegarde);
     $('#btn-importer').addEventListener('click', () => $('#fichier-import').click());
     $('#fichier-import').addEventListener('change', e => {
@@ -3075,16 +3195,10 @@ function init() {
 
     chargerJeux()
         .then(() => {
-            const ecran = location.hash.slice(1) || 'accueil';
-            if (ecran === 'accueil') afficherAccueil();
-            if (ecran === 'regles') afficherRegles();
-            if (ecran === 'catalogue') afficherCatalogue();
-            if (ecran === 'collection') afficherCollection();
-            if (ecran === 'profil') afficherProfil();
-            if (!$('#mode-pom').hidden) nouvelleQuestionPom();
+            RENDUS_ECRAN[location.hash.slice(1) || 'accueil']?.();
             verifierSucces(); // succès déjà atteints par une collection existante
             majBadgeSucces();
-            if (!etat.reglages.guideVu && !Object.keys(etat.collection).length) afficherGuide();
+            if (!etat.reglages.guideVu && !possedees().length) afficherGuide();
             else proposerConnexion();
         })
         .catch(e => {

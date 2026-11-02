@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=88">
+    <link rel="stylesheet" href="style.css?v=91">
 </head>
 <body>
 
@@ -155,7 +155,7 @@
                 <div class="ouverture-scene" id="ouverture-scene"></div>
                 <div class="tirage" id="tirage"></div>
                 <!-- Pour un ×10, cette barre reste collée en haut de l'écran (en bas sur mobile) -->
-                <div class="ouverture-actions" id="ouverture-actions">
+                <div class="ouverture-actions">
                     <p class="ouverture-aide" id="ouverture-aide" aria-live="polite" data-i18n>Attrape le haut du paquet et glisse le long pour le déchirer</p>
                     <button class="btn" id="btn-passer" data-i18n>Passer</button>
                     <div class="bilan" id="bilan" hidden></div>
@@ -213,6 +213,15 @@
             </div>
             <p class="intro-catalogue" data-i18n="intro-catalogue">Toutes les cartes du jeu. Tu peux acheter directement celle qui te manque, mais c’est bien plus cher que de tenter ta chance en booster.</p>
 
+            <!-- Marché du jour : 3 cartes à moitié prix, renouvelées chaque jour à minuit -->
+            <section class="marche" aria-labelledby="titre-marche">
+                <div class="marche-tete">
+                    <h2 id="titre-marche" data-i18n>Marché du jour</h2>
+                    <p data-i18n>Une Rare, une Épique et une Légendaire à moitié prix. Nouvelles offres chaque jour à minuit.</p>
+                </div>
+                <div class="marche-offres" id="marche-offres"></div>
+            </section>
+
             <div class="puces-raretes filtre-puces" id="catalogue-raretes" role="group" aria-label="Filtrer par rareté" data-i18n-attr="aria-label"></div>
 
             <div class="filtres">
@@ -263,11 +272,11 @@
                     <span data-i18n>Compose un deck de 3 cartes et affronte l’ordinateur, de Facile à Hardcore. Attaque, défends, anticipe.</span>
                     <small data-i18n>Stratégique · 5 à 80 pièces</small>
                 </button>
-                <button class="mode-jeu" data-mode="pom">
-                    <span class="mode-icone"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 20V4M3 8l4-4 4 4M17 4v16M13 16l4 4 4-4"/></svg></span>
-                    <b data-i18n>Plus ou moins</b>
-                    <span data-i18n>Deux jeux, une question : lequel a le plus d’avis, la meilleure note, le plus ancien ? Enchaîne les bonnes réponses.</span>
-                    <small data-i18n>Quiz · pièces aux paliers de série</small>
+                <button class="mode-jeu" data-mode="draft">
+                    <span class="mode-icone"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="7" width="7" height="10" rx="1.2"/><rect x="8.5" y="5" width="7" height="10" rx="1.2"/><rect x="14.5" y="7" width="7" height="10" rx="1.2"/><path d="M12 18v3M10 19.5l2 1.5 2-1.5"/></svg></span>
+                    <b>Draft</b>
+                    <span data-i18n>Prends 1 carte parmi 3, trois fois de suite, puis affronte l’ordinateur avec ce deck. Pas besoin de collection.</span>
+                    <small data-i18n>Improvisé · 15 pièces</small>
                 </button>
             </div>
             <button class="btn retour-modes" id="retour-modes" hidden data-i18n>← Modes de jeu</button>
@@ -302,17 +311,9 @@
             </div>
             </div>
 
-            <!-- Mini-jeu : deviner lequel des deux jeux gagne sur une question -->
             <!-- Duel de decks : construit par script.js (difficulté, deck, partie) -->
             <div id="mode-decks" hidden></div>
 
-            <div id="mode-pom" hidden>
-                <p class="pom-question" id="pom-question" data-i18n>Chargement…</p>
-                <div class="pom-plateau" id="pom-plateau"></div>
-                <p class="duel-message" id="pom-message"></p>
-                <div class="duel-actions" id="pom-actions"></div>
-                <p class="pom-score" data-i18n>Série <b id="pom-serie">0</b> · Record <b id="pom-record">0</b> · Pièces à 5, 10 et 20 bonnes réponses d’affilée</p>
-            </div>
         </section>
 
         <!-- ── RÈGLES ── -->
@@ -381,7 +382,15 @@
                 </article>
                 <article>
                     <h3 data-i18n>🃏 Duel de decks</h3>
-                    <p data-i18n="regle-decks">Choisis une difficulté (elle plafonne la rareté des cartes pour toi et pour l’ordinateur : Peu commune en Facile, Rare en Normal, Épique en Difficile, Légendaire en Impossible, Mythique en Hardcore), puis 3 cartes de ta collection. Pile ou face désigne qui commence. À tour de rôle, l’attaquant pose une carte face cachée et annonce une stat, le défenseur répond avec une de ses cartes : la plus haute valeur marque 1 point, et en cas d’égalité c’est le défenseur qui marque. Premier à 2 points. Si le score est à égalité, les dernières cartes se départagent au total de leurs stats. De 5 à 80 pièces à gagner selon la difficulté. En Impossible et Hardcore, l’ordinateur joue avec les meilleures cartes du jeu.</p>
+                    <p data-i18n="regle-decks">Choisis une difficulté (elle plafonne la rareté des cartes pour toi et pour l’ordinateur : Peu commune en Facile, Rare en Normal, Épique en Difficile, Légendaire en Impossible, Mythique en Hardcore), puis 3 cartes de ta collection. Pile ou face désigne qui commence. À tour de rôle, l’attaquant pose une carte face cachée et annonce une stat, le défenseur répond avec une de ses cartes : la plus haute valeur marque 1 point, et en cas d’égalité c’est le défenseur qui marque. Premier à 2 points. Si le score est à égalité, les dernières cartes se départagent au total de leurs stats. De 5 à 80 pièces à gagner selon la difficulté. L’ordinateur joue 1 Peu commune et 2 Communes en Facile, 2 Rares et 1 Peu commune en Normal, 3 Épiques en Difficile, et les meilleures cartes du jeu en Impossible et Hardcore.</p>
+                </article>
+                <article>
+                    <h3 data-i18n>🎲 Draft</h3>
+                    <p data-i18n="regle-draft">Pas besoin de collection : on te propose 3 cartes, tu en prends une, trois fois de suite (2 % Mythique, 8 % Légendaire, 20 % Épique, 30 % Rare, 25 % Peu commune, 15 % Commune, et 10 % de holos). L’ordinateur fait son draft avec les mêmes chances, puis la partie se joue comme un duel de decks. 15 pièces à gagner. Les cartes du draft ne rejoignent pas ta collection.</p>
+                </article>
+                <article>
+                    <h3 data-i18n>🏷 Marché du jour</h3>
+                    <p data-i18n="regle-marche">En haut du catalogue, chaque jour : une Rare, une Épique et une Légendaire que tu n’as pas encore, à moitié prix. Chaque offre ne s’achète qu’une fois, et le marché se renouvelle à minuit.</p>
                 </article>
                 <article>
                     <h3 data-i18n>✨ God pack</h3>
@@ -397,19 +406,15 @@
                 </article>
                 <article>
                     <h3 data-i18n>🏆 Succès</h3>
-                    <p data-i18n="regle-succes">Une trentaine d’objectifs (collection, boosters, duels, Plus ou moins). Quand un succès est atteint, va dans l’onglet Profil pour récupérer sa récompense : des pièces, des boosters, des Prestiges, et même une carte Full Art au hasard.</p>
+                    <p data-i18n="regle-succes">Une trentaine d’objectifs (collection, boosters, duels, draft). Quand un succès est atteint, va dans l’onglet Profil pour récupérer sa récompense : des pièces, des boosters, des Prestiges, et même une carte Full Art au hasard.</p>
                 </article>
                 <article>
                     <h3 data-i18n>💰 Gains du jour</h3>
-                    <p data-i18n="regle-gains">Dans chaque mode (duel, duel de decks, Plus ou moins), ta première victoire du jour rapporte le triple. Les suivantes rapportent le gain normal jusqu’à la 5ᵉ, la moitié jusqu’à la 15ᵉ, puis 10 % jusqu’au lendemain : de quoi jouer autant que tu veux, sans farmer. Tout repart à zéro chaque jour à minuit.</p>
+                    <p data-i18n="regle-gains">Dans chaque mode (duel, duel de decks, draft), ta première victoire du jour rapporte le triple. Les suivantes rapportent le gain normal jusqu’à la 5ᵉ, la moitié jusqu’à la 15ᵉ, puis 10 % jusqu’au lendemain : de quoi jouer autant que tu veux, sans farmer. Tout repart à zéro chaque jour à minuit.</p>
                 </article>
                 <article>
                     <h3 data-i18n>🍀 Compteur de malchance</h3>
                     <p data-i18n="regle-malchance">Après 50 boosters sans Légendaire ni Mythique, le suivant en contient une à coup sûr. Le compteur est affiché sur l’accueil.</p>
-                </article>
-                <article>
-                    <h3 data-i18n>❓ Plus ou moins</h3>
-                    <p data-i18n="regle-pom">Deux jeux, une question : lequel a le plus d’avis, le mieux noté, le plus ancien ? La série s’arrête à la première erreur. Elle rapporte des pièces à 5 bonnes réponses d’affilée (5 pièces), 10 (15), 20 (40), puis 40 toutes les 10.</p>
                 </article>
                 <article>
                     <h3 data-i18n>💰 Revente</h3>
@@ -431,6 +436,14 @@
             <h2 class="profil-titre" data-i18n-texte>Succès <span id="succes-compte"></span>
                 <button class="btn btn-or" id="btn-tout-recuperer" hidden data-i18n>Tout récupérer</button></h2>
             <div class="succes-grille" id="succes-grille"></div>
+
+            <h2 class="profil-titre" data-i18n>Code cadeau</h2>
+            <div class="profil-bloc">
+                <form class="code-cadeau" id="form-code">
+                    <input type="text" id="code-cadeau" placeholder="Entre ton code" aria-label="Code cadeau" autocomplete="off" spellcheck="false" data-i18n-attr="placeholder,aria-label">
+                    <button class="btn btn-or" data-i18n>Utiliser</button>
+                </form>
+            </div>
 
             <h2 class="profil-titre" data-i18n>Réglages</h2>
             <div class="profil-bloc">
@@ -488,7 +501,7 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="i18n.js?v=24"></script>
-    <script src="script.js?v=134"></script>
+    <script src="i18n.js?v=28"></script>
+    <script src="script.js?v=139"></script>
 </body>
 </html>
