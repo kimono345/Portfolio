@@ -225,7 +225,6 @@ const CULTES_EPIQUES = [
     460790,  // Bayonetta
     3830,    // Psychonauts
     1213210, // Command & Conquer Remastered
-    221910,  // The Stanley Parable
     1693980, // Dead Space (2023)
     2252570, // Football Manager 2024
     1388880, // Doki Doki Literature Club Plus!
@@ -256,14 +255,14 @@ const STATS_FORCEES = {
     //2357570: { attaque: 75, popularite: 88 }, // Overwatch 2 : le CSV date d'avant sa sortie sur Steam
     72850: { attaque: 84 },                   // The Elder Scrolls V: Skyrim (2011)
     12210: { attaque: 93 },                   // GTA IV : note Steam plombée par le portage PC (98 sur Metacritic)
-    319510: { attaque: 92, popularite: 96 },             // Five Nights at Freddy's : phénomène bien au-delà de ses avis Steam
+    319510: { attaque: 92, popularite: 94 },             // Five Nights at Freddy's : phénomène bien au-delà de ses avis Steam
     332800: { popularite: 88 },               // Five Nights at Freddy's 2 : porté par le phénomène FNAF
     388090: { popularite: 86 },               // Five Nights at Freddy's 4
     814380: { attaque: 93 },                  // Sekiro : GOTY 2019, ex-Mythique
     // Mythiques anciennes : leur notoriété dépasse leurs avis Steam (surtout joués sur console)
-    33230: { popularite: 96 },                // Assassin's Creed II
-    10180: { popularite: 94 },                // Call of Duty: Modern Warfare 2 (2009)
-    39140: { popularite: 92 },                // Final Fantasy VII
+    33230: { popularite: 94 },                // Assassin's Creed II
+    10180: { popularite: 92 },                // Call of Duty: Modern Warfare 2 (2009)
+    39140: { popularite: 90 },                // Final Fantasy VII
     1328670: { attaque: 95 },                  // mass effect
     304240: { popularite: 92 },               // Resident Evil (1996) : le fondateur du survival horror
 };
@@ -483,8 +482,9 @@ function sauvegarder() {
 
 // ---------- Cartes ----------
 
-// Popularité sur une échelle logarithmique : 1 avis → 0, 1 000 → 50, 1 million → 100
-const popularite = avis => Math.round(echelleLog(avis, 1e6));
+// Popularité sur une échelle logarithmique : 1 avis → 0, 1 000 → 48, 2 millions → 100
+// (au-delà d'un million d'avis, les géants restent départagés au lieu de tous plafonner à 100)
+const popularite = avis => Math.round(echelleLog(avis, 2e6));
 // Stat Popularité d'une carte, gardée en mémoire sur le jeu (le tri du catalogue la demande pour 115 000 jeux)
 const statPopularite = jeu => (jeu.statPopularite ??= STATS_FORCEES[jeu.id]?.popularite ?? statDeJeu(popularite(jeu.avis), jeu.rarete));
 // Stat Qualité d'une carte, gardée en mémoire de la même façon (tri du catalogue)
