@@ -255,16 +255,39 @@ const STATS_FORCEES = {
     //2357570: { attaque: 75, popularite: 88 }, // Overwatch 2 : le CSV date d'avant sa sortie sur Steam
     72850: { attaque: 84 },                   // The Elder Scrolls V: Skyrim (2011)
     12210: { attaque: 93 },                   // GTA IV : note Steam plombée par le portage PC (98 sur Metacritic)
-    319510: { attaque: 92, popularite: 94 },             // Five Nights at Freddy's : phénomène bien au-delà de ses avis Steam
     332800: { popularite: 87 },               // Five Nights at Freddy's 2 : porté par le phénomène FNAF
     388090: { popularite: 85 },               // Five Nights at Freddy's 4
     814380: { attaque: 93 },                  // Sekiro : GOTY 2019, ex-Mythique
-    // Mythiques anciennes : leur notoriété dépasse leurs avis Steam (surtout joués sur console)
-    33230: { popularite: 94 },                // Assassin's Creed II
-    10180: { popularite: 92 },                // Call of Duty: Modern Warfare 2 (2009)
-    39140: { popularite: 90 },                // Final Fantasy VII
-    1328670: { attaque: 95 },                  // mass effect
     304240: { popularite: 92 },               // Resident Evil (1996) : le fondateur du survival horror
+
+    // Mythiques : leurs vraies stats Steam, ajustées de quelques points seulement. Elles ne sont pas toutes
+    // aussi fortes : (Qualité + Popularité) de 192 à 194 pour les titans, 188 à 191 pour le cœur,
+    // 185 à 187 pour les classiques surtout joués sur console (leurs chiffres Steam les sous-estiment déjà).
+    // Titans
+    1086940: { attaque: 97, popularite: 97 }, // Baldur's Gate 3 (194)
+    292030: { attaque: 96, popularite: 97 },  // The Witcher 3: Wild Hunt (193)
+    1245620: { attaque: 98, popularite: 98 }, // Elden Ring (196)
+    105600: { attaque: 95, popularite: 98 },  // Terraria (193)
+    620: { attaque: 99, popularite: 93 },     // Portal 2 (192)
+    4000: { attaque: 94, popularite: 98 },    // Garry's Mod (192)
+    1174180: { attaque: 95, popularite: 97 }, // Red Dead Redemption 2 (192)
+    // Cœur
+    489830: { attaque: 95, popularite: 96 },  // The Elder Scrolls V: Skyrim Special Edition (191)
+    220: { attaque: 98, popularite: 92 },     // Half-Life 2 (190)
+    391540: { attaque: 97, popularite: 93 },  // Undertale (190)
+    1593500: { attaque: 96, popularite: 94 }, // God of War (190)
+    271590: { attaque: 90, popularite: 100 }, // Grand Theft Auto V (190)
+    1903340: { attaque: 97, popularite: 92 }, // Clair Obscur: Expedition 33 (189)
+    379720: { attaque: 96, popularite: 93 },  // DOOM (189)
+    730: { attaque: 88, popularite: 100 },    // Counter-Strike 2 (188)
+    // Classiques de console, et Cyberpunk (lancement raté)
+    10180: { attaque: 94, popularite: 93 },   // Call of Duty: Modern Warfare 2 (2009) (187)
+    319510: { attaque: 91, popularite: 96 },  // Five Nights at Freddy's (187)
+    1091500: { attaque: 89, popularite: 97 }, // Cyberpunk 2077 (186)
+    254700: { attaque: 94, popularite: 92 },  // Resident Evil 4 (2005) (186)
+    39140: { attaque: 94, popularite: 91 },   // Final Fantasy VII (185)
+    33230: { attaque: 90, popularite: 95 },   // Assassin's Creed II (185)
+    1328670: { attaque: 95, popularite: 90 }, // Mass Effect Legendary Edition (185)
 };
 
 // Score de prestige des autres jeux : 75 % popularité + 25 % qualité + bonus
