@@ -994,32 +994,35 @@ main {
     box-shadow: 0 0 18px color-mix(in srgb, var(--promo) 30%, transparent), 0 10px 26px rgba(0, 0, 0, 0.6);
 }
 
-/* 2. Néon GameCards : un cadre large, rayé façon « tech », où la lumière cyan → magenta fait le tour */
+/* 2. Rainbow Rare : un cadre large et rayé, arc-en-ciel pastel presque blanc (comme les cartes Pokémon), où la lumière fait le tour */
 @property --angle-promo { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
 .carte.promo-neon {
-    --rar: var(--neon-1);
+    --rar: #ffc6ff;
+    --pastels: #ffb3d9, #ffd6a5, #fdffb6, #caffbf, #9bf6ff, #a0c4ff, #bdb2ff, #ffc6ff, #ffb3d9;
     padding: 8px;
     background:
-        repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0 2px, transparent 2px 8px),
-        conic-gradient(from var(--angle-promo), var(--neon-1), #7a3cd6, var(--neon-2), #ff8a3d, var(--neon-2), #7a3cd6, var(--neon-1));
-    box-shadow: 0 0 20px color-mix(in srgb, var(--neon-1) 55%, transparent), 0 0 42px color-mix(in srgb, var(--neon-2) 45%, transparent), 0 10px 26px rgba(0, 0, 0, 0.6);
-    animation: neon-promo 5s linear infinite;
+        repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0 2px, transparent 2px 8px),
+        conic-gradient(from var(--angle-promo), var(--pastels));
+    box-shadow: 0 0 20px rgba(255, 214, 240, 0.45), 0 0 42px rgba(160, 196, 255, 0.35), 0 10px 26px rgba(0, 0, 0, 0.6);
+    animation: neon-promo 6s linear infinite;
     animation-play-state: var(--effets);
 }
 @keyframes neon-promo { to { --angle-promo: 360deg; } }
-/* Le néon déborde un peu vers l'intérieur de l'illustration */
+/* La lumière pastel déborde un peu vers l'intérieur de l'illustration */
 .carte.promo-neon .carte-corps {
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5), inset 0 0 18px color-mix(in srgb, var(--neon-1) 55%, transparent), inset 0 -10px 26px color-mix(in srgb, var(--neon-2) 35%, transparent);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6), inset 0 0 18px rgba(255, 220, 245, 0.45);
 }
-/* « PROMO #001 » aux couleurs du cadre : dégradé cyan → magenta */
+/* « PROMO #001 » aux couleurs du cadre */
 .carte.promo-neon .carte-rarete {
-    background: linear-gradient(90deg, var(--neon-1), var(--neon-2));
+    background: linear-gradient(90deg, #ffb3d9, #fdffb6, #9bf6ff, #bdb2ff);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
 }
+/* Illustration délavée et éclaircie, pour que le voile pastel la recolore entièrement */
+.carte.promo-neon .full-art-fond img { filter: brightness(1.2) contrast(0.82); }
 
-/* Effet « Rainbow Rare » aux couleurs néon : deux calques entre l'illustration et le texte.
+/* Effet « Rainbow Rare » : deux calques entre l'illustration et le texte.
    --mx / --my suivent la souris (inclinerVers) ; sur écran tactile, ils balaient la carte tout seuls */
 @property --mx { syntax: '<percentage>'; inherits: true; initial-value: 50%; }
 @property --my { syntax: '<percentage>'; inherits: true; initial-value: 40%; }
@@ -1028,18 +1031,18 @@ main {
     transition: transform 0.18s ease-out;
 }
 .carte.promo-neon .carte-corps > :not(.full-art-fond):not(.ruban-goty) { z-index: 2; }
-/* 1. Voile pastel cyan → violet → magenta sur toute l'illustration ; les couleurs glissent avec l'angle */
-.carte.promo-neon .carte-corps::before {
+/* 1. Voile arc-en-ciel pastel sur toute l'illustration ; les couleurs glissent avec l'angle */
+.carte.promo-neon.full-art .carte-corps::before { /* .full-art cache ce calque par défaut */
     content: '';
     display: block;
     position: absolute;
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    background: linear-gradient(125deg, #00e5ff, #8b5cff, #ff2bd6, #ffb0e8, #00e5ff, #8b5cff, #ff2bd6)
+    background: linear-gradient(125deg, var(--pastels), #ffd6a5, #fdffb6, #caffbf, #9bf6ff)
         calc(100% - var(--mx)) calc(100% - var(--my)) / 300% 300%;
     mix-blend-mode: color;
-    opacity: 0.6;
+    opacity: 0.85;
 }
 /* 2 et 3. Surface gravée (fines ondes) qui s'allume sous la lumière, et reflet qui suit la souris */
 .carte.promo-neon .carte-corps::after {
