@@ -342,6 +342,11 @@ const CODES_CADEAUX = {
     VALORANT: { promo: -900003 },
     GENSHIN: { promo: -900004 },
     FORTNITE: { promo: -900005 },
+    PACMAN: { promo: -900101 },
+    SUPERMARIO: { promo: -900102 },
+    TETRIS: { promo: -900103 },
+    POKEMON: { promo: -900104 },
+    ZELDA: { promo: -900105 },
 };
 // Cartes promo (rareté Promo) : une édition spéciale d'un jeu, distincte de sa carte normale (identifiant à part, négatif),
 // obtenue seulement avec un code cadeau ({ promo: identifiant }) : jamais dans les boosters, le catalogue ni le draft.
@@ -374,8 +379,20 @@ const PROMOS = {
         jeu: { nom: 'Genshin Impact', annee: 2020, metacritic: 84, genres: ['Action', 'Aventure', 'RPG', 'Free-to-play'], tags: ['Monde ouvert', 'Anime', 'Fantasy', 'Coopération'] } },
     [-900005]: { serie: 2, numero: 5, stats: { attaque: 78, popularite: 99 }, image: 'promos/s2-005.png', site: 'https://www.fortnite.com',
         jeu: { nom: 'Fortnite', annee: 2017, metacritic: 81, genres: ['Action', 'Free-to-play'], tags: ['Battle royale', 'Tir', 'Bac à sable', 'Multijoueur', 'Coopération', 'Comédie'] } },
+
+    // Série 3 « Rétro » : les classiques d'avant 2000, hors Steam (identifiants -900101…)
+    [-900101]: { serie: 3, numero: 1, stats: { attaque: 83, popularite: 96 }, image: 'promos/s3-001.jpg', site: 'https://pacman.com',
+        jeu: { nom: 'PAC-MAN', annee: 1980, genres: ['Action', 'Casual'], tags: ['Pixel art'] } },
+    [-900102]: { serie: 3, numero: 2, stats: { attaque: 91, popularite: 98 }, image: 'promos/s3-002.jpg', site: 'https://mario.nintendo.com',
+        jeu: { nom: 'Super Mario Bros.', annee: 1985, genres: ['Action', 'Aventure'], tags: ['Plateforme', 'Pixel art'] } },
+    [-900103]: { serie: 3, numero: 3, stats: { attaque: 86, popularite: 97 }, image: 'promos/s3-003.jpg', site: 'https://tetris.com',
+        jeu: { nom: 'Tetris', annee: 1984, genres: ['Casual', 'Stratégie'], tags: ['Réflexion', 'Pixel art'] } },
+    [-900104]: { serie: 3, numero: 4, stats: { attaque: 89, popularite: 98 }, image: 'promos/s3-004.jpg?v=2', site: 'https://www.pokemon.com',
+        jeu: { nom: 'Pokémon Rouge / Bleu', annee: 1996, genres: ['RPG', 'Aventure'], tags: ['JRPG', 'Tour par tour', 'Pixel art'] } },
+    [-900105]: { serie: 3, numero: 5, stats: { attaque: 98, popularite: 90 }, image: 'promos/s3-005.jpg', site: 'https://www.zelda.com',
+        jeu: { nom: 'The Legend of Zelda: Ocarina of Time', annee: 1998, metacritic: 99, genres: ['Action', 'Aventure'], tags: ['Fantasy', 'Réflexion'] } },
 };
-// Carte promo d'une carte (ou undefined) ; une promo sans `steam` est un jeu hors Steam (série 2)
+// Carte promo d'une carte (ou undefined) ; une promo sans `steam` est un jeu hors Steam (séries 2 et 3)
 const promoDe = carte => PROMOS[carte.id];
 const horsSteam = carte => Boolean(promoDe(carte)) && !promoDe(carte).steam;
 // « S1 · #001 » : série, puis numéro dans la série
@@ -543,7 +560,7 @@ const etat = {
         ...lire(CLES.charges, {}),
     },
     godPacks: lire(CLES.godPacks, { nombre: 0, premier: null }), // trophée : combien, et la date du premier
-    stats: { boosters: 0, prestiges: 0, duelsGagnes: 0, duelsParfaits: 0, ventes: 0, decksGagnes: 0, decksHardcore: 0, draftsGagnes: 0, ...lire(CLES.stats, {}) },
+    stats: { boosters: 0, prestiges: 0, duelsGagnes: 0, duelsParfaits: 0, ventes: 0, decksGagnes: 0, decksHardcore: 0, draftsGagnes: 0, defisGagnes: 0, ...lire(CLES.stats, {}) },
     succes: lire(CLES.succes, {}),        // { id du succès: date d'obtention }
     // { id du succès: date de récupération de la récompense }. Les anciennes sauvegardes avaient reçu
     // leurs récompenses tout de suite : leurs succès déjà obtenus comptent comme récupérés.
@@ -2110,7 +2127,7 @@ const completeSynergie = (choisies, carte) => choisies.length === TAILLE_DECK - 
 const BADGE_SYNERGIE = `<span class="badge-synergie" aria-hidden="true">✦ +${BONUS_SYNERGIE}</span>`;
 
 // Boutons d'attaque : une stat par bouton, avec sa valeur sur la carte (`attribut` : data-stat ou data-stat-deck)
-const boutonsStatsHTML = (carte, attribut) => Object.entries(STATS).map(([cle, stat]) => `
+const boutonsStatsHTML = (carte, attribut, stats = Object.keys(STATS)) => stats.map(cle => [cle, STATS[cle]]).map(([cle, stat]) => `
         <button class="btn-stat" ${attribut}="${cle}"><span>${stat.icone} ${stat.nom}</span><b>${carte[cle]}</b></button>`).join('');
 
 // Victoire payée selon les gains du jour du mode ; renvoie { pieces, taux }
@@ -2399,10 +2416,14 @@ function recupererSucces(id) {
 // ---------- Paquet Full Art (récompense de succès ou du 7ᵉ jour de connexion) ----------
 
 let fileFullArt = Promise.resolve();
+// Écran où revenir après l'ouverture (booster de série du Défi Promo : la partie), sinon les paquets
+let retourApresOuverture = null;
 
 // La carte arrive dans un paquet irisé à déchirer, puis se révèle face cachée, avec un peu de suspense.
-// `origine` : d'où vient le paquet, rappelé devant la consigne
-async function ouvrirPaquetFullArt(carte, nouvelle, origine) {
+// `origine` : d'où vient le paquet, rappelé devant la consigne ; `paquet`, `aide` et `classe` : pour un autre
+// paquet que le Full Art (booster de série du Défi Promo)
+async function ouvrirPaquetFullArt(carte, nouvelle, origine,
+    { paquet = $('#paquet-full-art'), aide = t('Une carte <b>Full Art</b>… laquelle ?'), classe = '' } = {}) {
     while (ouvertureEnCours) await attendre(300);
     ouvertureEnCours = true;
     location.hash = '#accueil';
@@ -2410,11 +2431,11 @@ async function ouvrirPaquetFullArt(carte, nouvelle, origine) {
     const tirage = [{ carte, fullArt: true, holo: false, ex: false, nouvelle }];
 
     debutOuverture(false);
-    await dechirerPaquet($('#paquet-full-art'), false, `${origine} · `);
+    await dechirerPaquet(paquet, false, `${origine} · `);
     if (!seance.passer) {
         // Le dos de la carte brille de plus en plus fort… puis elle se retourne dans un éclair
-        $('#ouverture-scene').innerHTML = `<div class="revelation-full-art">${flipHTML(carte, { fullArt: true })}</div>`;
-        $('#ouverture-aide').innerHTML = t('Une carte <b>Full Art</b>… laquelle ?');
+        $('#ouverture-scene').innerHTML = `<div class="revelation-full-art ${classe}">${flipHTML(carte, { fullArt: true })}</div>`;
+        $('#ouverture-aide').innerHTML = aide;
         await attendre(2000);
         const scene = $('#ouverture-scene .revelation-full-art');
         if (scene && !seance.passer) {
@@ -2578,17 +2599,19 @@ function afficherProfil() {
     $('#reglage-langue').value = LANGUE;
 }
 
-// Écran « Jouer » : d'abord le choix du mode (mode = null), puis Duel, Duel de decks ou Draft.
+// Écran « Jouer » : d'abord le choix du mode (mode = null), puis Duel, Duel de decks, Draft ou Défi Promo.
 // Une partie en cours reste en mémoire : la reprendre, c'est rechoisir son mode.
-// Le Draft se joue sur la table du duel de decks : passer de l'un à l'autre abandonne la partie en cours.
+// Draft et Défi Promo se jouent sur la table du duel de decks : passer de l'un à l'autre abandonne la partie en cours.
 function changerModeJeu(mode) {
     $('#modes-jeu').hidden = Boolean(mode);
     $('#retour-modes').hidden = !mode;
     $('#mode-duel').hidden = mode !== 'duel';
-    $('#mode-decks').hidden = mode !== 'decks' && mode !== 'draft';
+    const surLaTable = ['decks', 'draft', 'promo'].includes(mode);
+    $('#mode-decks').hidden = !surLaTable;
     if (mode === 'decks' && deckDuel.mode !== 'decks') Object.assign(deckDuel, { mode: 'decks', etape: 'niveau' });
     if (mode === 'draft' && deckDuel.mode !== 'draft') nouveauDraft();
-    if (mode === 'decks' || mode === 'draft') afficherDuelDecks();
+    if (mode === 'promo' && deckDuel.mode !== 'promo') Object.assign(deckDuel, { mode: 'promo', etape: 'serie' });
+    if (surLaTable) afficherDuelDecks();
 }
 
 // ---------- Duel de decks ----------
@@ -2626,7 +2649,7 @@ const TRIS_DECK = {
 };
 
 const deckDuel = {
-    mode: 'decks',   // 'decks' (deck de ta collection) ou 'draft'
+    mode: 'decks',   // 'decks' (deck de ta collection), 'draft' ou 'promo' (Défi Promo)
     // Draft en cours : { propositions (les 3 cartes du choix), moi, ordi (cartes prises), exclus (jeux déjà sortis) }
     draft: null,
     etape: 'niveau', niveau: null, choix: [], dernierAjout: null, recherche: '', tri: 'total', limite: CARTES_CHOIX_DECK,
@@ -2643,6 +2666,10 @@ const deckDuel = {
 };
 
 const totalStats = c => STATS_DECK.reduce((n, s) => n + valeurCombat(c, s), 0);
+// Défi Promo à stat imposée : seule cette stat se joue, manche décisive comprise
+const statImposee = () => (deckDuel.mode === 'promo' ? deckDuel.niveau?.stat : null) ?? null;
+const statsPartie = () => (statImposee() ? [statImposee()] : STATS_DECK);
+const valeurDecisive = c => (statImposee() ? valeurCombat(c, statImposee()) : totalStats(c));
 const autoriseeAuNiveau = (rarete, niveau) => indexRarete(rarete === 'promo' ? PLAFOND_PROMO : rarete) >= indexRarete(niveau.max);
 const cartesDuNiveau = niveau => possedees().filter(e => autoriseeAuNiveau(e.rarete, niveau));
 // Cartes de ces jeux, de la meilleure à la moins bonne (total des stats)
@@ -2714,10 +2741,10 @@ function coupOrdi(role, stat) {
     const d = deckDuel;
     const malin = Math.random() < d.niveau.intelligence;
     if (role === 'attaque') {
-        if (!malin) return { carte: auHasard(d.ordi), stat: auHasard(STATS_DECK) };
+        if (!malin) return { carte: auHasard(d.ordi), stat: auHasard(statsPartie()) };
         let meilleur = null;
         for (const carte of d.ordi) {
-            for (const s of STATS_DECK) {
+            for (const s of statsPartie()) {
                 if (!meilleur || valeurCombat(carte, s) > valeurCombat(meilleur.carte, meilleur.stat)) meilleur = { carte, stat: s };
             }
         }
@@ -2772,6 +2799,7 @@ function choixDeckHTML() {
     return `
         <p class="duel-message">${t('Niveau {niveau} : clique sur tes cartes pour remplir les {n} emplacements de ton deck.',
             { niveau: d.niveau.nom, n: TAILLE_DECK })}</p>
+        ${regleDefiHTML()}
         ${etatSynergieHTML(choisies)}
         <div class="deck-slots${tagSynergie(choisies) ? ' synergie' : ''}">${Array.from({ length: TAILLE_DECK }, (_, i) => {
             const carte = etat.collection[d.choix[i]];
@@ -2783,7 +2811,9 @@ function choixDeckHTML() {
                 : `<div class="deck-slot"><span>${i + 1}</span></div>`;
         }).join('')}</div>
         <div class="duel-actions">
-            <button class="btn" data-deck-action="niveaux">${t('Changer de difficulté')}</button>
+            ${d.mode === 'promo'
+                ? `<button class="btn" data-deck-action="series">${t('Changer de série')}</button>`
+                : `<button class="btn" data-deck-action="niveaux">${t('Changer de difficulté')}</button>`}
             <button class="btn btn-principal" data-deck-action="lancer"${d.choix.length === TAILLE_DECK ? '' : ' disabled'}>${t('Lancer la partie')}</button>
         </div>
         <div class="deck-outils">
@@ -2806,10 +2836,14 @@ function actionsDeckHTML() {
     const d = deckDuel;
     if (d.verrou) return '';
     if (d.attente === 'attaque' && d.carte !== null) {
-        return boutonsStatsHTML(d.moi[d.carte], 'data-stat-deck');
+        return boutonsStatsHTML(d.moi[d.carte], 'data-stat-deck', statsPartie());
     }
     if (d.actions === 'suivante') return `<button class="btn btn-principal btn-grand" data-deck-action="suivante">${t('Manche suivante')}</button>`;
     if (d.actions === 'decisive') return `<button class="btn btn-principal btn-grand" data-deck-action="decisive">${t('Révéler les dernières cartes')}</button>`;
+    if (d.actions === 'fin' && d.mode === 'promo') {
+        return `<button class="btn btn-principal btn-grand" data-deck-action="rejouer">${t('Rejouer')}</button>
+            <button class="btn" data-deck-action="series">${t('Changer de série')}</button>`;
+    }
     if (d.actions === 'fin' && d.mode === 'draft') {
         return `<button class="btn btn-principal btn-grand" data-deck-action="draft">${t('Nouveau draft')}</button>`;
     }
@@ -2839,7 +2873,7 @@ function etatSynergieHTML(choisies) {
 function annonceStatHTML() {
     const c = deckDuel.combat;
     if (!c) return '<div class="stat-annoncee vide"></div>';
-    if (c.stat === null) return `<div class="stat-annoncee">Σ <b>${t('Manche décisive : total des stats')}</b></div>`;
+    if (c.stat === null) return `<div class="stat-annoncee">Σ <b>${statImposee() ? t('Manche décisive : {stat}', { stat: STATS[statImposee()].nom }) : t('Manche décisive : total des stats')}</b></div>`;
     const ordi = c.par === 'ordi';
     return `<div class="stat-annoncee${ordi ? ' par-ordi' : ''}">⚔ <span>${ordi ? t('Attaque de l’ordinateur :') : t('Ton attaque :')}</span>
         <b>${STATS[c.stat].icone} ${STATS[c.stat].nom}</b></div>`;
@@ -2866,7 +2900,7 @@ function plateauDeckHTML() {
     const dos = '<div class="dos-carte" aria-hidden="true"><span>GC</span></div>';
     const resultat = qui => (!c || !c.ecart ? '' : (qui === 'moi') === (c.ecart > 0) ? ' gagne' : ' perd');
     // Manche décisive : le total des stats s'affiche sur chaque carte
-    const total = carte => (c && c.stat === null && carte ? `<span class="total-deck">Σ ${totalStats(carte)}</span>` : '');
+    const total = carte => (c && c.stat === null && carte ? `<span class="total-deck">Σ ${valeurDecisive(carte)}</span>` : '');
     // Sa holo ou son Full Art n'apparaissent qu'une fois la carte retournée, avec la pastille de bonus
     const variantesCarteOrdi = c?.ordi && { holo: c.ordi.holos > 0, fullArt: c.ordi.fullArts > 0, bonus: bonusCombat(c.ordi) };
     const carteOrdi = !c?.ordi ? '' : c.revele ? flipHTML(c.ordi, variantesCarteOrdi) : c.cache ? dos : carteHTML(c.ordi, variantesCarteOrdi);
@@ -2887,6 +2921,7 @@ function plateauDeckHTML() {
             <div class="duel-joueur-score"><span>${t('Ordi')}</span><div class="pips">${pips('ordi')}</div></div>
         </div>
         ${synergiesPartieHTML()}
+        ${regleDefiHTML()}
         <div class="decks-main decks-ordi">${mainOrdi.map(() => dos).join('')}</div>
         ${table}
         <p class="duel-message${d.actions === 'fin' ? ' resultat-final' : ''}">${d.message}</p>
@@ -2911,6 +2946,7 @@ function afficherDuelDecks() {
     const d = deckDuel;
     const zone = $('#mode-decks');
     if (d.etape === 'niveau') zone.innerHTML = niveauxDeckHTML();
+    else if (d.etape === 'serie') zone.innerHTML = seriesDefiHTML();
     else if (d.etape === 'deck') zone.innerHTML = choixDeckHTML();
     else if (d.etape === 'draft') zone.innerHTML = draftHTML();
     else {
@@ -2927,7 +2963,8 @@ function lancerPartieDecks() {
     const d = deckDuel;
     d.choix = d.choix.filter(id => etat.collection[id]);
     if (!donneesPretes() || d.choix.length < TAILLE_DECK) return afficherDuelDecks();
-    demarrerPartieDecks(d.choix.map(id => ({ ...etat.collection[id] })), variantesOrdi(deckOrdinateur(d.niveau), d.niveau));
+    const ordi = d.mode === 'promo' ? deckDefiPromo(d.niveau.serie) : variantesOrdi(deckOrdinateur(d.niveau), d.niveau);
+    demarrerPartieDecks(d.choix.map(id => ({ ...etat.collection[id] })), ordi);
 }
 
 // Début d'une partie (duel de decks ou draft) : le premier attaquant est tiré au sort,
@@ -2996,13 +3033,164 @@ function draftHTML() {
             </button>`).join('')}</div>`;
 }
 
+// ---------- Défi Promo ----------
+
+// Un défi par série de promos, avec toute ta collection (pas de plafond de rareté) : une règle spéciale
+// et un deck adverse propres à la série. `stat` : la seule stat jouée ; `deck` : comment l'ordinateur compose le sien
+const DEFIS_PROMO = {
+    1: { deck: 'top', regle: t('Pas de règle spéciale : l’ordinateur joue une des cartes les plus fortes du jeu dans chaque stat (Qualité, Popularité, Ancienneté), toutes en holo ou Full Art.') },
+    2: { deck: 'synergie', stat: 'popularite', regle: t('Seule la Popularité compte. L’ordinateur joue 3 Légendaires ou Mythiques Full Art qui partagent un thème (synergie +1).') },
+    3: { deck: 'anciens', stat: 'anciennete', regle: t('Seule l’Ancienneté compte. L’ordinateur joue les plus vieilles Légendaires et Mythiques, en holo.') },
+};
+const defiDeSerie = serie => DEFIS_PROMO[serie] ?? DEFIS_PROMO[1];
+// Récompense d'une victoire, tirée au hasard (chances en %) : un booster pour la réserve, des pièces,
+// ou un booster de la série avec une de ses promos (doublons gardés)
+const RECOMPENSES_DEFI = [
+    { id: 'booster', chance: 60 },
+    { id: 'pieces', chance: 30, pieces: 200 },
+    { id: 'serie', chance: 10 },
+];
+const seriesPromo = () => [...new Set(Object.values(PROMOS).map(p => p.serie))].sort((a, b) => a - b);
+const promosDeSerie = serie => Object.keys(PROMOS).map(Number).filter(id => PROMOS[id].serie === serie && jeuxParId.get(id));
+const niveauDefi = serie => ({ id: `defi-${serie}`, serie, nom: t('Série {n}', { n: serie }), max: 'mythique', intelligence: 1, stat: defiDeSerie(serie).stat ?? null });
+
+// Légendaires et Mythiques du jeu, calculées une seule fois
+let cartesHautesCache = null;
+const cartesHautes = () => (cartesHautesCache ??= tousLesJeux.filter(j => estHauteRarete(j.rarete)).map(j => creerCarte(j)));
+
+// Deck de l'ordinateur selon la série, sur des copies (holo et Full Art posés dessus)
+function deckDefiPromo(serie) {
+    const force = c => c.attaque + c.popularite;
+    const parmi = (cartes, n) => melanger(cartes.slice(0, n)).slice(0, TAILLE_DECK);
+    const regle = defiDeSerie(serie);
+    if (regle.deck === 'synergie') {
+        // Un genre ou thème partagé par au moins 3 des cartes les plus populaires ; 3 de ses 5 meilleures
+        const populaires = [...cartesHautes()].sort((a, b) => b.popularite - a.popularite).slice(0, 80);
+        const parTag = {};
+        for (const c of populaires) for (const tag of [...c.genres, ...(c.tags || [])]) (parTag[tag] ??= []).push(c);
+        const groupe = auHasard(Object.values(parTag).filter(g => g.length >= TAILLE_DECK));
+        return parmi(groupe, 5).map(c => ({ ...c, fullArts: 1 }));
+    }
+    if (regle.deck === 'anciens') {
+        const anciens = [...cartesHautes()].sort((a, b) => b.anciennete - a.anciennete || force(b) - force(a));
+        return parmi(anciens, 8).map(c => ({ ...c, holos: 1 }));
+    }
+    // Un spécialiste par stat : une carte au hasard parmi les 5 meilleures en Qualité, puis en Popularité,
+    // puis en Ancienneté (à égalité, la plus forte), sans prendre deux fois le même jeu
+    const deck = [];
+    for (const stat of STATS_DECK) {
+        const meilleures = [...cartesHautes()].filter(c => !deck.some(d => d.id === c.id))
+            .sort((a, b) => b[stat] - a[stat] || force(b) - force(a));
+        deck.push(auHasard(meilleures.slice(0, 5)));
+    }
+    return deck.map(c => ({ ...c, ...(Math.random() < 0.5 ? { holos: 1 } : { fullArts: 1 }) }));
+}
+
+const regleDefiHTML = () => (deckDuel.mode === 'promo' && deckDuel.niveau
+    ? `<p class="defi-regle">${defiDeSerie(deckDuel.niveau.serie).regle}</p>` : '');
+
+function seriesDefiHTML() {
+    const assez = possedees().length >= TAILLE_DECK;
+    return `
+        <p class="duel-message">${t('Choisis une série et affronte son défi avec toute ta collection. Victoire : un booster, des pièces, ou parfois un booster de la série avec une de ses cartes promo.')}</p>
+        <div class="defis-promo">${seriesPromo().map(serie => {
+            const ids = promosDeSerie(serie);
+            if (!ids.length) return '';
+            const possedes = ids.filter(id => etat.collection[id]).length;
+            return `
+            <button class="defi-promo" data-serie="${serie}"${assez ? '' : ' disabled'}>
+                <span class="defi-apercu" aria-hidden="true">${carteHTML(creerCarte(jeuxParId.get(ids[0])))}</span>
+                <b class="titre-serie serie-${serie}">${t('Série {n}', { n: serie })}</b>
+                <span>${defiDeSerie(serie).regle}</span>
+                <small>${t('{a} / {b} promos', { a: possedes, b: ids.length })}</small>
+            </button>`;
+        }).join('')}</div>
+        ${assez ? '' : `<p class="duel-message">${t('Il te faut au moins {n} cartes dans ta collection.', { n: TAILLE_DECK })}</p>`}`;
+}
+
+function tirerRecompenseDefi() {
+    let tirage = Math.random() * 100;
+    return RECOMPENSES_DEFI.find(r => (tirage -= r.chance) < 0) ?? RECOMPENSES_DEFI[0];
+}
+
+// Récompense d'une victoire, versée tout de suite (rien n'est perdu si la fenêtre est fermée) puis annoncée
+// dans une fenêtre : un booster rejoint la réserve, les pièces le compte, une promo la collection.
+// Renvoie la phrase du résultat
+function recompenseDefi(serie) {
+    const recompense = tirerRecompenseDefi();
+    let promo = null;
+    if (recompense.id === 'pieces') etat.pieces += recompense.pieces;
+    else if (recompense.id === 'booster') etat.charges.standard.charges++;
+    else {
+        const carte = creerCarte(jeuxParId.get(auHasard(promosDeSerie(serie))));
+        promo = { carte, serie, nouvelle: ajouterACollection(carte, false, true) }; // toutes les promos sont Full Art
+    }
+    sauvegarder();
+    majEntete();
+    verifierSucces();
+    const texte = {
+        pieces: t('+{n} pièces', { n: recompense.pieces }),
+        booster: t('+1 booster ajouté à ta réserve'),
+        serie: t('Un booster Série {n} !', { n: serie }),
+    }[recompense.id];
+    setTimeout(() => annoncerRecompenseDefi(texte, promo), 900);
+    return t('Récompense : <b>{texte}</b>', { texte });
+}
+
+// Promo du booster de série, révélée après le « OK » de la fenêtre
+let promoARevele = null;
+
+function annoncerRecompenseDefi(texte, promo) {
+    promoARevele = promo;
+    jouerSon('succes');
+    $('#modale-contenu').innerHTML = `
+        <div class="echange echange-resultat recompense-defi">
+            <h2>${t('Victoire !')}</h2>
+            <p class="echange-intro">${t('Ta récompense :')}</p>
+            <p class="recompense-defi-gain">${promo ? '🎁' : texte.includes('booster') ? '📦' : '🪙'} <b>${texte}</b></p>
+            ${promo ? `<p class="echange-intro">${t('Il contient une carte promo de la série.')}</p>` : ''}
+            <div class="echange-actions"><button class="btn btn-principal" data-recompense-ok>${promo ? t('Ouvrir') : 'OK'}</button></div>
+        </div>`;
+    ouvrirModale();
+}
+
+// « OK » : fermeture ; « Ouvrir » (booster de série) : on déchire son paquet, puis la promo se révèle,
+// comme un paquet Full Art (sans son halo arc-en-ciel). Le bouton « Retour » ramène ensuite à la partie
+function validerRecompenseDefi() {
+    const promo = promoARevele;
+    promoARevele = null;
+    $('#modale').close();
+    if (!promo) return;
+    retourApresOuverture = location.hash || '#duel';
+    fileFullArt = fileFullArt.then(() => ouvrirPaquetFullArt(promo.carte, promo.nouvelle, t('Booster Série {n}', { n: promo.serie }),
+        { paquet: paquetPromo(promo.serie), aide: t('Une carte <b>Promo</b>… laquelle ?'), classe: 'sans-prisme' }));
+}
+
+// Couleurs du paquet de chaque série (pastel, bleu et or, console grise)
+const FONDS_PAQUET_PROMO = {
+    1: 'linear-gradient(160deg, #ffc6e5 0%, #e3c7ff 50%, #b9d4ff 100%)',
+    2: 'linear-gradient(160deg, #0a1a5c 0%, #1c3faa 55%, #c9a24c 100%)',
+    3: 'linear-gradient(160deg, #d3cfc6 0%, #8f8b82 100%)',
+};
+// Paquet d'un booster de série : le modèle Full Art, recoloré et renommé
+function paquetPromo(serie) {
+    const paquet = $('#paquet-full-art').cloneNode(true);
+    paquet.removeAttribute('id');
+    paquet.classList.add('paquet-promo');
+    paquet.style.setProperty('--fond-paquet', FONDS_PAQUET_PROMO[serie] ?? FONDS_PAQUET_PROMO[1]);
+    paquet.querySelector('.paquet-type').textContent = t('Promo S{n}', { n: serie });
+    return paquet;
+}
+
 // `premiere` : première manche, le gros message dit qui commence
 function mancheDecks(premiere = false) {
     const d = deckDuel;
     Object.assign(d, { carte: null, combat: null, actions: null, attente: null, pointMarque: null });
     if (d.moi.length === 1 && d.score.moi === d.score.ordi) {
         d.actions = 'decisive';
-        d.message = t('Égalité ! Dernière manche : vos dernières cartes se départagent au total de leurs stats.');
+        d.message = statImposee()
+            ? t('Égalité ! Dernière manche : vos dernières cartes se départagent en {stat}.', { stat: STATS[statImposee()].nom })
+            : t('Égalité ! Dernière manche : vos dernières cartes se départagent au total de leurs stats.');
         annonceDeck(t('Manche décisive !'), 'decisive');
     } else if (d.attaquant === 'moi') {
         d.attente = 'attaque';
@@ -3027,7 +3215,8 @@ async function resoudreMancheDecks(carteMoi, carteOrdi, stat) {
     d.verrou = true;
     d.moi = d.moi.filter(c => c !== carteMoi);
     d.ordi = d.ordi.filter(c => c !== carteOrdi);
-    const nomStat = stat ? `${STATS[stat].icone} ${STATS[stat].nom}` : t('Total des stats');
+    const statNommee = stat ?? statImposee();
+    const nomStat = statNommee ? `${STATS[statNommee].icone} ${STATS[statNommee].nom}` : t('Total des stats');
     Object.assign(d, {
         combat: { moi: carteMoi, ordi: carteOrdi, stat, revele: true, arrivee: d.combat?.cache ? 'moi' : 'les-deux', par: d.attaquant },
         attente: null, carte: null, actions: null, pointMarque: null,
@@ -3048,7 +3237,7 @@ async function resoudreMancheDecks(carteMoi, carteOrdi, stat) {
     await attendre(600);
 
     // Résultat
-    const valeur = c => (stat ? valeurCombat(c, stat) : totalStats(c));
+    const valeur = c => (stat ? valeurCombat(c, stat) : valeurDecisive(c));
     let ecart = valeur(carteMoi) - valeur(carteOrdi);
     // Égalité sur une stat annoncée : le défenseur l'emporte (la manche décisive au total reste nulle)
     const egaliteDefendue = !ecart && stat;
@@ -3083,7 +3272,10 @@ function finPartieDecks(carteMoi, carteOrdi, stat) {
         gagnant = ecart > 0 ? 'moi' : ecart < 0 ? 'ordi' : null;
         d.message += ` ${t('Score à égalité : départage au total des stats des dernières cartes ({a} contre {b}).', { a: totalStats(carteMoi), b: totalStats(carteOrdi) })}`;
     }
-    if (gagnant === 'moi') {
+    if (gagnant === 'moi' && d.mode === 'promo') {
+        etat.stats.defisGagnes++;
+        d.message += t('<br><b class="victoire">Victoire {a} à {b} !</b> {recompense}', { a: moi, b: ordi, recompense: recompenseDefi(d.niveau.serie) });
+    } else if (gagnant === 'moi') {
         if (d.mode === 'draft') etat.stats.draftsGagnes++;
         else etat.stats.decksGagnes++;
         if (d.niveau.id === 'hardcore') etat.stats.decksHardcore++;
@@ -3101,13 +3293,17 @@ function finPartieDecks(carteMoi, carteOrdi, stat) {
 function actionDuelDecks(element) {
     const d = deckDuel;
     if (d.verrou) return;
-    const { niveau, choixDeck, carteMain, statDeck, deckAction, draft } = element.dataset;
+    const { niveau, serie, choixDeck, carteMain, statDeck, deckAction, draft } = element.dataset;
     if (draft !== undefined) {
         return choisirDraft(Number(draft));
     } else if (deckAction === 'draft') {
         nouveauDraft();
     } else if (niveau) {
         Object.assign(d, { niveau: NIVEAUX_DECK.find(n => n.id === niveau), choix: [], recherche: '', limite: CARTES_CHOIX_DECK, etape: 'deck' });
+    } else if (serie) {
+        Object.assign(d, { niveau: niveauDefi(Number(serie)), choix: [], recherche: '', limite: CARTES_CHOIX_DECK, etape: 'deck' });
+    } else if (deckAction === 'series') {
+        d.etape = 'serie';
     } else if (choixDeck) {
         const id = Number(choixDeck);
         if (d.choix.includes(id)) d.choix = d.choix.filter(x => x !== id);
@@ -3318,7 +3514,11 @@ function init() {
         seance.reprendre();
     });
     // Écran de bilan : retour aux paquets de l'accueil
-    $('#btn-retour').addEventListener('click', afficherAccueil);
+    $('#btn-retour').addEventListener('click', () => {
+        afficherAccueil();
+        if (retourApresOuverture) location.hash = retourApresOuverture;
+        retourApresOuverture = null;
+    });
     $('#tirage').addEventListener('click', e => cliquerCarteTirage(e.target.closest('.flip')));
     $('#tirage').addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -3377,6 +3577,7 @@ function init() {
         const echange = e.target.closest('[data-echanger]');
         if (echange) return echangerDoublons(echange.dataset.echanger);
         if (e.target.closest('[data-echange-encore]')) return proposerEchange();
+        if (e.target.closest('[data-recompense-ok]')) return validerRecompenseDefi();
         const choixVente = e.target.closest('[data-choix-vente]');
         if (choixVente) return choisirVente(Number(choixVente.dataset.choixVente));
         const fiche = e.target.closest('[data-fiche]');
@@ -3432,7 +3633,7 @@ function init() {
     });
     $('#retour-modes').addEventListener('click', () => changerModeJeu(null));
     $('#mode-decks').addEventListener('click', e => {
-        const element = e.target.closest('[data-niveau], [data-choix-deck], [data-carte-main], [data-stat-deck], [data-deck-action], [data-draft]');
+        const element = e.target.closest('[data-niveau], [data-serie], [data-choix-deck], [data-carte-main], [data-stat-deck], [data-deck-action], [data-draft]');
         if (element && !element.disabled) actionDuelDecks(element);
     });
     // Recherche pendant la composition du deck : on garde le curseur dans le champ

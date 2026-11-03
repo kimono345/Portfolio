@@ -699,6 +699,8 @@ main {
     animation: eclair-full-art 0.9s ease-out forwards;
 }
 .revelation-full-art.eclair::before { opacity: 0.9; transform: scale(1.15); animation: none; }
+/* Booster de série du Défi Promo : même révélation, sans le halo arc-en-ciel */
+.revelation-full-art.sans-prisme::before { display: none; }
 @keyframes eclair-full-art { from { opacity: 1; } to { opacity: 0; } }
 .paquet-seul { width: clamp(200px, 50vw, 260px); cursor: default; touch-action: none; }
 
@@ -1108,6 +1110,74 @@ main {
         repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px 9px),
         repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px 9px),
         linear-gradient(125deg, #1c3faa, #f3d27a, #3a6df0, #f3d27a, #1c3faa) var(--mx) var(--my) / 300% 300%;
+}
+
+/* ── Série 3 « Rétro » : la carte est une console portable des années 90. Coque en plastique gris clair,
+   écran inséré dans un cadre sombre, coin bas droit très arrondi, LED rouge et marque en bas ;
+   écran cathodique (scanlines, vignette) sur l'illustration, textes en police pixel ── */
+.carte.promo-neon.promo-serie-3 {
+    --rar: #9bbc0f;
+    padding: 10px 10px 26px;
+    border-radius: 10px 10px 34px 10px;
+    background:
+        linear-gradient(160deg, rgba(255, 255, 255, 0.35), transparent 40%, rgba(0, 0, 0, 0.12)),
+        #c9c5bc;
+    box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18), inset 0 2px 0 rgba(255, 255, 255, 0.5), 0 10px 26px rgba(0, 0, 0, 0.6);
+    animation: none;
+}
+/* Cadre sombre autour de l'écran */
+.carte.promo-neon.promo-serie-3 .carte-corps {
+    border-radius: 4px 4px 22px 4px;
+    box-shadow: 0 0 0 5px #55566a, 0 0 0 6px rgba(0, 0, 0, 0.25), inset 0 0 24px rgba(0, 0, 0, 0.55);
+}
+/* LED rouge allumée, à gauche sous l'écran */
+.carte.promo-neon.promo-serie-3::before {
+    content: '';
+    position: absolute;
+    left: 14px;
+    bottom: 9px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ff9a9a, #e0201f 60%);
+    box-shadow: 0 0 6px rgba(255, 40, 40, 0.8);
+}
+/* Marque sous l'écran */
+.carte.promo-neon.promo-serie-3::after {
+    content: 'GameCards RETRO';
+    position: absolute;
+    left: 28px;
+    bottom: 7px;
+    font: italic 900 11px 'Outfit', sans-serif;
+    letter-spacing: 0.02em;
+    color: #2b2f7a;
+}
+.carte.promo-neon.promo-serie-3 .carte-rarete,
+.fiche-infos.promo-serie-3 .fiche-rarete,
+.titre-serie.serie-3 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: max(7px, 3.6cqi);
+    letter-spacing: 0;
+    background: none;
+    color: #9bbc0f;
+    text-shadow: 2px 2px 0 #0f380f;
+}
+.fiche-infos.promo-serie-3 .fiche-rarete, .titre-serie.serie-3 { font-size: 0.8rem; }
+.carte.promo-neon.promo-serie-3 .full-art-fond img { filter: contrast(1.1) saturate(1.25); image-rendering: pixelated; }
+/* Écran cathodique : scanlines horizontales et coins assombris, à la place du voile coloré */
+.carte.promo-neon.promo-serie-3.full-art .carte-corps::before {
+    background:
+        repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.28) 0 1px, transparent 1px 3px),
+        radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55));
+    mix-blend-mode: normal;
+    opacity: 1;
+}
+/* Trame de pixels qui s'allume sous la lumière, et reflet de l'écran */
+.carte.promo-neon.promo-serie-3 .carte-corps::after {
+    background:
+        radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.45), transparent 35%),
+        repeating-conic-gradient(rgba(255, 255, 255, 0.22) 0 25%, transparent 0 50%) 0 0 / 4px 4px,
+        linear-gradient(125deg, #e43b44, #feae34, #63c74d, #0099db) var(--mx) var(--my) / 300% 300%;
 }
 
 /* ── Mythique : prisme cosmique ── */
@@ -2117,7 +2187,8 @@ main {
    ========================================================= */
 
 /* Choix du mode de jeu : trois grandes tuiles */
-.modes-jeu { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 0.5rem; }
+.modes-jeu { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin-top: 0.5rem; }
+@media (max-width: 1100px) { .modes-jeu { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .mode-jeu {
     display: flex;
     flex-direction: column;
@@ -2152,6 +2223,45 @@ main {
 .mode-jeu span:not(.mode-icone) { color: var(--texte-doux); font-size: 0.92rem; line-height: 1.45; }
 .mode-jeu small { margin-top: auto; padding-top: 0.4rem; color: var(--accent); font-family: 'Space Mono', monospace; font-size: 0.78rem; font-weight: 700; }
 .retour-modes { display: flex; margin: 0 auto 1.2rem; padding: 0.45rem 1rem; font-size: 0.9rem; }
+/* Défi Promo : une tuile par série, avec une de ses cartes en aperçu */
+.defis-promo { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 0.4rem; }
+.defi-promo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 1.3rem 1.1rem 1.2rem;
+    border: 1px solid var(--bord);
+    border-radius: 18px;
+    background: var(--fond-2);
+    color: var(--texte);
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.defi-promo:not(:disabled):hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--neon-1) 55%, transparent);
+    box-shadow: 0 0 26px color-mix(in srgb, var(--neon-1) 20%, transparent);
+}
+.defi-promo:disabled { opacity: 0.5; cursor: default; }
+.defi-apercu { width: 150px; pointer-events: none; }
+.defi-promo .titre-serie { margin: 0.3rem 0 0; justify-self: auto; }
+.defi-promo > span:not(.defi-apercu) { color: var(--texte-doux); font-size: 0.9rem; line-height: 1.45; }
+.defi-promo small { margin-top: auto; color: var(--accent); font-family: 'Space Mono', monospace; font-size: 0.8rem; font-weight: 700; }
+/* Fenêtre de récompense du Défi Promo */
+.recompense-defi-gain { margin: 0.8rem 0 1rem; font-size: 1.35rem; }
+/* Règle de la série, rappelée pendant la composition du deck et la partie */
+.defi-regle {
+    max-width: 640px;
+    margin: 0 auto 1rem;
+    padding: 0.6rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--neon-2) 45%, transparent);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--neon-2) 10%, var(--fond-2));
+    text-align: center;
+    font-size: 0.92rem;
+}
 @media (max-width: 760px) {
     .modes-jeu { grid-template-columns: 1fr; }
     .mode-jeu { padding: 1.3rem 1.1rem; }
