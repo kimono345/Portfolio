@@ -29,7 +29,7 @@
     --epique: #a352ff;
     --legendaire: #ffb800;
     --mythique: #ff6b9a;
-    --promo: #e9c46a; /* champagne : plus pâle que l'or des Légendaires */
+    --promo: #f5b8ff; /* rose pastel des Rainbow Rare */
     --arc-en-ciel: linear-gradient(135deg, #ff4d6d, #ffb800, #3fbf6f, #3b8bff, #a352ff, #ff4d6d);
     --prisme: linear-gradient(90deg, #ff4d8d, #ffb84d, #7dffb0, #45d4ff, #8b5cff, #ff4d8d);
     --or: linear-gradient(135deg,
@@ -1019,8 +1019,14 @@ main {
     background-clip: text;
     color: transparent;
 }
-/* Illustration délavée et éclaircie, pour que le voile pastel la recolore entièrement */
-.carte.promo-neon .full-art-fond img { filter: brightness(1.2) contrast(0.82); }
+.carte.promo-neon .full-art-fond img { object-position: 50% 0; filter: brightness(1.25) contrast(0.82) saturate(1.15); } /* calée en haut pour ne pas rogner le logo ; délavée, comme les Rainbow Rare */
+/* Fiche : « Promo » au même dégradé pastel que la carte */
+.fiche-infos.rarete-promo .fiche-rarete {
+    background: linear-gradient(90deg, #ffb3d9, #fdffb6, #9bf6ff, #bdb2ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
 
 /* Effet « Rainbow Rare » : deux calques entre l'illustration et le texte.
    --mx / --my suivent la souris (inclinerVers) ; sur écran tactile, ils balaient la carte tout seuls */
@@ -1040,9 +1046,9 @@ main {
     z-index: 1;
     pointer-events: none;
     background: linear-gradient(125deg, var(--pastels), #ffd6a5, #fdffb6, #caffbf, #9bf6ff)
-        calc(100% - var(--mx)) calc(100% - var(--my)) / 300% 300%;
-    mix-blend-mode: color;
-    opacity: 0.85;
+        calc(100% - var(--mx)) calc(100% - var(--my)) / 160% 160%;
+    mix-blend-mode: color; /* recolore toute l'illustration en arc-en-ciel pastel */
+    opacity: 0.7;
 }
 /* 2 et 3. Surface gravée (fines ondes) qui s'allume sous la lumière, et reflet qui suit la souris */
 .carte.promo-neon .carte-corps::after {
@@ -1054,7 +1060,8 @@ main {
     background:
         radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.55), transparent 38%),
         repeating-radial-gradient(circle at 20% 110%, rgba(255, 255, 255, 0.5) 0 1px, transparent 1px 3.5px),
-        repeating-linear-gradient(60deg, rgba(255, 255, 255, 0.18) 0 1px, transparent 1px 5px);
+        repeating-linear-gradient(60deg, rgba(255, 255, 255, 0.18) 0 1px, transparent 1px 5px),
+        linear-gradient(125deg, var(--pastels)) var(--mx) var(--my) / 300% 300%; /* irisation pastel par-dessous */
     mix-blend-mode: overlay;
     -webkit-mask-image: radial-gradient(circle at var(--mx) var(--my), #000, rgba(0, 0, 0, 0.3) 60%);
     mask-image: radial-gradient(circle at var(--mx) var(--my), #000, rgba(0, 0, 0, 0.3) 60%);
@@ -1063,6 +1070,45 @@ main {
     .carte.promo-neon .carte-corps { animation: promo-balayage 6s ease-in-out infinite alternate; animation-play-state: var(--effets); }
 }
 @keyframes promo-balayage { from { --mx: 10%; --my: 15%; } to { --mx: 90%; --my: 75%; } }
+
+/* ── Série 2 (jeux hors Steam) : bleu roi et or. Cadre bleu et or, halo bleu, illustration teintée bleu nuit,
+   paillettes et gravure en chevrons ; mêmes calques que la série 1, autres couleurs ── */
+.carte.promo-neon.promo-serie-2 {
+    --rar: #f3d27a;
+    --pastels: #0a1a5c, #1c3faa, #3a6df0, #1c3faa, #0a1a5c, #2a52d0, #0a1a5c;
+    /* Cadre bleu roi traversé de reflets or (un cadre tout or rappelait trop les Légendaires), liseré or tout autour */
+    background:
+        repeating-linear-gradient(135deg, rgba(255, 236, 170, 0.3) 0 1px, transparent 1px 7px),
+        conic-gradient(from var(--angle-promo), #f7e3a1, #c9a24c 8%, #1c3faa 18%, #3a6df0 28%, #0a1a5c 40%, #1c3faa 48%,
+            #fff3c4 55%, #c9a24c 62%, #1c3faa 72%, #3a6df0 80%, #0a1a5c 90%, #f7e3a1);
+    box-shadow: 0 0 0 1.5px #e2bd62, 0 0 22px rgba(50, 100, 255, 0.55), 0 0 44px rgba(30, 60, 200, 0.4), 0 10px 26px rgba(0, 0, 0, 0.6);
+}
+.carte.promo-neon.promo-serie-2 .carte-corps {
+    box-shadow: inset 0 0 0 1px rgba(255, 230, 160, 0.75), inset 0 0 20px rgba(60, 110, 255, 0.5);
+}
+.carte.promo-neon.promo-serie-2 .carte-rarete,
+.fiche-infos.promo-serie-2 .fiche-rarete,
+.titre-serie.serie-2 {
+    background: linear-gradient(90deg, #fff3c4, #e2bd62, #fff3c4, #c9a24c);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+.carte.promo-neon.promo-serie-2 .full-art-fond img { filter: brightness(1.05) contrast(1.05) saturate(1.1); }
+.carte.promo-neon.promo-serie-2 .full-art-fond::after {
+    background: linear-gradient(180deg, rgba(4, 10, 45, 0.6) 0%, transparent 17%, transparent 45%, rgba(4, 10, 45, 0.93) 72%);
+}
+/* Voile bleu roi : l'illustration passe en camaïeu bleu, plus intense que le pastel de la série 1 */
+.carte.promo-neon.promo-serie-2.full-art .carte-corps::before { opacity: 0.75; }
+/* Paillettes dorées et chevrons gravés, qui s'allument sous la lumière */
+.carte.promo-neon.promo-serie-2 .carte-corps::after {
+    background:
+        radial-gradient(circle at var(--mx) var(--my), rgba(255, 240, 200, 0.6), transparent 38%),
+        radial-gradient(circle, rgba(255, 236, 170, 0.95) 0 1px, transparent 1.6px) 0 0 / 23px 29px,
+        radial-gradient(circle, rgba(255, 255, 255, 0.85) 0 0.8px, transparent 1.4px) 11px 14px / 37px 41px,
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px 9px),
+        repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px 9px),
+        linear-gradient(125deg, #1c3faa, #f3d27a, #3a6df0, #f3d27a, #1c3faa) var(--mx) var(--my) / 300% 300%;
+}
 
 /* ── Mythique : prisme cosmique ── */
 .carte.rarete-mythique {
@@ -1783,6 +1829,21 @@ main {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 1.3rem 1.1rem;
 }
+/* Collection filtrée sur les promos : un titre par série, sur toute la largeur */
+.titre-serie {
+    grid-column: 1 / -1;
+    margin-top: 0.6rem;
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, #ffb3d9, #fdffb6, #9bf6ff, #bdb2ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    justify-self: start;
+}
+.titre-serie:first-child { margin-top: 0; }
 .case { display: flex; flex-direction: column; gap: 0.5rem; }
 .case-carte { border-radius: 14px; transition: transform 0.2s; }
 .case-carte:hover { transform: translateY(-5px); }

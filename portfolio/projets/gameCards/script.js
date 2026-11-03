@@ -327,17 +327,61 @@ const CODES_CADEAUX = {
     FULLART5: { fullArt: true },
     PORTAL: { carte: 620 },
     FEMBOY: { pieces: 500000 },
-    FUTAHOUSE: { promo: -3602290 }, 
+    FUTAHOUSE: { promo: -3602290 },
+    ELDENRING: { promo: -1245620 },
+    HELLDIVERS: { promo: -553850 },
+    OUTERWILDS: { promo: -753640 },
+    FNAF: { promo: -319510 },
+    CLAIROBSCUR: { promo: -1903340 },
+    OMORI: { promo: -1150690 },
+    DISPATCH: { promo: -2592160 },
+    CLOUDMEADOW: { promo: -1223750 },
+    BLACKFLAG: { promo: -242050 },
+    MINECRAFT: { promo: -900001 },
+    LEAGUEOFLEGENDS: { promo: -900002 },
+    VALORANT: { promo: -900003 },
+    GENSHIN: { promo: -900004 },
+    FORTNITE: { promo: -900005 },
 };
 // Cartes promo (rareté Promo) : une édition spéciale d'un jeu, distincte de sa carte normale (identifiant à part, négatif),
 // obtenue seulement avec un code cadeau ({ promo: identifiant }) : jamais dans les boosters, le catalogue ni le draft.
-// `steam` : le jeu d'origine (image, fiche Steam) ; `numero` : affiché « #001 » ; `stats` : Qualité et Popularité
-// choisies à la main (l'Ancienneté reste celle du jeu)
+// `steam` : le jeu d'origine (image, fiche Steam) ; `serie` et `numero` : affichés « S1 · #001 » ; `stats` : Qualité et Popularité
+// choisies à la main (l'Ancienneté reste celle du jeu) ; `image` : illustration verticale à part (dossier promos/) ;
+// `jeu` : infos du jeu quand il manque au dataset (genres et thèmes en français, traduits au chargement) ;
+// `site` : lien officiel d'un jeu hors Steam, à la place de la page Steam
 const PROMOS = {
-    [-3602290]: { steam: 3602290, numero: 1, stats: { attaque: 75, popularite: 80 } }, // FEMBOY FUTA HOUSE
+    [-3602290]: { steam: 3602290, serie: 1, numero: 1, stats: { attaque: 67, popularite: 67 }, image: 'promos/001.png?v=2' }, // FEMBOY FUTA HOUSE
+    [-1245620]: { steam: 1245620, serie: 1, numero: 2, stats: { attaque: 99, popularite: 99 }, image: 'promos/002.png' }, // ELDEN RING
+    [-553850]: { steam: 553850, serie: 1, numero: 3, stats: { attaque: 94, popularite: 97 }, image: 'promos/003.png' }, // HELLDIVERS 2
+    [-753640]: { steam: 753640, serie: 1, numero: 4, stats: { attaque: 97, popularite: 92 }, image: 'promos/004.png' }, // OUTER WILDS
+    [-319510]: { steam: 319510, serie: 1, numero: 5, stats: { attaque: 93, popularite: 99 }, image: 'promos/005.png' }, // FIVE NIGHTS AT FREDDY'S
+    [-1903340]: { steam: 1903340, serie: 1, numero: 6, stats: { attaque: 98, popularite: 96 }, image: 'promos/006.png' }, // CLAIR OBSCUR: EXPEDITION 33
+    [-1150690]: { steam: 1150690, serie: 1, numero: 7, stats: { attaque: 96, popularite: 80 }, image: 'promos/007.png' }, // OMORI
+    [-2592160]: { steam: 2592160, serie: 1, numero: 8, stats: { attaque: 95, popularite: 90 }, image: 'promos/008.png' }, // DISPATCH
+    [-1223750]: { steam: 1223750, serie: 1, numero: 9, stats: { attaque: 85, popularite: 55 }, image: 'promos/009.png' }, // CLOUD MEADOW
+    // Absent du dataset Steam : infos du jeu données ici (avis et note relevés sur Steam)
+    [-242050]: { steam: 242050, serie: 1, numero: 10, stats: { attaque: 95, popularite: 92 }, image: 'promos/010.png', // ASSASSIN'S CREED IV BLACK FLAG
+        jeu: { nom: 'Assassin’s Creed® IV Black Flag', annee: 2013, avis: 72357, note: 88, metacritic: 84, genres: ['Action', 'Aventure'], tags: ['Monde ouvert', 'Infiltration', 'Multijoueur', 'Narratif'] } },
+
+    // Série 2 : jeux hors Steam (pas de `steam`, identifiants -900001…), avec le lien de leur site officiel
+    [-900001]: { serie: 2, numero: 1, stats: { attaque: 96, popularite: 99 }, image: 'promos/s2-001.png', site: 'https://www.minecraft.net',
+        jeu: { nom: 'Minecraft', annee: 2011, metacritic: 93, genres: ['Aventure', 'Simulation'], tags: ['Bac à sable', 'Survie', 'Monde ouvert', 'Multijoueur', 'Coopération', 'Pixel art'] } },
+    [-900002]: { serie: 2, numero: 2, stats: { attaque: 94, popularite: 98 }, image: 'promos/s2-002.png', site: 'https://www.leagueoflegends.com',
+        jeu: { nom: 'League of Legends', annee: 2009, metacritic: 78, genres: ['Stratégie', 'Action', 'Free-to-play'], tags: ['Multijoueur', 'Fantasy'] } },
+    [-900003]: { serie: 2, numero: 3, stats: { attaque: 86, popularite: 95 }, image: 'promos/s2-003.jpg', site: 'https://playvalorant.com',
+        jeu: { nom: 'VALORANT', annee: 2020, metacritic: 80, genres: ['Action', 'Free-to-play'], tags: ['Tir', 'Multijoueur', 'Science-fiction'] } },
+    [-900004]: { serie: 2, numero: 4, stats: { attaque: 89, popularite: 96 }, image: 'promos/s2-004.png', site: 'https://genshin.hoyoverse.com',
+        jeu: { nom: 'Genshin Impact', annee: 2020, metacritic: 84, genres: ['Action', 'Aventure', 'RPG', 'Free-to-play'], tags: ['Monde ouvert', 'Anime', 'Fantasy', 'Coopération'] } },
+    [-900005]: { serie: 2, numero: 5, stats: { attaque: 78, popularite: 99 }, image: 'promos/s2-005.png', site: 'https://www.fortnite.com',
+        jeu: { nom: 'Fortnite', annee: 2017, metacritic: 81, genres: ['Action', 'Free-to-play'], tags: ['Battle royale', 'Tir', 'Bac à sable', 'Multijoueur', 'Coopération', 'Comédie'] } },
 };
-// En duel de decks, une Promo compte comme cette rareté pour les plafonds des niveaux (jouable à partir de Difficile)
-const PLAFOND_PROMO = 'epique';
+// Carte promo d'une carte (ou undefined) ; une promo sans `steam` est un jeu hors Steam (série 2)
+const promoDe = carte => PROMOS[carte.id];
+const horsSteam = carte => Boolean(promoDe(carte)) && !promoDe(carte).steam;
+// « S1 · #001 » : série, puis numéro dans la série
+const numeroPromoHTML = promo => `S${promo.serie} · #${String(promo.numero).padStart(3, '0')}`;
+// En duel de decks, une Promo compte comme cette rareté pour les plafonds des niveaux (jouable là où les Mythiques le sont)
+const PLAFOND_PROMO = 'mythique';
 // Contour des cartes promo, à essayer : 'noir-or' (édition limitée) ou 'neon' (néon GameCards)
 const STYLE_PROMO = 'neon';
 const URL_IMAGES = 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps';
@@ -691,7 +735,7 @@ function creerCarte(jeu, { ex = false } = {}) {
         promo: Boolean(jeu.promo),
         numero: jeu.numero, // numéro d'une carte promo
         nom: jeu.nom,
-        image: `${URL_IMAGES}/${jeu.steam ?? jeu.id}/${jeu.image || 'header.jpg'}`,
+        image: horsSteam(jeu) ? promoDe(jeu).image : `${URL_IMAGES}/${jeu.steam ?? jeu.id}/${jeu.image || 'header.jpg'}`,
         attaque: ex
             ? STATS_FORCEES[jeu.id]?.attaque ?? statDeJeu(notePublic(jeu.note, jeu.avis), RARETES[indexRarete(jeu.rarete) - 1].id, 50)
             : statQualite(jeu),
@@ -711,8 +755,8 @@ function creerCarte(jeu, { ex = false } = {}) {
 }
 
 // `cachee` masque les stats, et ce qui les trahirait (année, chef-d'œuvre) : carte adverse en duel
-// Jaquette verticale Steam (600 × 900) pour les Full Art ; à défaut, l'image horizontale
-const imagePortrait = carte => `${URL_IMAGES}/${carte.steam ?? carte.id}/library_600x900.jpg`;
+// Jaquette verticale Steam (600 × 900) pour les Full Art (ou l'illustration d'une promo) ; à défaut, l'image horizontale
+const imagePortrait = carte => PROMOS[carte.id]?.image || `${URL_IMAGES}/${carte.steam ?? carte.id}/library_600x900.jpg`;
 
 // Image de secours, sous l'image Steam : visible pendant le chargement, et si l'image n'existe pas.
 // Une couleur propre à chaque jeu, ses initiales en grand et son nom.
@@ -732,7 +776,7 @@ function carteHTML(carte, { holo = (carte.holos || 0) > 0, compteur = 0, cachee 
     const rarete = RARETES[indexRarete(carte.rarete)];
     // Sur la carte adverse du duel, l'année trahirait l'Ancienneté : on la cache aussi
     const infos = [cachee ? null : carte.annee, carte.genres[0]].filter(Boolean).join(' · ');
-    const chef = !cachee && carte.metacritic >= SEUIL_CHEF_OEUVRE;
+    const chef = !cachee && !carte.promo && carte.metacritic >= SEUIL_CHEF_OEUVRE; // pas de chef-d’œuvre sur une promo
     const goty = gotyDe(carte.id);
     const pastille = bonus && !cachee ? `<small class="bonus-stat">+${bonus}</small>` : '';
     const plaque = chef ? `<span class="plaque-chef" title="${t('Metacritic : {n} / 100', { n: carte.metacritic })}">${ICONES.medaille}<span>${t('Chef-d’œuvre')}</span></span>` : '';
@@ -755,7 +799,7 @@ function carteHTML(carte, { holo = (carte.holos || 0) > 0, compteur = 0, cachee 
                 </ul>`;
     const secours = echapper(carte.image);
     return `
-        <article class="carte rarete-${rarete.id}${holo ? ' holo' : ''}${cachee ? ' stats-cachees' : ''}${chef ? ' chef-oeuvre' : ''}${goty ? ' goty' : ''}${fullArt ? ' full-art' : ''}${ex ? ' ex' : ''}${carte.promo ? ` promo promo-${STYLE_PROMO}" data-incline` : '"'}>
+        <article class="carte rarete-${rarete.id}${holo ? ' holo' : ''}${cachee ? ' stats-cachees' : ''}${chef ? ' chef-oeuvre' : ''}${goty ? ' goty' : ''}${fullArt ? ' full-art' : ''}${ex ? ' ex' : ''}${carte.promo ? ` promo promo-${STYLE_PROMO} promo-serie-${promoDe(carte)?.serie ?? 1}" data-incline` : '"'}>
             <div class="carte-corps">
                 ${fullArt ? `<div class="full-art-fond" style="--secours: url('${secours}')" aria-hidden="true">${imageSecoursHTML(carte)}<img src="${imagePortrait(carte)}" alt="" loading="lazy"
                     onerror="if (this.dataset.repli) { this.parentNode.classList.remove('paysage'); this.remove(); } else { this.dataset.repli = 1; this.src = '${secours}'; this.parentNode.classList.add('paysage'); }"></div>` : ''}
@@ -763,7 +807,7 @@ function carteHTML(carte, { holo = (carte.holos || 0) > 0, compteur = 0, cachee 
                 ${goty && !fullArt ? `<span class="filigrane-goty" aria-hidden="true">${LAURIER}</span>` : ''}
                 <header class="carte-haut">
                     <span class="carte-rarete">${carte.promo
-                        ? `${rarete.nom}${carte.numero ? ` #${String(carte.numero).padStart(3, '0')}` : ''}`
+                        ? `${rarete.nom}${promoDe(carte) ? ` ${numeroPromoHTML(promoDe(carte))}` : ''}`
                         : `${rarete.nom}${fullArt ? ' · Full Art' : holo ? ' · Holo' : ''}`}</span>
                     ${compteur > 1 ? `<span class="carte-compteur">×${compteur}</span>` : ''}
                 </header>
@@ -820,7 +864,7 @@ function optionsGenresHTML(choisi, presents = null) {
 // Distinctions : valeurs spéciales du filtre, calculées plutôt que stockées
 const DISTINCTIONS = {
     [t('GOTY (jeu de l’année)')]: carte => Boolean(GOTY[carte.id]),
-    [t('Chef-d’œuvre (Metacritic 90+)')]: carte => carte.metacritic >= SEUIL_CHEF_OEUVRE,
+    [t('Chef-d’œuvre (Metacritic 90+)')]: carte => !carte.promo && carte.metacritic >= SEUIL_CHEF_OEUVRE,
 };
 const distinctionsDe = carte => Object.keys(DISTINCTIONS).filter(nom => DISTINCTIONS[nom](carte));
 
@@ -851,8 +895,8 @@ async function chargerJeux() {
     for (const jeu of tousLesJeux) jeuxParRarete[jeu.rarete].push(jeu);
     jeuxParId = new Map(tousLesJeux.map(jeu => [jeu.id, jeu]));
     // Les cartes promo ne sont connues que par leur identifiant (hors de tousLesJeux et des raretés)
-    for (const [id, { steam, numero, stats }] of Object.entries(PROMOS)) {
-        const jeu = jeuxParId.get(steam);
+    for (const [id, { steam, numero, stats, jeu: infos }] of Object.entries(PROMOS)) {
+        const jeu = jeuxParId.get(steam) ?? (infos && { ...infos, nomMin: infos.nom.toLowerCase(), genres: infos.genres.map(t), tags: infos.tags.map(t) });
         if (!jeu) continue;
         STATS_FORCEES[id] = stats;
         jeuxParId.set(Number(id), { ...jeu, id: Number(id), steam, numero, rarete: 'promo', promo: true, statPopularite: undefined, statQualite: undefined });
@@ -1492,8 +1536,10 @@ const anneeDeCarte = carte => {
     return jeu ? anneeOriginale(jeu) : carte.annee;
 };
 
+// Ordre d'une carte promo (série, puis numéro), 0 pour les autres
+const numeroPromo = carte => (promoDe(carte) ? promoDe(carte).serie * 1000 + promoDe(carte).numero : 0);
 const TRIS = {
-    rarete: (a, b) => indexRarete(a.rarete) - indexRarete(b.rarete) || b.popularite - a.popularite,
+    rarete: (a, b) => indexRarete(a.rarete) - indexRarete(b.rarete) || numeroPromo(a) - numeroPromo(b) || b.popularite - a.popularite,
     recent: (a, b) => b.obtenue - a.obtenue,
     attaque: (a, b) => b.attaque - a.attaque,
     anciennete: (a, b) => b.anciennete - a.anciennete,
@@ -1538,7 +1584,8 @@ function afficherCollection() {
     const selGenre = $('#filtre-genre');
     selGenre.innerHTML = optionsGenresHTML(selGenre.value, new Set(entrees.flatMap(e => [...e.genres, ...(e.tags || []), ...distinctionsDe(e)])));
 
-    const visibles = entrees.filter(filtreCollection()).sort(TRIS[$('#tri').value]);
+    // Les promos seules : toujours par numéro croissant
+    const visibles = entrees.filter(filtreCollection()).sort(filtreRarete === 'promo' ? (a, b) => numeroPromo(a) - numeroPromo(b) : TRIS[$('#tri').value]);
 
     const grille = $('#grille-collection');
     if (!entrees.length) {
@@ -1546,7 +1593,11 @@ function afficherCollection() {
     } else if (!visibles.length) {
         grille.innerHTML = `<p class="vide">${t('Aucune carte ne correspond à ces filtres.')}</p>`;
     } else {
-        grille.innerHTML = visibles.slice(0, limiteCollection).map(caseCollectionHTML).join('');
+        grille.innerHTML = visibles.slice(0, limiteCollection).map((e, i, liste) => {
+            const serie = filtreRarete === 'promo' && promoDe(e)?.serie;
+            const titre = serie && serie !== promoDe(liste[i - 1] ?? {})?.serie ? `<h3 class="titre-serie serie-${serie}">${t('Série {n}', { n: serie })}</h3>` : '';
+            return titre + caseCollectionHTML(e);
+        }).join('');
     }
     const restantes = visibles.length - limiteCollection;
     $('#btn-plus').hidden = restantes <= 0;
@@ -1761,30 +1812,30 @@ function afficherFiche(id) {
     const manque = rarete.prix - etat.pieces;
     $('#modale-contenu').innerHTML = `
         <div class="fiche-visuel" data-incline>${carteHTML(carte, { holo: e?.holos > 0 })}</div>
-        <div class="fiche-infos rarete-${rarete.id}">
-            <span class="fiche-rarete">${rarete.nom}${carte.ex ? ' EX' : ''}${e?.holos ? ' · ✨ Holo' : ''}</span>
+        <div class="fiche-infos rarete-${rarete.id}${promoDe(carte) ? ` promo-serie-${promoDe(carte).serie}` : ''}">
+            <span class="fiche-rarete">${rarete.nom}${promoDe(carte) ? ` · ${t('Série {n}', { n: promoDe(carte).serie })}${horsSteam(carte) ? ` · ${t('hors Steam')}` : ''}` : ''}${carte.ex ? ' EX' : ''}${e?.holos ? ' · ✨ Holo' : ''}</span>
             <h2>${echapper(carte.nom)}</h2>
             <p class="fiche-meta">${[carte.annee, ...carte.genres].filter(Boolean).map(echapper).join(' · ')}</p>
             ${jeu ? `<p class="fiche-raison">${raisonRarete(jeu)}</p>` : ''}
             ${aUneVersionEX(jeu) ? `<p class="fiche-ex">${carte.ex
                 ? t('Version EX : jeu adoré des joueurs mais peu connu, sa Qualité est calculée comme une rareté au-dessus.')
                 : t('Ce jeu existe en version EX (5 % de chance quand il est tiré) : sa Qualité y est calculée comme une rareté au-dessus.')}</p>` : ''}
-            ${gotyDe(carte.id) || carte.metacritic >= SEUIL_CHEF_OEUVRE ? `<div class="fiche-distinctions">
+            ${gotyDe(carte.id) || (!carte.promo && carte.metacritic >= SEUIL_CHEF_OEUVRE) ? `<div class="fiche-distinctions">
                 ${gotyDe(carte.id) ? `<p class="fiche-distinction">${LAURIER}${t('Jeu de l’année {annee}', { annee: gotyDe(carte.id).annee })}<span>${gotyDe(carte.id).ceremonie}</span></p>` : ''}
-                ${carte.metacritic >= SEUIL_CHEF_OEUVRE ? `<p class="fiche-distinction">${ICONES.medaille}${t('Chef-d’œuvre')}<span>${t('noté {n}/100 par la presse (Metacritic)', { n: carte.metacritic })}</span></p>` : ''}
+                ${!carte.promo && carte.metacritic >= SEUIL_CHEF_OEUVRE ? `<p class="fiche-distinction">${ICONES.medaille}${t('Chef-d’œuvre')}<span>${t('noté {n}/100 par la presse (Metacritic)', { n: carte.metacritic })}</span></p>` : ''}
             </div>` : ''}
             ${carte.tags?.length ? `<p class="fiche-tags">${carte.tags.map(tag => `<span${(groupesTags[t('Contenu sensible')] || []).includes(tag)
                 ? ' class="tag-sensible"' : ''}>${echapper(tag)}</span>`).join('')}</p>` : ''}
             <dl class="fiche-stats">
-                <div><dt>${STATS.attaque.icone} ${STATS.attaque.nom}</dt><dd>${carte.attaque} <span class="gris">· ${jeu?.estime ? t('note estimée') : t('{n} % d’avis positifs', { n: carte.noteReelle ?? '?' })}</span></dd></div>
-                <div><dt>★ ${STATS.popularite.nom}</dt><dd>${carte.popularite} <span class="gris">· ${jeu?.estime
+                <div><dt>${STATS.attaque.icone} ${STATS.attaque.nom}</dt><dd>${carte.attaque} <span class="gris">· ${horsSteam(carte) ? t('jeu hors Steam') : jeu?.estime ? t('note estimée') : t('{n} % d’avis positifs', { n: carte.noteReelle ?? '?' })}</span></dd></div>
+                <div><dt>★ ${STATS.popularite.nom}</dt><dd>${carte.popularite} <span class="gris">· ${horsSteam(carte) ? t('jeu hors Steam') : jeu?.estime
                     ? (carte.avis ? t('≈ {n} avis (estimés)', { n: nombre(carte.avis) }) : t('pas encore d’avis Steam'))
                     : t('{n} avis Steam', { n: carte.avis ? nombre(carte.avis) : '?' })}</span></dd></div>
                 <div><dt>${STATS.anciennete.icone} ${STATS.anciennete.nom}</dt><dd>${carte.anciennete} <span class="gris">· ${t('sorti en {annee}', { annee: jeu && anneeOriginale(jeu) !== carte.annee
                     ? t('{annee} (sur Steam en {steam})', { annee: anneeOriginale(jeu), steam: carte.annee }) : carte.annee })}</span></dd></div>
-                ${jeu?.joueurs > 1 ? `<div><dt>👥 ${t('Joueurs estimés')}</dt><dd>≈ ${formatJoueurs(jeu.joueurs)}</dd></div>` : ''}
+                ${jeu?.joueurs > 1 && !jeu.promo ?`<div><dt>👥 ${t('Joueurs estimés')}</dt><dd>≈ ${formatJoueurs(jeu.joueurs)}</dd></div>` : ''}
                 <div><dt>📰 Metacritic</dt><dd>${carte.metacritic ?? `<span class="gris">${t('aucune')}</span>`}</dd></div>
-                <div><dt># ${t('ID Steam')}</dt><dd>${carte.steam ?? carte.id}</dd></div>
+                ${horsSteam(carte) ? '' : `<div><dt># ${t('ID Steam')}</dt><dd>${carte.steam ?? carte.id}</dd></div>`}
             </dl>
             <p class="fiche-exemplaires">
                 ${e
@@ -1795,13 +1846,15 @@ function afficherFiche(id) {
             <div class="fiche-actions">
                 ${e ? boutonsVenteHTML(e) : ''}
                 ${e ? boutonFusionHTML(e) : ''}
-                ${!e
+                ${!e && !carte.promo
                     ? `<button class="btn btn-principal" data-acheter="${carte.id}"${manque > 0 ? ` disabled title="${t('Il te manque {n} pièces', { n: nombre(manque) })}"` : ''}>
                            ${t('Acheter')} · ${nombre(rarete.prix)} ${PIECE}</button>`
                     : ''}
-                <a class="btn" href="https://store.steampowered.com/app/${carte.steam ?? carte.id}" target="_blank" rel="noopener">${t('Voir sur Steam ↗')}</a>
+                ${horsSteam(carte)
+                    ? `<a class="btn" href="${promoDe(carte).site}" target="_blank" rel="noopener">${t('Site officiel ↗')}</a>`
+                    : `<a class="btn" href="https://store.steampowered.com/app/${carte.steam ?? carte.id}" target="_blank" rel="noopener">${t('Voir sur Steam ↗')}</a>`}
             </div>
-            ${!e && manque > 0 ? `<p class="fiche-note">${t('Il te manque {n} pièces.', { n: nombre(manque) })}</p>` : ''}
+            ${!e && !carte.promo && manque > 0 ? `<p class="fiche-note">${t('Il te manque {n} pièces.', { n: nombre(manque) })}</p>` : ''}
         </div>`;
     ouvrirModale();
 }
@@ -1880,7 +1933,7 @@ function filtrerCatalogue() {
 
 function acheterCarte(id) {
     const jeu = jeuxParId.get(id);
-    if (!jeu || etat.collection[id]) return;
+    if (!jeu || jeu.promo || etat.collection[id]) return; // une promo ne s'obtient qu'avec son code cadeau
     const carte = creerCarte(jeu);
     const prix = RARETES[indexRarete(carte.rarete)].prix;
     if (etat.pieces < prix) return toast(t('Il te manque {n} pièces pour acheter {nom}', { n: nombre(prix - etat.pieces), nom: carte.nom }));
@@ -2029,7 +2082,8 @@ function reinitialiser() {
 // Bonus des variantes en combat (duel et duel de decks), sur chaque stat : Full Art +3, Holo +2
 const BONUS_COMBAT = { fullArt: 3, holo: 2 };
 // Variante qui compte en combat : le Full Art passe avant la holo
-const varianteCombat = carte => (carte.fullArts > 0 ? 'fullArt' : carte.holos > 0 ? 'holo' : null);
+// Une promo est toujours Full Art, mais sans le bonus en combat (ses stats sont déjà choisies à la main)
+const varianteCombat = carte => (carte.promo ? null : carte.fullArts > 0 ? 'fullArt' : carte.holos > 0 ? 'holo' : null);
 // Synergie (duel de decks et draft) : si les 3 cartes d'un deck partagent un genre ou un thème,
 // chacune gagne ce bonus sur toutes ses stats (`carte.synergie`, posé au début de la partie)
 const BONUS_SYNERGIE = 1;
@@ -2241,7 +2295,7 @@ const SUCCES = [
     { id: 'olympe', nom: t('Olympe'), description: t('Posséder toutes les Mythiques'), cible: MYTHIQUES.length, recompense: { pieces: 2000 }, valeur: () => nombreDeRarete('mythique') },
     { id: 'palmares', nom: t('Palmarès'), description: t('Posséder 5 jeux de l’année (années différentes)'), cible: 5, recompense: { prestiges: 1 }, valeur: anneesGotyPossedees },
     { id: 'tous-goty', nom: t('Toutes les cérémonies'), description: t('Posséder un jeu de l’année pour chaque année'), cible: ANNEES_GOTY, recompense: { pieces: 1000 }, valeur: anneesGotyPossedees },
-    { id: 'critique', nom: t('Critique avisé'), description: t('Posséder 10 chefs-d’œuvre (Metacritic 90+)'), cible: 10, recompense: { boosters: 10 }, valeur: () => possedees().filter(e => e.metacritic >= SEUIL_CHEF_OEUVRE).length },
+    { id: 'critique', nom: t('Critique avisé'), description: t('Posséder 10 chefs-d’œuvre (Metacritic 90+)'), cible: 10, recompense: { boosters: 10 }, valeur: () => possedees().filter(e => !e.promo && e.metacritic >= SEUIL_CHEF_OEUVRE).length },
     { id: 'brillant', nom: t('Tout ce qui brille'), description: t('Obtenir une carte holo'), cible: 1, recompense: { pieces: 50 }, valeur: () => possedees().filter(e => e.holos > 0).length },
     { id: 'galerie-holo', nom: t('Galerie des glaces'), description: t('Posséder 10 cartes holo différentes'), cible: 10, recompense: { prestiges: 1 }, valeur: () => possedees().filter(e => e.holos > 0).length },
     { id: 'oeuvre-art', nom: t('Œuvre d’art'), description: t('Obtenir une carte Full Art'), cible: 1, recompense: { pieces: 100 }, valeur: () => possedees().filter(e => e.fullArts > 0).length },
