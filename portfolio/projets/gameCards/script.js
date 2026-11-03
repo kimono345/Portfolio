@@ -318,6 +318,7 @@ const CODES_CADEAUX = {
     PRESTIGE: { prestiges: 2 },
     FULLART: { fullArt: true },
     PORTAL: { carte: 620 },
+    FEMBOY: { pieces: 500000 },
 };
 const URL_IMAGES = 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps';
 
@@ -1530,6 +1531,75 @@ function majResumeCollection() {
     const bouton = $('#btn-vendre-tout');
     bouton.disabled = valeur === 0;
     bouton.innerHTML = valeur ? `${t('Revendre les doublons')} · +${nombre(valeur)} ${PIECE}` : t('Aucun doublon');
+    $('#btn-echanger').disabled = !echangesPossibles();
+}
+
+// ---------- Échange de doublons ----------
+
+// Doublons d'une rareté contre 1 carte au hasard de la rareté au-dessus (plus cher pour monter en Mythique)
+const DOUBLONS_ECHANGE = { commune: 5, 'peu-commune': 5, rare: 5, epique: 5, legendaire: 10 };
+
+// Exemplaires normaux qu'on peut échanger : on garde toujours un exemplaire du jeu (une variante, sinon une normale)
+function doublonsNormaux(entree) {
+    const { normale } = exemplairesParVariante(entree);
+    return entree.exemplaires > normale ? normale : Math.max(0, normale - 1);
+}
+const doublonsDeRarete = rarete => possedees().filter(e => e.rarete === rarete).reduce((n, e) => n + doublonsNormaux(e), 0);
+const echangesPossibles = () => Object.entries(DOUBLONS_ECHANGE).some(([rarete, cout]) => doublonsDeRarete(rarete) >= cout);
+
+function proposerEchange() {
+    $('#modale-contenu').innerHTML = `
+        <div class="echange">
+            <h2>${t('Échanger des doublons')}</h2>
+            <p class="echange-intro">${t('Tes doublons contre une carte de la rareté au-dessus, si possible une que tu n’as pas. Tu gardes toujours un exemplaire de chaque jeu, et tes holos, EX et Full Art ne sont jamais pris.')}</p>
+            <div class="echange-options">${Object.entries(DOUBLONS_ECHANGE).map(([rarete, cout]) => {
+                const de = RARETES[indexRarete(rarete)];
+                const vers = RARETES[indexRarete(rarete) - 1];
+                const dispo = doublonsDeRarete(rarete);
+                return `
+                <button class="echange-option" data-echanger="${rarete}"${dispo < cout ? ' disabled' : ''}>
+                    <span class="rarete-${de.id}"><b class="texte-rarete">${cout} × ${de.nom}</b></span>
+                    <span class="echange-fleche" aria-hidden="true">→</span>
+                    <span class="rarete-${vers.id}"><b class="texte-rarete">1 × ${vers.nom}</b></span>
+                    <small>${tn(dispo, '{n} doublon disponible', '{n} doublons disponibles')}</small>
+                </button>`;
+            }).join('')}</div>
+        </div>`;
+    ouvrirModale();
+}
+
+function echangerDoublons(rarete) {
+    const cout = DOUBLONS_ECHANGE[rarete];
+    if (!cout || !donneesPretes() || doublonsDeRarete(rarete) < cout) return;
+    // On prend d'abord sur les cartes qui ont le plus de doublons
+    let reste = cout;
+    const cartes = possedees().filter(e => e.rarete === rarete && doublonsNormaux(e) > 0)
+        .sort((a, b) => doublonsNormaux(b) - doublonsNormaux(a));
+    for (const entree of cartes) {
+        const pris = Math.min(reste, doublonsNormaux(entree));
+        entree.exemplaires -= pris;
+        reste -= pris;
+        if (!reste) break;
+    }
+    // La carte reçue : au hasard dans la rareté au-dessus, une qui manque à la collection si possible
+    const bac = jeuxParRarete[RARETES[indexRarete(rarete) - 1].id];
+    let jeu = auHasard(bac);
+    for (let essai = 0; essai < 30 && etat.collection[jeu.id]; essai++) jeu = auHasard(bac);
+    const carte = creerCarte(jeu);
+    const nouvelle = ajouterACollection(carte, false);
+    sauvegarder();
+    jouerSonRarete(carte.rarete);
+    $('#modale-contenu').innerHTML = `
+        <div class="echange echange-resultat">
+            <h2>${t('Échange réussi !')}</h2>
+            <div class="echange-carte">${flipHTML(carte, { retournee: true, nouvelle })}</div>
+            <div class="echange-actions">
+                ${echangesPossibles() ? `<button class="btn btn-principal" data-echange-encore>${t('Nouvel échange')}</button>` : ''}
+                <button class="btn" data-fiche="${carte.id}">${t('Voir la fiche')}</button>
+            </div>
+        </div>`;
+    if (!$('#ecran-collection').hidden) afficherCollection();
+    verifierSucces();
 }
 
 function vendreDepuisFiche(id, variante) {
@@ -3161,6 +3231,7 @@ function init() {
         afficherCollection();
     });
     $('#btn-vendre-tout').addEventListener('click', vendreTousLesDoublons);
+    $('#btn-echanger').addEventListener('click', proposerEchange);
     $('#btn-reinitialiser').addEventListener('click', reinitialiser);
 
     // Catalogue
@@ -3193,6 +3264,9 @@ function init() {
         if (marche) return acheterMarche(Number(marche.dataset.marche));
         const fusion = e.target.closest('[data-fusion]');
         if (fusion) return fusionnerHolo(Number(fusion.dataset.fusion));
+        const echange = e.target.closest('[data-echanger]');
+        if (echange) return echangerDoublons(echange.dataset.echanger);
+        if (e.target.closest('[data-echange-encore]')) return proposerEchange();
         const choixVente = e.target.closest('[data-choix-vente]');
         if (choixVente) return choisirVente(Number(choixVente.dataset.choixVente));
         const fiche = e.target.closest('[data-fiche]');

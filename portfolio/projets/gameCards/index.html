@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=103">
+    <link rel="stylesheet" href="style.css?v=105">
 </head>
 <body>
 
@@ -195,6 +195,7 @@
                     <label class="option-filtre"><input type="checkbox" id="filtre-doublons"><span data-i18n>Doublons</span></label>
                     <label class="option-filtre option-full-art"><input type="checkbox" id="filtre-fullart"><span>Full Art</span></label>
                     <label class="option-filtre option-ex"><input type="checkbox" id="filtre-ex"><span>EX</span></label>
+                    <button class="btn btn-echanger" id="btn-echanger" data-i18n>Échanger des doublons</button>
                     <button class="btn btn-or" id="btn-vendre-tout" data-i18n>Revendre les doublons</button>
                 </div>
             </div>
@@ -393,6 +394,10 @@
                     <p data-i18n="regle-marche">En haut du catalogue, chaque jour : une Rare, une Épique et une Légendaire que tu n’as pas encore, à moitié prix. Chaque offre ne s’achète qu’une fois, et le marché se renouvelle à minuit.</p>
                 </article>
                 <article>
+                    <h3 data-i18n>♻ Échange de doublons</h3>
+                    <p data-i18n="regle-echange">Dans la Collection, échange 5 doublons d’une rareté contre 1 carte au hasard de la rareté au-dessus (une que tu n’as pas encore, si possible) : 5 Communes donnent une Peu commune, 5 Épiques une Légendaire… Il faut 10 Légendaires pour une Mythique. Seuls les exemplaires normaux en trop sont pris : tu gardes toujours un exemplaire de chaque jeu, et tes holos, EX et Full Art ne sont jamais échangés.</p>
+                </article>
+                <article>
                     <h3 data-i18n>✨ God pack</h3>
                     <p data-i18n="regle-godpack">Un booster sur 2 000 est un god pack : 5 Légendaires ou Mythiques (dont au moins une Mythique), avec 25 % de chance par carte d’être holo au lieu de 2 %. Le paquet devient doré à l’ouverture, impossible de le rater.</p>
                 </article>
@@ -501,7 +506,7 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="i18n.js?v=40"></script>
-    <script src="script.js?v=151"></script>
+    <script src="i18n.js?v=42"></script>
+    <script src="script.js?v=153"></script>
 </body>
 </html>
