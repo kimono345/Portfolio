@@ -28,6 +28,9 @@ const RARETES = [
     { id: 'rare',        nom: t('Rare'),        quota: 1500, stats: [25, 85],  chance: 6, chanceGarantie: 30,  chancePrestige: 22.8, chancePrestigeGarantie: 0,  chanceDuel: 18, chanceDraft: 30, revente: 15,  prix: 600 },
     { id: 'peu-commune', nom: t('Peu commune'), quota: 3000, stats: [15, 80],  chance: 18, chanceGarantie: 57,  chancePrestige: 70,   chancePrestigeGarantie: 0,  chanceDuel: 25, chanceDraft: 25, revente: 5,   prix: 250 },
     { id: 'commune',     nom: t('Commune'),     quota: null, stats: [5, 75],   chance: 73.4, chanceGarantie: 0,   chancePrestige: 0,    chancePrestigeGarantie: 0,  chanceDuel: 35, chanceDraft: 15, revente: 2,   prix: 100 },
+    // Promo : hors du tirage (toutes ses chances à 0), obtenue seulement avec un code cadeau (voir PROMOS) ;
+    // ni vendue ni achetée, stats choisies à la main
+    { id: 'promo',       nom: t('Promo'),       quota: null, stats: [30, 100],  chance: 0, chanceGarantie: 0,     chancePrestige: 0,    chancePrestigeGarantie: 0,  chanceDuel: 0,  chanceDraft: 0,  revente: 0,   prix: 0, promo: true },
 ];
 const CHANCE_HOLO_PRESTIGE = 0.08; // contre 2 % dans un booster normal
 
@@ -317,9 +320,26 @@ const CODES_CADEAUX = {
     BOOSTERS: { boosters: 10 },
     PRESTIGE: { prestiges: 2 },
     FULLART: { fullArt: true },
+    FULLART1: { fullArt: true },
+    FULLART2: { fullArt: true },
+    FULLART3: { fullArt: true },
+    FULLART4: { fullArt: true },
+    FULLART5: { fullArt: true },
     PORTAL: { carte: 620 },
     FEMBOY: { pieces: 500000 },
+    FUTAHOUSE: { promo: -3602290 },
 };
+// Cartes promo (rareté Promo) : une édition spéciale d'un jeu, distincte de sa carte normale (identifiant à part, négatif),
+// obtenue seulement avec un code cadeau ({ promo: identifiant }) : jamais dans les boosters, le catalogue ni le draft.
+// `steam` : le jeu d'origine (image, fiche Steam) ; `numero` : affiché « #001 » ; `stats` : Qualité et Popularité
+// choisies à la main (l'Ancienneté reste celle du jeu)
+const PROMOS = {
+    [-3602290]: { steam: 3602290, numero: 1, stats: { attaque: 75, popularite: 80 } }, // FEMBOY FUTA HOUSE
+};
+// En duel de decks, une Promo compte comme cette rareté pour les plafonds des niveaux (jouable à partir de Difficile)
+const PLAFOND_PROMO = 'epique';
+// Contour des cartes promo, à essayer : 'noir-or' (édition limitée) ou 'neon' (néon GameCards)
+const STYLE_PROMO = 'neon';
 const URL_IMAGES = 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps';
 
 // Icônes Bootstrap Icons (licence MIT) en SVG : rendu identique sur tous les appareils, contrairement aux emoji
@@ -660,15 +680,18 @@ function statDeJeu(valeur, rarete, bas = 0) {
 }
 
 // Un jeu a une version EX s'il est adoré des joueurs (sur de vrais avis) mais classé Rare ou en dessous
-const aUneVersionEX = jeu => Boolean(jeu) && !jeu.estime && jeu.note >= SEUIL_EX_NOTE && jeu.avis >= SEUIL_EX_AVIS
+const aUneVersionEX = jeu => Boolean(jeu) && !jeu.promo && !jeu.estime && jeu.note >= SEUIL_EX_NOTE && jeu.avis >= SEUIL_EX_AVIS
     && indexRarete(jeu.rarete) >= INDEX_RARE;
 
 // `ex` : version EX, la Qualité est placée dans la fourchette de la rareté au-dessus
 function creerCarte(jeu, { ex = false } = {}) {
     return {
         id: jeu.id,
+        steam: jeu.steam ?? jeu.id, // identifiant Steam (différent de `id` pour une carte promo)
+        promo: Boolean(jeu.promo),
+        numero: jeu.numero, // numéro d'une carte promo
         nom: jeu.nom,
-        image: `${URL_IMAGES}/${jeu.id}/${jeu.image || 'header.jpg'}`,
+        image: `${URL_IMAGES}/${jeu.steam ?? jeu.id}/${jeu.image || 'header.jpg'}`,
         attaque: ex
             ? STATS_FORCEES[jeu.id]?.attaque ?? statDeJeu(notePublic(jeu.note, jeu.avis), RARETES[indexRarete(jeu.rarete) - 1].id, 50)
             : statQualite(jeu),
@@ -689,7 +712,7 @@ function creerCarte(jeu, { ex = false } = {}) {
 
 // `cachee` masque les stats, et ce qui les trahirait (année, chef-d'œuvre) : carte adverse en duel
 // Jaquette verticale Steam (600 × 900) pour les Full Art ; à défaut, l'image horizontale
-const imagePortrait = carte => `${URL_IMAGES}/${carte.id}/library_600x900.jpg`;
+const imagePortrait = carte => `${URL_IMAGES}/${carte.steam ?? carte.id}/library_600x900.jpg`;
 
 // Image de secours, sous l'image Steam : visible pendant le chargement, et si l'image n'existe pas.
 // Une couleur propre à chaque jeu, ses initiales en grand et son nom.
@@ -704,6 +727,7 @@ function imageSecoursHTML(carte) {
 // `bonus` : bonus de variante en combat, affiché en pastille à côté de chaque stat (duels)
 // Holo et Full Art suivent par défaut les exemplaires possédés (carte de la collection)
 function carteHTML(carte, { holo = (carte.holos || 0) > 0, compteur = 0, cachee = false, fullArt = (carte.fullArts || 0) > 0, ex = Boolean(carte.ex), bonus = 0 } = {}) {
+    if (carte.promo) fullArt = true; // toutes les promos sont Full Art
     if (fullArt) holo = false;
     const rarete = RARETES[indexRarete(carte.rarete)];
     // Sur la carte adverse du duel, l'année trahirait l'Ancienneté : on la cache aussi
@@ -731,14 +755,16 @@ function carteHTML(carte, { holo = (carte.holos || 0) > 0, compteur = 0, cachee 
                 </ul>`;
     const secours = echapper(carte.image);
     return `
-        <article class="carte rarete-${rarete.id}${holo ? ' holo' : ''}${cachee ? ' stats-cachees' : ''}${chef ? ' chef-oeuvre' : ''}${goty ? ' goty' : ''}${fullArt ? ' full-art' : ''}${ex ? ' ex' : ''}">
+        <article class="carte rarete-${rarete.id}${holo ? ' holo' : ''}${cachee ? ' stats-cachees' : ''}${chef ? ' chef-oeuvre' : ''}${goty ? ' goty' : ''}${fullArt ? ' full-art' : ''}${ex ? ' ex' : ''}${carte.promo ? ` promo promo-${STYLE_PROMO}` : ''}">
             <div class="carte-corps">
                 ${fullArt ? `<div class="full-art-fond" style="--secours: url('${secours}')" aria-hidden="true">${imageSecoursHTML(carte)}<img src="${imagePortrait(carte)}" alt="" loading="lazy"
                     onerror="if (this.dataset.repli) { this.parentNode.classList.remove('paysage'); this.remove(); } else { this.dataset.repli = 1; this.src = '${secours}'; this.parentNode.classList.add('paysage'); }"></div>` : ''}
                 ${goty ? `<span class="ruban-goty" title="${t('Jeu de l’année {annee}', { annee: goty.annee })} · ${goty.ceremonie}"><span>${BRIN_LAURIER}GOTY ${goty.annee}${BRIN_LAURIER}</span></span>` : ''}
                 ${goty && !fullArt ? `<span class="filigrane-goty" aria-hidden="true">${LAURIER}</span>` : ''}
                 <header class="carte-haut">
-                    <span class="carte-rarete">${rarete.nom}${fullArt ? ' · Full Art' : holo ? ' · Holo' : ''}</span>
+                    <span class="carte-rarete">${carte.promo
+                        ? `${rarete.nom}${carte.numero ? ` #${String(carte.numero).padStart(3, '0')}` : ''}`
+                        : `${rarete.nom}${fullArt ? ' · Full Art' : holo ? ' · Holo' : ''}`}</span>
                     ${compteur > 1 ? `<span class="carte-compteur">×${compteur}</span>` : ''}
                 </header>
                 ${fullArt
@@ -772,7 +798,8 @@ function pucesRaretesHTML({ actif = '', totaux = false } = {}) {
         <button class="puce${id ? ` rarete-${id}` : ''}${actif === id ? ' active' : ''}" data-rarete="${id}" aria-pressed="${actif === id}">
             <i></i>${nom} <b>${nombre(n)}${totaux ? ` / ${nombre(total)}` : ''}</b></button>`;
     return puce('', t('Toutes'), possedees().length, totalJeux())
-        + RARETES.map(r => puce(r.id, r.nom, nombreDeRarete(r.id), totalDeRarete(r.id))).join('');
+        // Le catalogue (avec les totaux) ne montre que les jeux : pas de pastille Promo
+        + RARETES.filter(r => !(totaux && r.promo)).map(r => puce(r.id, r.nom, nombreDeRarete(r.id), totalDeRarete(r.id))).join('');
 }
 
 // Options du filtre genre / thème, groupées. `presents` (Set) ne garde que les valeurs rencontrées.
@@ -823,6 +850,13 @@ async function chargerJeux() {
     calculerRaretes();
     for (const jeu of tousLesJeux) jeuxParRarete[jeu.rarete].push(jeu);
     jeuxParId = new Map(tousLesJeux.map(jeu => [jeu.id, jeu]));
+    // Les cartes promo ne sont connues que par leur identifiant (hors de tousLesJeux et des raretés)
+    for (const [id, { steam, numero, stats }] of Object.entries(PROMOS)) {
+        const jeu = jeuxParId.get(steam);
+        if (!jeu) continue;
+        STATS_FORCEES[id] = stats;
+        jeuxParId.set(Number(id), { ...jeu, id: Number(id), steam, numero, rarete: 'promo', promo: true, statPopularite: undefined, statQualite: undefined });
+    }
     calculerAnciennete();
     genresCatalogue = genres;
     majCollectionDepuisDonnees(); 
@@ -844,6 +878,8 @@ function majCollectionDepuisDonnees() {
             continue;
         }
         Object.assign(entree, creerCarte(jeu, { ex: entree.exs > 0 }));
+        // Toutes les promos sont Full Art (y compris celles obtenues avant cette règle)
+        if (jeu.promo) entree.fullArts = entree.exemplaires;
         delete entree.defense; // ancienne stat Note Metacritic
     }
     etat.pieces += rembourse;
@@ -857,7 +893,7 @@ function majCollectionDepuisDonnees() {
 
 const donneesPretes = () => tousLesJeux.length > 0;
 const totalJeux = () => tousLesJeux.length;
-const totalDeRarete = id => jeuxParRarete[id]?.length || 0;
+const totalDeRarete = id => (id === 'promo' ? Object.keys(PROMOS).length : jeuxParRarete[id]?.length || 0);
 // Cartes de la collection
 const possedees = () => Object.values(etat.collection);
 const nombreDeRarete = id => possedees().filter(e => e.rarete === id).length;
@@ -872,7 +908,8 @@ function tirerRarete(cle = 'chance', possibles = RARETES) {
         t -= rarete[cle];
         if (t < 0) return indexRarete(rarete.id);
     }
-    return indexRarete(possibles.at(-1).id);
+    // Arrondi : la dernière rareté qui a une chance (jamais la Promo, hors du tirage)
+    return indexRarete(possibles.findLast(r => r[cle] > 0)?.id ?? possibles.at(-1).id);
 }
 
 // Pioche un jeu au hasard dans la rareté demandée, tous avec la même chance (sans doublon dans `exclus`,
@@ -1643,6 +1680,7 @@ const formatJoueurs = n => n >= 1e6
 
 // Pourquoi ce jeu a cette rareté, en une phrase
 function raisonRarete(jeu) {
+    if (jeu.promo) return t('Carte promo : une édition spéciale, obtenue seulement avec un code cadeau');
     if (jeu.rarete === 'mythique') return t('Mythique : l’un des 22 jeux les plus cultes du jeu vidéo');
     const raisons = jeu.raisons.length ? ` · ${jeu.raisons.join(', ')}` : '';
     return `${t('Rang {n} au score de prestige', { n: nombre(jeu.rang) })}${raisons}`;
@@ -1652,6 +1690,7 @@ const variantesPossedees = e => Object.entries(exemplairesParVariante(e)).filter
 
 // Une seule variante : vente directe. Plusieurs : « Vendre… » ouvre la fenêtre du choix de l'exemplaire
 function boutonsVenteHTML(e) {
+    if (e.promo) return ''; // une carte promo ne s'obtient qu'une fois : elle ne se vend pas
     const variantes = variantesPossedees(e);
     if (variantes.length === 1) {
         const [variante] = variantes[0];
@@ -1745,7 +1784,7 @@ function afficherFiche(id) {
                     ? t('{annee} (sur Steam en {steam})', { annee: anneeOriginale(jeu), steam: carte.annee }) : carte.annee })}</span></dd></div>
                 ${jeu?.joueurs > 1 ? `<div><dt>👥 ${t('Joueurs estimés')}</dt><dd>≈ ${formatJoueurs(jeu.joueurs)}</dd></div>` : ''}
                 <div><dt>📰 Metacritic</dt><dd>${carte.metacritic ?? `<span class="gris">${t('aucune')}</span>`}</dd></div>
-                <div><dt># ${t('ID Steam')}</dt><dd>${carte.id}</dd></div>
+                <div><dt># ${t('ID Steam')}</dt><dd>${carte.steam ?? carte.id}</dd></div>
             </dl>
             <p class="fiche-exemplaires">
                 ${e
@@ -1760,7 +1799,7 @@ function afficherFiche(id) {
                     ? `<button class="btn btn-principal" data-acheter="${carte.id}"${manque > 0 ? ` disabled title="${t('Il te manque {n} pièces', { n: nombre(manque) })}"` : ''}>
                            ${t('Acheter')} · ${nombre(rarete.prix)} ${PIECE}</button>`
                     : ''}
-                <a class="btn" href="https://store.steampowered.com/app/${carte.id}" target="_blank" rel="noopener">${t('Voir sur Steam ↗')}</a>
+                <a class="btn" href="https://store.steampowered.com/app/${carte.steam ?? carte.id}" target="_blank" rel="noopener">${t('Voir sur Steam ↗')}</a>
             </div>
             ${!e && manque > 0 ? `<p class="fiche-note">${t('Il te manque {n} pièces.', { n: nombre(manque) })}</p>` : ''}
         </div>`;
@@ -1922,13 +1961,30 @@ function utiliserCode() {
     etat.codes[code] = Date.now();
     champ.value = '';
     // Une carte précise : elle rejoint la collection, le reste se verse comme une récompense de succès
-    const { carte: idCarte, ...reste } = recompense;
+    const { carte: idCarte, promo: idPromo, ...reste } = recompense;
     const jeu = jeuxParId.get(idCarte);
     if (jeu) {
         ajouterACollection(creerCarte(jeu), false);
         toast(t('{nom} rejoint ta collection !', { nom: jeu.nom }), 'gain');
     }
     encaisserRecompense(reste, t('Code cadeau'));
+    // Une carte promo : présentée dans une fenêtre, comme une récompense rare
+    const promo = jeuxParId.get(idPromo);
+    if (promo) {
+        const carte = creerCarte(promo);
+        const nouvelle = ajouterACollection(carte, false, true); // toutes les promos sont Full Art
+        sauvegarder();
+        jouerSonRarete(carte.rarete);
+        $('#modale-contenu').innerHTML = `
+            <div class="echange echange-resultat">
+                <h2>${t('Carte promo obtenue !')}</h2>
+                <p class="echange-intro">${t('Une édition spéciale, à part de la carte normale du jeu.')}</p>
+                <div class="echange-carte">${flipHTML(carte, { retournee: true, nouvelle })}</div>
+                <div class="echange-actions"><button class="btn" data-fiche="${carte.id}">${t('Voir la fiche')}</button></div>
+            </div>`;
+        ouvrirModale();
+        verifierSucces();
+    }
 }
 
 // ---------- Écran règles ----------
@@ -1939,12 +1995,12 @@ function afficherRegles() {
     $('#legende-raretes').innerHTML = RARETES.map(r => `
         <tr class="rarete-${r.id}">
             <td><span class="pastille"></span>${r.nom}</td>
-            <td>${r.id === 'mythique' ? t('choisis à la main') : r.quota ? t('{n} suivants', { n: nombre(r.quota) }) : t('tous les autres')}</td>
-            <td>${chanceRarete(r)}</td>
+            <td>${r.promo ? t('codes cadeaux') : r.id === 'mythique' ? t('choisis à la main') : r.quota ? t('{n} suivants', { n: nombre(r.quota) }) : t('tous les autres')}</td>
+            <td>${r.promo ? '—' : chanceRarete(r)}</td>
             <td>${r.chanceGarantie ? `${nombre(r.chanceGarantie)} %` : '—'}</td>
-            <td>${nombre(r.chanceDuel)} %</td>
-            <td>${r.revente} ${PIECE}</td>
-            <td>${nombre(r.prix)} ${PIECE}</td>
+            <td>${r.promo ? '—' : `${nombre(r.chanceDuel)} %`}</td>
+            <td>${r.promo ? '—' : `${r.revente} ${PIECE}`}</td>
+            <td>${r.promo ? '—' : `${nombre(r.prix)} ${PIECE}`}</td>
             <td>${nombreDeRarete(r.id)} / ${nombre(totalDeRarete(r.id))}</td>
         </tr>`).join('');
 }
@@ -2148,7 +2204,7 @@ function majMalchance() {
 // Progression de l'accueil : une tuile par rareté (possédées / total, jauge et pourcentage)
 function progressionRaretesHTML() {
     const pourcent = p => `${p > 0 && p < 0.1 ? '< ' + (0.1).toLocaleString(LOCALE) : p.toLocaleString(LOCALE, { maximumFractionDigits: p < 10 ? 1 : 0 })} %`;
-    return RARETES.map(r => {
+    return RARETES.filter(r => !r.promo).map(r => {
         const n = nombreDeRarete(r.id);
         const total = totalDeRarete(r.id);
         const p = total ? (n / total) * 100 : 0;
@@ -2533,7 +2589,7 @@ const deckDuel = {
 };
 
 const totalStats = c => STATS_DECK.reduce((n, s) => n + valeurCombat(c, s), 0);
-const autoriseeAuNiveau = (rarete, niveau) => indexRarete(rarete) >= indexRarete(niveau.max);
+const autoriseeAuNiveau = (rarete, niveau) => indexRarete(rarete === 'promo' ? PLAFOND_PROMO : rarete) >= indexRarete(niveau.max);
 const cartesDuNiveau = niveau => possedees().filter(e => autoriseeAuNiveau(e.rarete, niveau));
 // Cartes de ces jeux, de la meilleure à la moins bonne (total des stats)
 const classerParTotal = jeux => jeux.map(j => creerCarte(j)).sort((a, b) => totalStats(b) - totalStats(a));

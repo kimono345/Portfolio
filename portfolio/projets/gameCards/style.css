@@ -29,6 +29,7 @@
     --epique: #a352ff;
     --legendaire: #ffb800;
     --mythique: #ff6b9a;
+    --promo: #e9c46a; /* champagne : plus pâle que l'or des Légendaires */
     --arc-en-ciel: linear-gradient(135deg, #ff4d6d, #ffb800, #3fbf6f, #3b8bff, #a352ff, #ff4d6d);
     --prisme: linear-gradient(90deg, #ff4d8d, #ffb84d, #7dffb0, #45d4ff, #8b5cff, #ff4d8d);
     --or: linear-gradient(135deg,
@@ -115,6 +116,7 @@ h2 { font-size: 1.15rem; font-weight: 800; }
 .rarete-epique      { --rar: var(--epique); }
 .rarete-legendaire  { --rar: var(--legendaire); --rar-fond: var(--or); }
 .rarete-mythique    { --rar: var(--mythique); --rar-fond: var(--arc-en-ciel); }
+.rarete-promo       { --rar: var(--promo); }
 .texte-peu-commune { color: var(--peu-commune); }
 .texte-rarete { color: var(--rar); }
 
@@ -981,6 +983,28 @@ main {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     text-align: left;
 }
+/* ── Promo : un seul contour plein, deux styles à essayer (STYLE_PROMO dans script.js).
+   « PROMO #001 » s'affiche en haut à gauche, à la place de la rareté ── */
+.carte.promo .carte-rarete { color: var(--rar); letter-spacing: 0.06em; }
+
+/* 1. Noir et or : un cadre champagne métallisé, mat (sans le reflet animé de l'or des Légendaires) */
+.carte.promo-noir-or {
+    padding: 4px;
+    background: linear-gradient(160deg, #f6e3a8, #c9a24c 45%, #f1d98f 70%, #b88c3a);
+    box-shadow: 0 0 18px color-mix(in srgb, var(--promo) 30%, transparent), 0 10px 26px rgba(0, 0, 0, 0.6);
+}
+
+/* 2. Néon GameCards : un seul tube, du cyan au magenta, qui respire */
+.carte.promo-neon {
+    --rar: var(--neon-1);
+    padding: 3px;
+    background: linear-gradient(135deg, var(--neon-1), var(--neon-2));
+    box-shadow: 0 0 16px color-mix(in srgb, var(--neon-1) 45%, transparent), 0 0 30px color-mix(in srgb, var(--neon-2) 35%, transparent);
+    animation: neon-promo 2.4s ease-in-out infinite alternate;
+    animation-play-state: var(--effets);
+}
+@keyframes neon-promo { to { filter: brightness(1.18) saturate(1.2); } }
+
 /* ── Mythique : prisme cosmique ── */
 .carte.rarete-mythique {
     padding: 6px;
@@ -2728,6 +2752,10 @@ main {
     .tirage { grid-template-columns: repeat(6, minmax(0, 1fr)); max-width: 440px; margin-left: auto; margin-right: auto; }
     .tirage .flip { grid-column: span 2; }
     .tirage .flip:nth-child(4) { grid-column: 2 / span 2; }
+    /* Une seule carte (paquet Full Art) : une seule colonne, sinon le « span 2 » ci-dessus l'étire
+       sur une colonne en trop et elle déborde sous les boutons */
+    .tirage:has(> .flip:only-child) { grid-template-columns: minmax(0, 230px); }
+    .tirage:has(> .flip:only-child) > .flip { grid-column: auto; }
     .badge-nouvelle { top: -8px; font-size: 0.62rem; padding: 0.1rem 0.45rem; }
     .tirage-vedettes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .ouverture.multiple .tirage .flip, .ouverture.multiple .tirage .flip:nth-child(4) { grid-column: auto; }
