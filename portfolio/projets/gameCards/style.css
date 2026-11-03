@@ -994,16 +994,72 @@ main {
     box-shadow: 0 0 18px color-mix(in srgb, var(--promo) 30%, transparent), 0 10px 26px rgba(0, 0, 0, 0.6);
 }
 
-/* 2. Néon GameCards : un seul tube, du cyan au magenta, qui respire */
+/* 2. Néon GameCards : un cadre large, rayé façon « tech », où la lumière cyan → magenta fait le tour */
+@property --angle-promo { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
 .carte.promo-neon {
     --rar: var(--neon-1);
-    padding: 3px;
-    background: linear-gradient(135deg, var(--neon-1), var(--neon-2));
-    box-shadow: 0 0 16px color-mix(in srgb, var(--neon-1) 45%, transparent), 0 0 30px color-mix(in srgb, var(--neon-2) 35%, transparent);
-    animation: neon-promo 2.4s ease-in-out infinite alternate;
+    padding: 8px;
+    background:
+        repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0 2px, transparent 2px 8px),
+        conic-gradient(from var(--angle-promo), var(--neon-1), #7a3cd6, var(--neon-2), #ff8a3d, var(--neon-2), #7a3cd6, var(--neon-1));
+    box-shadow: 0 0 20px color-mix(in srgb, var(--neon-1) 55%, transparent), 0 0 42px color-mix(in srgb, var(--neon-2) 45%, transparent), 0 10px 26px rgba(0, 0, 0, 0.6);
+    animation: neon-promo 5s linear infinite;
     animation-play-state: var(--effets);
 }
-@keyframes neon-promo { to { filter: brightness(1.18) saturate(1.2); } }
+@keyframes neon-promo { to { --angle-promo: 360deg; } }
+/* Le néon déborde un peu vers l'intérieur de l'illustration */
+.carte.promo-neon .carte-corps {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5), inset 0 0 18px color-mix(in srgb, var(--neon-1) 55%, transparent), inset 0 -10px 26px color-mix(in srgb, var(--neon-2) 35%, transparent);
+}
+/* « PROMO #001 » aux couleurs du cadre : dégradé cyan → magenta */
+.carte.promo-neon .carte-rarete {
+    background: linear-gradient(90deg, var(--neon-1), var(--neon-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* Effet « Rainbow Rare » aux couleurs néon : deux calques entre l'illustration et le texte.
+   --mx / --my suivent la souris (inclinerVers) ; sur écran tactile, ils balaient la carte tout seuls */
+@property --mx { syntax: '<percentage>'; inherits: true; initial-value: 50%; }
+@property --my { syntax: '<percentage>'; inherits: true; initial-value: 40%; }
+.carte.promo-neon[data-incline] {
+    transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition: transform 0.18s ease-out;
+}
+.carte.promo-neon .carte-corps > :not(.full-art-fond):not(.ruban-goty) { z-index: 2; }
+/* 1. Voile pastel cyan → violet → magenta sur toute l'illustration ; les couleurs glissent avec l'angle */
+.carte.promo-neon .carte-corps::before {
+    content: '';
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(125deg, #00e5ff, #8b5cff, #ff2bd6, #ffb0e8, #00e5ff, #8b5cff, #ff2bd6)
+        calc(100% - var(--mx)) calc(100% - var(--my)) / 300% 300%;
+    mix-blend-mode: color;
+    opacity: 0.6;
+}
+/* 2 et 3. Surface gravée (fines ondes) qui s'allume sous la lumière, et reflet qui suit la souris */
+.carte.promo-neon .carte-corps::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.55), transparent 38%),
+        repeating-radial-gradient(circle at 20% 110%, rgba(255, 255, 255, 0.5) 0 1px, transparent 1px 3.5px),
+        repeating-linear-gradient(60deg, rgba(255, 255, 255, 0.18) 0 1px, transparent 1px 5px);
+    mix-blend-mode: overlay;
+    -webkit-mask-image: radial-gradient(circle at var(--mx) var(--my), #000, rgba(0, 0, 0, 0.3) 60%);
+    mask-image: radial-gradient(circle at var(--mx) var(--my), #000, rgba(0, 0, 0, 0.3) 60%);
+}
+@media (hover: none) {
+    .carte.promo-neon .carte-corps { animation: promo-balayage 6s ease-in-out infinite alternate; animation-play-state: var(--effets); }
+}
+@keyframes promo-balayage { from { --mx: 10%; --my: 15%; } to { --mx: 90%; --my: 75%; } }
 
 /* ── Mythique : prisme cosmique ── */
 .carte.rarete-mythique {
