@@ -1590,6 +1590,40 @@ function boutonsVenteHTML(e) {
     return `<button class="btn btn-or" data-choix-vente="${e.id}">${t('Vendre…')}</button>`;
 }
 
+// Fusion : 3 exemplaires normaux (la carte et 2 doublons) deviennent 1 holo. Même valeur de revente
+// (une holo vaut 3 normales), mais la holo gagne son bonus en duel.
+const EXEMPLAIRES_FUSION = 3;
+
+// Bouton de la fiche : actif à 3 exemplaires normaux, grisé à 2 pour montrer que la fusion approche
+function boutonFusionHTML(e) {
+    const normales = exemplairesParVariante(e).normale;
+    if (normales < EXEMPLAIRES_FUSION - 1) return '';
+    const pret = normales >= EXEMPLAIRES_FUSION;
+    return `<button class="btn btn-fusion" data-fusion="${e.id}"${pret ? '' : ' disabled'}
+                title="${t('{n} exemplaires normaux deviennent 1 holo', { n: EXEMPLAIRES_FUSION })}">
+                ✨ ${t('Fusionner en holo')} · ${Math.min(normales, EXEMPLAIRES_FUSION)}/${EXEMPLAIRES_FUSION}</button>`;
+}
+
+function fusionnerHolo(id) {
+    const entree = etat.collection[id];
+    if (!entree || exemplairesParVariante(entree).normale < EXEMPLAIRES_FUSION) return;
+    if (!confirm(t('Fusionner {n} exemplaires normaux de « {nom} » en 1 holo ?', { n: EXEMPLAIRES_FUSION, nom: entree.nom }))) return;
+    entree.exemplaires -= EXEMPLAIRES_FUSION - 1;
+    entree.holos++;
+    sauvegarder();
+    jouerSon('succes');
+    toast(t('✨ {nom} devient holo !', { nom: entree.nom }), 'gain');
+    const caseCarte = document.querySelector(`.case[data-id="${id}"]`);
+    if (caseCarte) {
+        if (filtreCollection()(entree)) caseCarte.outerHTML = caseCollectionHTML(entree);
+        else caseCarte.remove();
+        majResumeCollection();
+    }
+    if (!$('#ecran-catalogue').hidden) afficherCatalogue();
+    afficherFiche(id);
+    verifierSucces();
+}
+
 // Fenêtre par-dessus la fiche : chaque variante possédée, avec sa carte, son nombre et son prix
 function choisirVente(id) {
     const e = etat.collection[id];
@@ -1651,6 +1685,7 @@ function afficherFiche(id) {
             </p>
             <div class="fiche-actions">
                 ${e ? boutonsVenteHTML(e) : ''}
+                ${e ? boutonFusionHTML(e) : ''}
                 ${!e
                     ? `<button class="btn btn-principal" data-acheter="${carte.id}"${manque > 0 ? ` disabled title="${t('Il te manque {n} pièces', { n: nombre(manque) })}"` : ''}>
                            ${t('Acheter')} · ${nombre(rarete.prix)} ${PIECE}</button>`
@@ -1869,14 +1904,30 @@ function reinitialiser() {
 const BONUS_COMBAT = { fullArt: 3, holo: 2 };
 // Variante qui compte en combat : le Full Art passe avant la holo
 const varianteCombat = carte => (carte.fullArts > 0 ? 'fullArt' : carte.holos > 0 ? 'holo' : null);
-const bonusCombat = carte => BONUS_COMBAT[varianteCombat(carte)] ?? 0;
+// Synergie (duel de decks et draft) : si les 3 cartes d'un deck partagent un genre ou un thème,
+// chacune gagne ce bonus sur toutes ses stats (`carte.synergie`, posé au début de la partie)
+const BONUS_SYNERGIE = 1;
+const bonusCombat = carte => (BONUS_COMBAT[varianteCombat(carte)] ?? 0) + (carte.synergie ?? 0);
 const valeurCombat = (carte, stat) => carte[stat] + bonusCombat(carte);
-// « (bonus Holo +2 compris) » après le score, quand ta carte en a un
+// « (bonus Holo +2, synergie +1 compris) » après le score, quand ta carte en a un
 function noteBonusCombat(carte) {
-    const bonus = bonusCombat(carte);
-    if (!bonus) return '';
-    return ` ${t('(bonus {variante} +{n} compris)', { variante: VARIANTES[varianteCombat(carte)].nom, n: bonus })}`;
+    const variante = varianteCombat(carte);
+    const parties = [
+        variante && `${VARIANTES[variante].nom} +${BONUS_COMBAT[variante]}`,
+        carte.synergie && t('synergie +{n}', { n: carte.synergie }),
+    ].filter(Boolean);
+    return parties.length ? ` ${t('(bonus {detail} compris)', { detail: parties.join(', ') })}` : '';
 }
+
+// Genres et thèmes communs à toutes ces cartes
+const tagsCommuns = ([premiere, ...autres]) => (premiere
+    ? [...premiere.genres, ...(premiere.tags || [])].filter(v => autres.every(c => aLeGenre(c, v)))
+    : []);
+// Le genre ou thème qui donne la synergie à un deck complet, sinon null
+const tagSynergie = cartes => (cartes.length === TAILLE_DECK ? tagsCommuns(cartes)[0] ?? null : null);
+// Pendant la composition : cette carte, ajoutée aux 2 déjà choisies, donnerait-elle la synergie ?
+const completeSynergie = (choisies, carte) => choisies.length === TAILLE_DECK - 1 && tagsCommuns([...choisies, carte]).length > 0;
+const BADGE_SYNERGIE = `<span class="badge-synergie" aria-hidden="true">✦ +${BONUS_SYNERGIE}</span>`;
 
 // Boutons d'attaque : une stat par bouton, avec sa valeur sur la carte (`attribut` : data-stat ou data-stat-deck)
 const boutonsStatsHTML = (carte, attribut) => Object.entries(STATS).map(([cle, stat]) => `
@@ -2372,12 +2423,13 @@ const POINTS_VICTOIRE_DECK = Math.floor(TAILLE_DECK / 2) + 1;
 // `elite` : son deck est tiré parmi les N meilleures cartes du jeu sous le plafond
 // `deck` : sinon, la rareté de chacune de ses 3 cartes ; `meilleures` : part de la rareté où il pioche
 // (0,5 = la meilleure moitié, au total des stats ; absente = toute la rareté)
+// `fullArt` : une de ses Légendaires ou Mythiques est Full Art ; sinon `chanceHolo` : chance qu'une de ses cartes soit holo
 const NIVEAUX_DECK = [
-    { id: 'facile', nom: t('Facile'), max: 'peu-commune', gain: 5, intelligence: 0, deck: ['peu-commune', 'commune', 'commune'] },
-    { id: 'normal', nom: t('Normal'), max: 'rare', gain: 10, intelligence: 0.5, deck: ['rare', 'rare', 'peu-commune'], meilleures: 0.5 },
-    { id: 'difficile', nom: t('Difficile'), max: 'epique', gain: 20, intelligence: 0.8, deck: ['epique', 'epique', 'epique'], meilleures: 0.33 },
-    { id: 'impossible', nom: t('Impossible'), max: 'legendaire', gain: 40, intelligence: 0.95, elite: 50 },
-    { id: 'hardcore', nom: t('Hardcore'), max: 'mythique', gain: 80, intelligence: 1, elite: 15 },
+    { id: 'facile', nom: t('Facile'), max: 'peu-commune', gain: 5, intelligence: 0, deck: ['peu-commune', 'commune', 'commune'], chanceHolo: 0.2 },
+    { id: 'normal', nom: t('Normal'), max: 'rare', gain: 10, intelligence: 0.5, deck: ['rare', 'rare', 'peu-commune'], meilleures: 0.5, chanceHolo: 0.35 },
+    { id: 'difficile', nom: t('Difficile'), max: 'epique', gain: 20, intelligence: 0.8, deck: ['epique', 'epique', 'epique'], meilleures: 0.33, chanceHolo: 0.5 },
+    { id: 'impossible', nom: t('Impossible'), max: 'legendaire', gain: 40, intelligence: 0.95, elite: 50, fullArt: true },
+    { id: 'hardcore', nom: t('Hardcore'), max: 'mythique', gain: 80, intelligence: 1, elite: 15, fullArt: true },
 ];
 // Draft : pas de collection ni de plafond. Chacun prend 1 carte parmi 3, trois fois (raretés selon `chanceDraft`).
 // `seuil` : l'ordinateur défend comme s'il attendait une bonne Épique
@@ -2485,15 +2537,30 @@ function coupOrdi(role, stat) {
         if (!malin) return { carte: auHasard(d.ordi), stat: auHasard(STATS_DECK) };
         let meilleur = null;
         for (const carte of d.ordi) {
-            for (const s of STATS_DECK) if (!meilleur || carte[s] > meilleur.carte[meilleur.stat]) meilleur = { carte, stat: s };
+            for (const s of STATS_DECK) {
+                if (!meilleur || valeurCombat(carte, s) > valeurCombat(meilleur.carte, meilleur.stat)) meilleur = { carte, stat: s };
+            }
         }
         return meilleur;
     }
     // Défense : il ne voit pas ta carte. Il répond avec sa plus petite carte qui dépasse la valeur qu'il attend ;
     // si aucune ne la dépasse, il sacrifie sa plus faible et garde ses atouts pour la suite
     if (!malin) return auHasard(d.ordi);
-    const triees = [...d.ordi].sort((a, b) => a[stat] - b[stat]);
-    return triees.find(c => c[stat] >= seuilDefense(d.niveau, stat)) ?? triees[0];
+    const triees = [...d.ordi].sort((a, b) => valeurCombat(a, stat) - valeurCombat(b, stat));
+    return triees.find(c => valeurCombat(c, stat) >= seuilDefense(d.niveau, stat)) ?? triees[0];
+}
+
+// Variantes du deck de l'ordinateur, sur des copies (ses cartes viennent d'un cache partagé) :
+// une Full Art garantie en Impossible et Hardcore, au mieux une holo dans les autres niveaux
+function variantesOrdi(deck, niveau) {
+    const cartes = deck.map(carte => ({ ...carte }));
+    if (niveau.fullArt) {
+        const eligibles = cartes.filter(carte => estHauteRarete(carte.rarete));
+        if (eligibles.length) auHasard(eligibles).fullArts = 1;
+    } else if (Math.random() < (niveau.chanceHolo ?? 0)) {
+        auHasard(cartes).holos = 1;
+    }
+    return cartes;
 }
 
 function niveauxDeckHTML() {
@@ -2521,10 +2588,12 @@ function choixDeckHTML() {
     const cartes = cartesDuNiveau(d.niveau)
         .filter(e => !recherche || e.nom.toLowerCase().includes(recherche))
         .sort((a, b) => valeur(b) - valeur(a) || totalStats(b) - totalStats(a));
+    const choisies = d.choix.map(id => etat.collection[id]).filter(Boolean);
     return `
         <p class="duel-message">${t('Niveau {niveau} : clique sur tes cartes pour remplir les {n} emplacements de ton deck.',
             { niveau: d.niveau.nom, n: TAILLE_DECK })}</p>
-        <div class="deck-slots">${Array.from({ length: TAILLE_DECK }, (_, i) => {
+        ${etatSynergieHTML(choisies)}
+        <div class="deck-slots${tagSynergie(choisies) ? ' synergie' : ''}">${Array.from({ length: TAILLE_DECK }, (_, i) => {
             const carte = etat.collection[d.choix[i]];
             return carte
                 ? `<button class="deck-slot plein${carte.id === d.dernierAjout ? ' arrive' : ''}" data-choix-deck="${carte.id}"
@@ -2548,7 +2617,7 @@ function choixDeckHTML() {
         </div>
         <div class="grille">${cartes.slice(0, d.limite).map(e => `
             <button class="carte-choix${d.choix.includes(e.id) ? ' choisie' : ''}" data-choix-deck="${e.id}" aria-pressed="${d.choix.includes(e.id)}">
-                ${carteHTML(e, { bonus: bonusCombat(e) })}
+                ${!d.choix.includes(e.id) && completeSynergie(choisies, e) ? BADGE_SYNERGIE : ''}${carteHTML(e, { bonus: bonusCombat(e) })}
             </button>`).join('')}</div>
         ${cartes.length > d.limite ? `<div class="plus"><button class="btn" data-deck-action="plus">${t('Afficher plus')}</button></div>` : ''}`;
 }
@@ -2569,6 +2638,21 @@ function actionsDeckHTML() {
             <button class="btn" data-deck-action="niveaux">${t('Changer de difficulté')}</button>`;
     }
     return '';
+}
+
+// Où en est la synergie du deck en cours de composition (duel de decks et draft)
+function etatSynergieHTML(choisies) {
+    const etiquette = tag => `<b class="tag-synergie">${echapper(tag)}</b>`;
+    const tag = tagSynergie(choisies);
+    const communs = choisies.length === TAILLE_DECK - 1 ? tagsCommuns(choisies) : [];
+    const texte = tag
+        ? t('Synergie {tag} : +{n} sur toutes les stats de tes {total} cartes !', { tag: etiquette(tag), n: BONUS_SYNERGIE, total: TAILLE_DECK })
+        : communs.length
+            ? t('Tes 2 cartes partagent {tags}. Choisis une 3ᵉ carte marquée ✦ pour la synergie : +{n} sur toutes les stats.', { tags: communs.slice(0, 4).map(etiquette).join(' '), n: BONUS_SYNERGIE })
+            : t('Synergie : si tes {total} cartes partagent un genre ou un thème, elles gagnent +{n} sur toutes leurs stats.', { total: TAILLE_DECK, n: BONUS_SYNERGIE });
+    return `<div class="synergie-bandeau${tag ? ' active' : communs.length ? ' proche' : ''}" role="status">
+            <span class="synergie-icone" aria-hidden="true">✦</span><p>${texte}</p>
+        </div>`;
 }
 
 // Bandeau au-dessus de la table : qui attaque, et sur quelle stat
@@ -2603,7 +2687,9 @@ function plateauDeckHTML() {
     const resultat = qui => (!c || !c.ecart ? '' : (qui === 'moi') === (c.ecart > 0) ? ' gagne' : ' perd');
     // Manche décisive : le total des stats s'affiche sur chaque carte
     const total = carte => (c && c.stat === null && carte ? `<span class="total-deck">Σ ${totalStats(carte)}</span>` : '');
-    const carteOrdi = !c?.ordi ? '' : c.revele ? flipHTML(c.ordi) : c.cache ? dos : carteHTML(c.ordi);
+    // Sa holo ou son Full Art n'apparaissent qu'une fois la carte retournée, avec la pastille de bonus
+    const variantesCarteOrdi = c?.ordi && { holo: c.ordi.holos > 0, fullArt: c.ordi.fullArts > 0, bonus: bonusCombat(c.ordi) };
+    const carteOrdi = !c?.ordi ? '' : c.revele ? flipHTML(c.ordi, variantesCarteOrdi) : c.cache ? dos : carteHTML(c.ordi, variantesCarteOrdi);
     const mainOrdi = d.ordi.filter(carte => carte !== c?.ordi);
     const table = `${annonceStatHTML()}
         <div class="decks-combat${c?.ecart !== undefined ? ' compare' : ''}">
@@ -2620,6 +2706,7 @@ function plateauDeckHTML() {
             <div class="duel-infos"><div class="duel-vs">VS</div><span>${d.niveau.nom}</span></div>
             <div class="duel-joueur-score"><span>${t('Ordi')}</span><div class="pips">${pips('ordi')}</div></div>
         </div>
+        ${synergiesPartieHTML()}
         <div class="decks-main decks-ordi">${mainOrdi.map(() => dos).join('')}</div>
         ${table}
         <p class="duel-message${d.actions === 'fin' ? ' resultat-final' : ''}">${d.message}</p>
@@ -2628,6 +2715,16 @@ function plateauDeckHTML() {
             <button class="carte-main${d.carte === i ? ' choisie' : ''}" data-carte-main="${i}"${d.attente && !d.verrou ? '' : ' disabled'}>
                 ${carteHTML(carte, { bonus: bonusCombat(carte) })}
             </button>`).join('')}</div>`;
+}
+
+// Synergies de la partie, sous le score. Celle de l'ordinateur ne dit pas son thème (ce serait un indice sur ses cartes)
+function synergiesPartieHTML() {
+    const { moi, ordi } = deckDuel.synergies ?? {};
+    if (!moi && !ordi) return '';
+    return `<p class="synergies-partie">
+        ${moi ? `<span class="synergie-deck active">${t('✦ Ta synergie « {tag} » : +{n}', { tag: echapper(moi), n: BONUS_SYNERGIE })}</span>` : ''}
+        ${ordi ? `<span class="synergie-deck active par-ordi">${t('✦ Synergie de l’ordinateur : +{n}', { n: BONUS_SYNERGIE })}</span>` : ''}
+    </p>`;
 }
 
 function afficherDuelDecks() {
@@ -2650,14 +2747,19 @@ function lancerPartieDecks() {
     const d = deckDuel;
     d.choix = d.choix.filter(id => etat.collection[id]);
     if (!donneesPretes() || d.choix.length < TAILLE_DECK) return afficherDuelDecks();
-    demarrerPartieDecks(d.choix.map(id => ({ ...etat.collection[id] })), deckOrdinateur(d.niveau));
+    demarrerPartieDecks(d.choix.map(id => ({ ...etat.collection[id] })), variantesOrdi(deckOrdinateur(d.niveau), d.niveau));
 }
 
 // Début d'une partie (duel de decks ou draft) : le premier attaquant est tiré au sort,
 // le gros message de la première manche l'annonce
 function demarrerPartieDecks(moi, ordi) {
+    // Synergie de chaque deck, posée sur des copies (les cartes de l'ordinateur viennent d'un cache partagé)
+    const synergies = { moi: tagSynergie(moi), ordi: tagSynergie(ordi) };
+    const avecSynergie = (deck, tag) => deck.map(carte => ({ ...carte, synergie: tag ? BONUS_SYNERGIE : 0 }));
     Object.assign(deckDuel, {
-        moi, ordi,
+        moi: avecSynergie(moi, synergies.moi),
+        ordi: avecSynergie(ordi, synergies.ordi),
+        synergies,
         score: { moi: 0, ordi: 0 },
         attaquant: Math.random() < 0.5 ? 'moi' : 'ordi',
         etape: 'partie', combat: null, actions: null, attente: null, pointMarque: null,
@@ -2704,12 +2806,13 @@ function draftHTML() {
     const { propositions, moi } = deckDuel.draft;
     return `
         <p class="duel-message">${t('Choix {i} / {n} : prends une carte. L’ordinateur fait son draft de son côté, avec les mêmes chances.', { i: moi.length + 1, n: TAILLE_DECK })}</p>
+        ${etatSynergieHTML(moi)}
         <div class="deck-slots">${Array.from({ length: TAILLE_DECK }, (_, i) => moi[i]
             ? `<div class="deck-slot plein${i === moi.length - 1 ? ' arrive' : ''}">${carteHTML(moi[i], { bonus: bonusCombat(moi[i]) })}</div>`
             : `<div class="deck-slot"><span>${i + 1}</span></div>`).join('')}</div>
         <div class="draft-choix">${propositions.map((carte, i) => `
             <button class="carte-choix" data-draft="${i}" aria-label="${t('Prendre {nom}', { nom: echapper(carte.nom) })}">
-                ${carteHTML(carte, { bonus: bonusCombat(carte) })}
+                ${completeSynergie(moi, carte) ? BADGE_SYNERGIE : ''}${carteHTML(carte, { bonus: bonusCombat(carte) })}
             </button>`).join('')}</div>`;
 }
 
@@ -3088,6 +3191,8 @@ function init() {
         }
         const marche = e.target.closest('[data-marche]');
         if (marche) return acheterMarche(Number(marche.dataset.marche));
+        const fusion = e.target.closest('[data-fusion]');
+        if (fusion) return fusionnerHolo(Number(fusion.dataset.fusion));
         const choixVente = e.target.closest('[data-choix-vente]');
         if (choixVente) return choisirVente(Number(choixVente.dataset.choixVente));
         const fiche = e.target.closest('[data-fiche]');

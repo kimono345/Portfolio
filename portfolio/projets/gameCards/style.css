@@ -1811,6 +1811,16 @@ main {
 .gris { color: var(--texte-doux); font-style: italic; }
 .fiche-exemplaires { color: var(--texte-doux); font-size: 0.92rem; }
 .fiche-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.2rem; }
+/* Fusion en holo : reflet irisé, comme une carte holo */
+.btn-fusion {
+    border: 1px solid transparent;
+    background:
+        linear-gradient(var(--fond-3), var(--fond-3)) padding-box,
+        linear-gradient(120deg, #ff4d6d, #ffb800, #3fbf6f, #3b8bff, #a352ff) border-box;
+    color: var(--texte);
+}
+.btn-fusion:not(:disabled):hover { box-shadow: 0 0 18px rgba(163, 82, 255, 0.45); }
+.btn-fusion:disabled { opacity: 0.55; cursor: not-allowed; }
 /* Choix de l'exemplaire à vendre quand on a plusieurs variantes */
 /* Choix de l'exemplaire à vendre : une carte par variante possédée */
 .modale-vente { width: min(720px, calc(100% - 32px)); text-align: center; }
@@ -2005,6 +2015,107 @@ main {
 }
 .deck-outils select option { background: var(--fond-2); }
 .carte-choix, .carte-main { border-radius: 14px; transition: transform 0.15s, box-shadow 0.15s; }
+.carte-choix { position: relative; }
+/* Synergie : 3 cartes avec un genre ou un thème en commun gagnent +1 */
+/* Bandeau pendant la composition du deck : discret au départ, néon quand la synergie est proche puis active */
+.synergie-bandeau {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    max-width: 680px;
+    margin: 0 auto 1.2rem;
+    padding: 0.8rem 1.1rem;
+    border-radius: 16px;
+    border: 1px solid var(--bord-fort);
+    background: var(--fond-3);
+    color: var(--texte);
+    font-size: 0.98rem;
+    line-height: 1.45;
+    text-align: left;
+}
+.synergie-bandeau p { margin: 0; }
+.synergie-icone {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    font-size: 1.3rem;
+    color: var(--neon-1);
+    background: radial-gradient(circle, color-mix(in srgb, var(--neon-1) 18%, transparent), transparent 70%);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--neon-1) 45%, transparent);
+}
+.tag-synergie {
+    display: inline-block;
+    margin: 0.1rem 0.15rem;
+    padding: 0.05rem 0.55rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--neon-1) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--neon-1) 55%, transparent);
+    color: var(--texte);
+    font-weight: 800;
+}
+.synergie-bandeau.proche { border-color: color-mix(in srgb, var(--neon-1) 55%, transparent); }
+.synergie-bandeau.active {
+    border-color: var(--neon-1);
+    background:
+        linear-gradient(100deg, color-mix(in srgb, var(--neon-1) 24%, transparent), color-mix(in srgb, var(--neon-2) 18%, transparent)),
+        var(--fond-3);
+    font-weight: 700;
+    font-size: 1.05rem;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--neon-1) 40%, transparent), 0 0 28px color-mix(in srgb, var(--neon-1) 35%, transparent);
+    animation: synergie-allume 0.6s cubic-bezier(0.2, 0.8, 0.3, 1.3);
+}
+.synergie-bandeau.active .synergie-icone { color: #04121a; background: var(--neon-1); box-shadow: 0 0 18px var(--neon-1); }
+@keyframes synergie-allume { from { transform: scale(0.92); opacity: 0.4; } }
+/* Les 3 emplacements du deck brillent quand la synergie est active */
+.deck-slots.synergie .deck-slot.plein { border-radius: 14px; box-shadow: 0 0 0 2px var(--neon-1), 0 0 24px color-mix(in srgb, var(--neon-1) 45%, transparent); }
+@media (max-width: 560px) {
+    .synergie-bandeau { font-size: 0.88rem; padding: 0.7rem 0.8rem; gap: 0.7rem; }
+    .synergie-bandeau.active { font-size: 0.92rem; }
+    .synergie-icone { width: 34px; height: 34px; font-size: 1.05rem; }
+}
+/* Bandeau de la partie, sous le score */
+.synergie-deck {
+    width: fit-content;
+    max-width: 100%;
+    margin: -0.4rem auto 1rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    border: 1px dashed var(--bord-fort);
+    color: var(--texte-doux);
+    font-size: 0.85rem;
+    text-align: center;
+}
+.synergie-deck.active {
+    border: 1px solid color-mix(in srgb, var(--neon-1) 60%, transparent);
+    background: color-mix(in srgb, var(--neon-1) 12%, transparent);
+    color: var(--texte);
+    font-weight: 700;
+    box-shadow: 0 0 16px color-mix(in srgb, var(--neon-1) 22%, transparent);
+}
+.synergie-deck.par-ordi {
+    border-color: color-mix(in srgb, var(--neon-2) 60%, transparent);
+    background: color-mix(in srgb, var(--neon-2) 12%, transparent);
+    box-shadow: 0 0 16px color-mix(in srgb, var(--neon-2) 22%, transparent);
+}
+.synergies-partie { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin: -0.6rem 0 1rem; }
+.synergies-partie .synergie-deck { margin: 0; }
+.badge-synergie {
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    z-index: 4;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: var(--neon-1);
+    color: #04121a;
+    font-size: 0.75rem;
+    font-weight: 900;
+    box-shadow: 0 0 12px color-mix(in srgb, var(--neon-1) 60%, transparent);
+    pointer-events: none;
+}
 .carte-main.choisie { transform: translateY(-6px); box-shadow: 0 0 0 3px var(--accent), 0 0 24px rgba(255, 184, 0, 0.45); }
 /* Carte déjà placée dans le deck : grisée dans la liste (un clic la retire) */
 .carte-choix.choisie { opacity: 0.35; }
