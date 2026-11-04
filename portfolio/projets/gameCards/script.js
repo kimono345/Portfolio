@@ -1684,7 +1684,7 @@ function majResumeCollection() {
     ].join(' · ');
     const bouton = $('#btn-vendre-tout');
     bouton.disabled = valeur === 0;
-    bouton.innerHTML = valeur ? `${t('Revendre les doublons')} · +${nombre(valeur)} ${PIECE}` : t('Aucun doublon');
+    bouton.innerHTML = valeur ? `${t('Vendre les doublons')} · +${nombre(valeur)} ${PIECE}` : t('Aucun doublon');
     $('#btn-echanger').disabled = !echangesPossibles();
 }
 
