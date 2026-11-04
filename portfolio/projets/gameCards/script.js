@@ -316,6 +316,20 @@ const REMISE_MARCHE = 0.5;
 // Codes cadeaux (Profil), un seul usage par sauvegarde. Récompenses : { pieces }, { boosters }, { prestiges },
 // { fullArt } (un paquet Full Art) et { carte: identifiant Steam } (cette carte précise)
 const CODES_CADEAUX = {
+    // Une série de promos entière d'un coup ({ serie: n })
+    SERIE1: { serie: 1 },
+    SERIE2: { serie: 2 },
+    SERIE3: { serie: 3 },
+    SERIE4: { serie: 4 },
+    SERIE5: { serie: 5 },
+    SERIE6: { serie: 6 },
+    // Un booster d'une série, ouvert tout de suite ({ boosterSerie: n })
+    BOOSTERSERIE1: { boosterSerie: 1 },
+    BOOSTERSERIE2: { boosterSerie: 2 },
+    BOOSTERSERIE3: { boosterSerie: 3 },
+    BOOSTERSERIE4: { boosterSerie: 4 },
+    BOOSTERSERIE5: { boosterSerie: 5 },
+    BOOSTERSERIE6: { boosterSerie: 6 },
     BIENVENUE: { pieces: 300 },
     BOOSTERS: { boosters: 10 },
     PRESTIGE: { prestiges: 2 },
@@ -327,36 +341,6 @@ const CODES_CADEAUX = {
     FULLART5: { fullArt: true },
     PORTAL: { carte: 620 },
     FEMBOY: { pieces: 500000 },
-    FUTAHOUSE: { promo: -3602290 },
-    ELDENRING: { promo: -1245620 },
-    HELLDIVERS: { promo: -553850 },
-    OUTERWILDS: { promo: -753640 },
-    FNAF: { promo: -319510 },
-    CLAIROBSCUR: { promo: -1903340 },
-    OMORI: { promo: -1150690 },
-    DISPATCH: { promo: -2592160 },
-    CLOUDMEADOW: { promo: -1223750 },
-    BLACKFLAG: { promo: -242050 },
-    MINECRAFT: { promo: -900001 },
-    LEAGUEOFLEGENDS: { promo: -900002 },
-    VALORANT: { promo: -900003 },
-    GENSHIN: { promo: -900004 },
-    FORTNITE: { promo: -900005 },
-    PACMAN: { promo: -900101 },
-    SUPERMARIO: { promo: -900102 },
-    TETRIS: { promo: -900103 },
-    POKEMON: { promo: -900104 },
-    ZELDA: { promo: -900105 },
-    FEARANDHUNGER: { promo: -1002300 },
-    SLIMERANCHER: { promo: -433340 },
-    NOTAHUMAN: { promo: -3180070 },
-    ASHORTHIKE: { promo: -1055540 },
-    SENNAAR: { promo: -1931770 },
-    GOROGOA: { promo: -557600 },
-    HYPERLIGHT: { promo: -257850 },
-    NIGHTINTHEWOODS: { promo: -481510 },
-    BALLXPIT: { promo: -2062430 },
-    TUNIC: { promo: -553420 },
 };
 // Cartes promo (rareté Promo) : une édition spéciale d'un jeu, distincte de sa carte normale (identifiant à part, négatif),
 // obtenue seulement avec un code cadeau ({ promo: identifiant }) : jamais dans les boosters, le catalogue ni le draft.
@@ -364,7 +348,7 @@ const CODES_CADEAUX = {
 // choisies à la main (l'Ancienneté reste celle du jeu) ; `image` : illustration verticale à part (dossier promos/) ;
 // `jeu` : infos du jeu quand il manque au dataset (genres et thèmes en français, traduits au chargement) ;
 // `site` : lien officiel d'un jeu hors Steam, à la place de la page Steam ;
-// `encres` : les deux encres de la risographie (série 3) : [ombres, lumières]
+// `encres` : les deux encres de la risographie (série 3) : [ombres, lumières] ; `nom` : nom affiché, s'il diffère de celui de Steam
 const PROMOS = {
     [-3602290]: { steam: 3602290, serie: 1, numero: 1, stats: { attaque: 67, popularite: 67 }, image: 'promos/001.png?v=2' }, // FEMBOY FUTA HOUSE
     [-1245620]: { steam: 1245620, serie: 1, numero: 2, stats: { attaque: 99, popularite: 99 }, image: 'promos/002.png' }, // ELDEN RING
@@ -414,8 +398,32 @@ const PROMOS = {
     [-481510]: { steam: 481510, serie: 3, numero: 8, stats: { attaque: 90, popularite: 74 }, image: 'promos/s3-008.jpg?v=3', encres: ['#1b2440', '#ff8a3d'] }, // NIGHT IN THE WOODS
     [-2062430]: { steam: 2062430, serie: 3, numero: 9, stats: { attaque: 94, popularite: 80 }, image: 'promos/s3-009.jpg?v=3', encres: ['#3a0d1a', '#ff6a2a'] }, // BALL X PIT
     [-553420]: { steam: 553420, serie: 3, numero: 10, stats: { attaque: 91, popularite: 73 }, image: 'promos/s3-010.jpg?v=3', encres: ['#123d33', '#ffb347'] }, // TUNIC
+
+    // Série 5 « Romance » : des jeux dont l'histoire d'amour est le cœur, sur Steam
+    [-698780]: { steam: 698780, serie: 5, numero: 1, stats: { attaque: 94, popularite: 90 }, image: 'promos/s5-001.jpg' }, // DOKI DOKI LITERATURE CLUB!
+    [-1289310]: { steam: 1289310, serie: 5, numero: 2, stats: { attaque: 92, popularite: 84 }, image: 'promos/s5-002.jpg' }, // HELLTAKER
+    [-1144400]: { steam: 1144400, serie: 5, numero: 3, stats: { attaque: 93, popularite: 79 }, image: 'promos/s5-003.jpg' }, // SENREN＊BANKA
+    [-1230140]: { steam: 1230140, serie: 5, numero: 4, stats: { attaque: 93, popularite: 78 }, image: 'promos/s5-004.jpg' }, // ATRI -MY DEAR MOMENTS-
+    [-1669980]: { steam: 1669980, serie: 5, numero: 5, stats: { attaque: 92, popularite: 79 }, image: 'promos/s5-005.jpg' }, // VOLCANO PRINCESS
+    [-339800]: { steam: 339800, serie: 5, numero: 6, stats: { attaque: 90, popularite: 79 }, image: 'promos/s5-006.jpg' }, // HUNIEPOP
+    [-2322560]: { steam: 2322560, serie: 5, numero: 7, stats: { attaque: 88, popularite: 80 }, image: 'promos/s5-007.jpg' }, // LOVE IS ALL AROUND
+    [-331470]: { steam: 331470, serie: 5, numero: 8, stats: { attaque: 89, popularite: 81 }, image: 'promos/s5-008.jpg' }, // EVERLASTING SUMMER
+    [-333600]: { steam: 333600, serie: 5, numero: 9, stats: { attaque: 89, popularite: 78 }, image: 'promos/s5-009.jpg' }, // NEKOPARA VOL. 1
+    [-1451940]: { steam: 1451940, serie: 5, numero: 10, stats: { attaque: 89, popularite: 80 }, image: 'promos/s5-010.jpg', nom: 'NEEDY GIRL OVERDOSE' }, // NEEDY STREAMER OVERLOAD sur Steam
+
+    // Série 6 « Nintendo Switch » : les exclusivités de la console, hors Steam (identifiants -900201…)
+    [-900201]: { serie: 6, numero: 1, stats: { attaque: 96, popularite: 92 }, image: 'promos/s6-001.jpg', site: 'https://www.zelda.com',
+        jeu: { nom: 'The Legend of Zelda: Breath of the Wild', annee: 2017, metacritic: 97, genres: ['Action', 'Aventure'], tags: ['Monde ouvert', 'Survie', 'Fantasy'] } },
+    [-900202]: { serie: 6, numero: 2, stats: { attaque: 95, popularite: 90 }, image: 'promos/s6-002.jpg', site: 'https://www.nintendo.com',
+        jeu: { nom: 'Super Mario Odyssey', annee: 2017, metacritic: 97, genres: ['Action', 'Aventure'], tags: ['Plateforme', 'Monde ouvert', 'Coopération'] } },
+    [-900203]: { serie: 6, numero: 3, stats: { attaque: 91, popularite: 93 }, image: 'promos/s6-003.jpg', site: 'https://www.smashbros.com',
+        jeu: { nom: 'Super Smash Bros. Ultimate', annee: 2018, metacritic: 93, genres: ['Action'], tags: ['Combat en duel', 'Multijoueur', 'Coopération'] } },
+    [-900204]: { serie: 6, numero: 4, stats: { attaque: 86, popularite: 94 }, image: 'promos/s6-004.jpg', site: 'https://www.animal-crossing.com',
+        jeu: { nom: 'Animal Crossing: New Horizons', annee: 2020, metacritic: 90, genres: ['Simulation', 'Casual'], tags: ['Simulation de vie', 'Relaxant', 'Multijoueur', 'Coopération'] } },
+    [-900205]: { serie: 6, numero: 5, stats: { attaque: 80, popularite: 92 }, image: 'promos/s6-005.jpg', site: 'https://www.pokemon.com',
+        jeu: { nom: 'Pokémon Legends: Z-A', annee: 2025, genres: ['Action', 'RPG'], tags: ['JRPG', 'Monde ouvert', 'Fantasy'] } },
 };
-// Carte promo d'une carte (ou undefined) ; une promo sans `steam` est un jeu hors Steam (séries 2 et 4)
+// Carte promo d'une carte (ou undefined) ; une promo sans `steam` est un jeu hors Steam (séries 2, 4 et 6)
 const promoDe = carte => PROMOS[carte.id];
 const horsSteam = carte => Boolean(promoDe(carte)) && !promoDe(carte).steam;
 // « S1 · #001 » : série, puis numéro dans la série
@@ -935,11 +943,11 @@ async function chargerJeux() {
     for (const jeu of tousLesJeux) jeuxParRarete[jeu.rarete].push(jeu);
     jeuxParId = new Map(tousLesJeux.map(jeu => [jeu.id, jeu]));
     // Les cartes promo ne sont connues que par leur identifiant (hors de tousLesJeux et des raretés)
-    for (const [id, { steam, numero, stats, jeu: infos }] of Object.entries(PROMOS)) {
+    for (const [id, { steam, numero, stats, nom, jeu: infos }] of Object.entries(PROMOS)) {
         const jeu = jeuxParId.get(steam) ?? (infos && { ...infos, nomMin: infos.nom.toLowerCase(), genres: infos.genres.map(t), tags: infos.tags.map(t) });
         if (!jeu) continue;
         STATS_FORCEES[id] = stats;
-        jeuxParId.set(Number(id), { ...jeu, id: Number(id), steam, numero, rarete: 'promo', promo: true, statPopularite: undefined, statQualite: undefined });
+        jeuxParId.set(Number(id), { ...jeu, ...(nom && { nom, nomMin: nom.toLowerCase() }), id: Number(id), steam, numero, rarete: 'promo', promo: true, statPopularite: undefined, statQualite: undefined });
     }
     calculerAnciennete();
     genresCatalogue = genres;
@@ -2054,7 +2062,7 @@ function utiliserCode() {
     etat.codes[code] = Date.now();
     champ.value = '';
     // Une carte précise : elle rejoint la collection, le reste se verse comme une récompense de succès
-    const { carte: idCarte, promo: idPromo, ...reste } = recompense;
+    const { carte: idCarte, promo: idPromo, serie, boosterSerie, ...reste } = recompense;
     const jeu = jeuxParId.get(idCarte);
     if (jeu) {
         ajouterACollection(creerCarte(jeu), false);
@@ -2078,6 +2086,32 @@ function utiliserCode() {
         ouvrirModale();
         verifierSucces();
     }
+    if (serie) obtenirSerie(serie);
+    if (boosterSerie) {
+        const carte = creerCarte(jeuxParId.get(auHasard(promosDeSerie(boosterSerie))));
+        const nouvelle = ajouterACollection(carte, false, true); // toutes les promos sont Full Art
+        sauvegarder();
+        verifierSucces();
+        ouvrirPaquetPromo(carte, nouvelle, boosterSerie);
+    }
+}
+
+// Toutes les promos d'une série d'un coup (code cadeau), présentées dans une fenêtre
+function obtenirSerie(serie) {
+    const cartes = promosDeSerie(serie).sort((a, b) => numeroPromo({ id: a }) - numeroPromo({ id: b }))
+        .map(id => creerCarte(jeuxParId.get(id)));
+    const nouvelles = cartes.map(carte => ajouterACollection(carte, false, true)); // toutes les promos sont Full Art
+    sauvegarder();
+    jouerSon('succes');
+    $('#modale-contenu').innerHTML = `
+        <div class="echange echange-resultat">
+            <h2>${t('Série {n} complète !', { n: serie })}</h2>
+            <p class="echange-intro">${tn(cartes.length, '{n} carte promo rejoint ta collection.', '{n} cartes promo rejoignent ta collection.')}</p>
+            <div class="promos-obtenues">${cartes.map((carte, i) => `
+                <button class="carte-choix" data-fiche="${carte.id}">${carteHTML(carte)}${nouvelles[i] ? `<span class="badge-nouvelle">${t('Nouvelle !')}</span>` : ''}</button>`).join('')}</div>
+        </div>`;
+    ouvrirModale();
+    verifierSucces();
 }
 
 // ---------- Écran règles ----------
@@ -3068,6 +3102,8 @@ const DEFIS_PROMO = {
     4: { deck: 'anciens', stat: 'anciennete', regle: t('Seule l’Ancienneté compte. L’ordinateur joue les plus vieilles Légendaires et Mythiques, en holo.') },
     // `genre` : les cartes de ce genre gagnent `bonus` sur toutes leurs stats (les tiennes comme celles de l'ordinateur)
     3: { deck: 'genre', genre: t('Indé'), bonus: 3, regle: t('Les jeux indé (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des meilleures pépites indé Épiques, en holo.') },
+    5: { deck: 'genre', genre: t('Romance'), bonus: 3, regle: t('Les jeux romance (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des plus belles romances Épiques, en holo.') },
+    6: { deck: 'genre', genre: t('Multijoueur'), bonus: 3, regle: t('Les jeux multijoueur (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des meilleurs jeux multijoueur Épiques, en holo.') },
 };
 const defiDeSerie = serie => DEFIS_PROMO[serie] ?? DEFIS_PROMO[1];
 // Récompense d'une victoire, tirée au hasard (chances en %) : un booster pour la réserve, des pièces,
@@ -3118,7 +3154,7 @@ function deckDefiPromo(serie) {
     return deck.map(c => ({ ...c, ...(Math.random() < 0.5 ? { holos: 1 } : { fullArts: 1 }) }));
 }
 
-// Bonus d'une carte selon la règle du défi en cours (jeux indé de la série 3, et les promos de la série), sinon 0
+// Bonus d'une carte selon la règle du défi en cours (jeux indé de la série 3, romances de la série 5, multijoueur de la série 6, et les promos de la série), sinon 0
 function bonusRegleDefi(carte) {
     const regle = deckDuel.mode === 'promo' && deckDuel.niveau ? defiDeSerie(deckDuel.niveau.serie) : null;
     const concernee = regle?.genre && (aLeGenre(carte, regle.genre) || promoDe(carte)?.serie === deckDuel.niveau.serie);
@@ -3202,22 +3238,29 @@ function validerRecompenseDefi() {
     $('#modale').close();
     if (!promo) return;
     retourApresOuverture = location.hash || '#duel';
-    fileFullArt = fileFullArt.then(() => ouvrirPaquetFullArt(promo.carte, promo.nouvelle, t('Booster Série {n}', { n: promo.serie }),
-        { paquet: paquetPromo(promo.serie), aide: t('Une carte <b>Promo</b>… laquelle ?'), classe: 'sans-prisme' }));
+    ouvrirPaquetPromo(promo.carte, promo.nouvelle, promo.serie);
 }
 
-// Couleurs du paquet de chaque série (pastel, bleu et or, console grise, encres de risographie)
+// Booster d'une série (Défi Promo ou code cadeau) : son paquet à déchirer, puis la promo se révèle
+function ouvrirPaquetPromo(carte, nouvelle, serie) {
+    fileFullArt = fileFullArt.then(() => ouvrirPaquetFullArt(carte, nouvelle, t('Booster Série {n}', { n: serie }),
+        { paquet: paquetPromo(serie), aide: t('Une carte <b>Promo</b>… laquelle ?'), classe: 'sans-prisme' }));
+}
+
+// Couleurs du paquet de chaque série (pastel, bleu et or, encres de risographie, console grise, sakura, Joy-Con)
 const FONDS_PAQUET_PROMO = {
     1: 'linear-gradient(160deg, #ffc6e5 0%, #e3c7ff 50%, #b9d4ff 100%)',
     2: 'linear-gradient(160deg, #0a1a5c 0%, #1c3faa 55%, #c9a24c 100%)',
     4: 'linear-gradient(160deg, #d3cfc6 0%, #8f8b82 100%)',
     3: 'linear-gradient(160deg, #f3ead8 0%, #ff6b5b 55%, #1d2b64 100%)',
+    5: 'linear-gradient(160deg, #ffffff 0%, #ffd6e7 50%, #ff8fbf 100%)',
+    6: 'linear-gradient(90deg, #0ab9e6 0%, #0ab9e6 22%, #2b2b30 22%, #2b2b30 78%, #ff3c28 78%)',
 };
 // Paquet d'un booster de série : le modèle Full Art, recoloré et renommé
 function paquetPromo(serie) {
     const paquet = $('#paquet-full-art').cloneNode(true);
     paquet.removeAttribute('id');
-    paquet.classList.add('paquet-promo');
+    paquet.classList.add('paquet-promo', `paquet-serie-${serie}`); // design propre à certaines séries (style.css)
     paquet.style.setProperty('--fond-paquet', FONDS_PAQUET_PROMO[serie] ?? FONDS_PAQUET_PROMO[1]);
     paquet.querySelector('.paquet-type').textContent = t('Promo S{n}', { n: serie });
     return paquet;

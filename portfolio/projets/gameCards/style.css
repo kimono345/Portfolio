@@ -540,6 +540,72 @@ main {
 .paquet-prestige .paquet-corps, .paquet-prestige .paquet-haut { box-shadow: inset 0 0 0 1.5px rgba(246, 220, 138, 0.55); }
 .paquet-prestige .paquet-type { background: rgba(246, 220, 138, 0.18); }
 
+/* ── Boosters des séries promo 3 à 5, aux couleurs de leurs cartes ── */
+/* Série 3 « Indé » : affiche en risographie (papier crème, aplats corail et bleu nuit, trame de points, repérage décalé) */
+.paquet.paquet-serie-3 { --texte-paquet: #1d2b64; --ombre-paquet: rgba(255, 107, 91, 0.45); }
+.paquet.paquet-serie-3 .paquet-haut {
+    background: repeating-linear-gradient(90deg, rgba(243, 234, 216, 0.25) 0 1.5px, transparent 1.5px 3.5px), #1d2b64;
+    border-bottom-color: rgba(243, 234, 216, 0.6);
+}
+.paquet.paquet-serie-3 .paquet-corps {
+    background:
+        radial-gradient(circle, rgba(29, 43, 100, 0.2) 0 1px, transparent 1.4px) 0 0 / 6px 6px,
+        linear-gradient(172deg, #f3ead8 0 50%, #ff6b5b 50% 74%, #1d2b64 74%);
+}
+.paquet.paquet-serie-3 .paquet-marque { color: #1d2b64; text-shadow: 3px 2px 0 #ff6b5b; }
+.paquet.paquet-serie-3 .paquet-embleme { color: #1d2b64; filter: none; }
+.paquet.paquet-serie-3 .paquet-embleme::after { content: '✺'; color: #ff6b5b; text-shadow: 2px 1px 0 #1d2b64; }
+.paquet.paquet-serie-3 .paquet-type { background: #1d2b64; color: #f3ead8; border: none; text-shadow: 1.5px 1px 0 #ff6b5b; }
+.paquet.paquet-serie-3 .paquet-mention { color: #f3ead8; text-shadow: none; }
+
+/* Série 4 « Rétro » : coque de console portable grise, liserés violet et bleu, étiquette en écran LCD vert */
+.paquet.paquet-serie-4 { --texte-paquet: #2b2f7a; --ombre-paquet: rgba(0, 0, 0, 0.45); }
+.paquet.paquet-serie-4 .paquet-haut {
+    background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.3) 0 1.5px, rgba(0, 0, 0, 0.12) 1.5px 3.5px), #b3afa6;
+}
+.paquet.paquet-serie-4 .paquet-corps {
+    background:
+        linear-gradient(transparent 21%, #7a2a6a 21% 22.2%, transparent 22.2% 23.6%, #2b2f7a 23.6% 24.8%, transparent 24.8%),
+        linear-gradient(160deg, rgba(255, 255, 255, 0.4), transparent 45%, rgba(0, 0, 0, 0.12)),
+        #c9c5bc;
+}
+.paquet.paquet-serie-4 .paquet-marque { font: italic 900 clamp(1.5rem, 2.4vw, 1.9rem)/0.95 'Outfit', sans-serif; color: #2b2f7a; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); }
+.paquet.paquet-serie-4 .paquet-embleme { color: #55566a; filter: none; }
+.paquet.paquet-serie-4 .paquet-embleme::after { content: '▶'; font-size: 1.6rem; color: #e0201f; }
+.paquet.paquet-serie-4 .paquet-type {
+    padding: 0.45rem 0.7rem;
+    border: 3px solid #55566a;
+    border-radius: 4px;
+    background: #9bbc0f;
+    color: #0f380f;
+    font: 0.55rem 'Press Start 2P', monospace;
+    text-shadow: none;
+}
+.paquet.paquet-serie-4 .paquet-mention { color: #2b2f7a; text-shadow: none; }
+
+/* Série 5 « Romance » : papier nacré blanc et rose, pétales de cerisier, kanji 桜 */
+.paquet.paquet-serie-5 { --texte-paquet: #c2457a; --ombre-paquet: rgba(255, 143, 191, 0.5); }
+.paquet.paquet-serie-5 .paquet-haut {
+    background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.5) 0 1.5px, rgba(194, 69, 122, 0.12) 1.5px 3.5px), #ffc2da;
+}
+.paquet.paquet-serie-5 .paquet-corps {
+    background:
+        radial-gradient(ellipse 6px 3.5px at 14% 8%, #ffb6d0 55%, transparent 72%),
+        radial-gradient(ellipse 5px 3px at 82% 14%, #ffb6d0 55%, transparent 72%),
+        radial-gradient(ellipse 4px 2.5px at 24% 40%, #ffb6d0 55%, transparent 72%),
+        radial-gradient(ellipse 6px 3.5px at 88% 52%, #ffb6d0 55%, transparent 72%),
+        radial-gradient(ellipse 5px 3px at 10% 70%, #ffb6d0 55%, transparent 72%),
+        radial-gradient(ellipse 6px 3.5px at 70% 84%, #ffb6d0 55%, transparent 72%),
+        radial-gradient(ellipse 4px 2.5px at 44% 92%, #ffb6d0 55%, transparent 72%),
+        linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.7) 42%, transparent 54%),
+        linear-gradient(160deg, #ffffff, #ffe1ee 50%, #ffcfe2);
+}
+.paquet.paquet-serie-5 .paquet-marque { font-family: 'Cinzel', serif; letter-spacing: 0; color: #c2457a; text-shadow: 0 1px 0 #fff, 0 0 12px rgba(255, 143, 191, 0.5); }
+.paquet.paquet-serie-5 .paquet-embleme { color: #e98ab0; filter: drop-shadow(0 0 10px rgba(255, 143, 191, 0.5)); }
+.paquet.paquet-serie-5 .paquet-embleme::after { content: '桜'; font: 700 1.7rem 'Cinzel', serif; color: #c2457a; }
+.paquet.paquet-serie-5 .paquet-type { background: #ff8fbf; color: #fff; border-color: #fff; font-family: 'Cinzel', serif; text-shadow: none; }
+.paquet.paquet-serie-5 .paquet-mention { color: #c2457a; text-shadow: none; }
+
 /* Réserve de boosters gratuits : pastille ×N sur le paquet */
 .paquet-charges {
     position: absolute;
@@ -1230,6 +1296,201 @@ main {
 }
 .fiche-infos.promo-serie-3 .fiche-rarete, .titre-serie.serie-3 { color: #ff6b5b; text-shadow: 1.5px 1px 0 #1d2b64; }
 .carte.promo-neon.promo-serie-3 .carte-nom { text-shadow: 2px 1.5px 0 var(--encre-2); }
+
+/* ── Série 5 « Romance » : sakura. Cadre nacré blanc et rose qui chatoie, liseré vieux rose,
+   pétales de cerisier qui tombent devant la carte, lueurs douces (bokeh) en haut de l'illustration,
+   voile rose de printemps, textes en Cinzel ── */
+.carte.promo-neon.promo-serie-5 {
+    --rar: #ff8fbf;
+    padding: 10px;
+    border-radius: 14px;
+    overflow: hidden; /* les pétales restent dans la carte */
+    background:
+        linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.85) 45%, transparent 55%) calc(var(--mx) * 2 - 50%) 0 / 250% 100% no-repeat,
+        radial-gradient(circle at 50% 100%, transparent 0 3px, rgba(255, 255, 255, 0.75) 3px 4px, transparent 4px 6px, rgba(255, 255, 255, 0.75) 6px 7px, transparent 7px) 0 0 / 14px 7px,
+        radial-gradient(circle at 50% 100%, transparent 0 3px, rgba(255, 255, 255, 0.75) 3px 4px, transparent 4px 6px, rgba(255, 255, 255, 0.75) 6px 7px, transparent 7px) 7px 3.5px / 14px 7px,
+        linear-gradient(150deg, #ffe9f2 0%, #ffcfe1 30%, #ffeef6 52%, #efd0ff 74%, #ffd2e4 100%);
+    box-shadow: 0 0 0 1px #e9a6bf, 0 0 24px rgba(255, 170, 205, 0.5), 0 10px 26px rgba(0, 0, 0, 0.55);
+    animation: none;
+}
+/* Liseré vieux rose autour de l'illustration */
+.carte.promo-neon.promo-serie-5 .carte-corps {
+    border-radius: 9px;
+    box-shadow: 0 0 0 1.5px #e9a6bf, 0 0 0 3px rgba(255, 255, 255, 0.9), inset 0 0 20px rgba(255, 200, 225, 0.35);
+}
+/* Lueurs douces de printemps en haut de l'illustration */
+.carte.promo-neon.promo-serie-5::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg transform='rotate(0 20 20)' fill='none' stroke='%23c96b92' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M3 30V9a6 6 0 0 1 6-6h21'/%3E%3Cpath d='M8 30V14a6 6 0 0 1 6-6h16' stroke-width='0.9'/%3E%3Cpath d='M3 9c5 0 8 3 8 8M9 3c0 5 3 8 8 8' stroke-width='1'/%3E%3C/g%3E%3Ccircle cx='6' cy='6' r='2' fill='%23ffffff' stroke='%23c96b92' stroke-width='1'/%3E%3C/svg%3E") 1px 1px / 30px 30px no-repeat,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg transform='rotate(90 20 20)' fill='none' stroke='%23c96b92' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M3 30V9a6 6 0 0 1 6-6h21'/%3E%3Cpath d='M8 30V14a6 6 0 0 1 6-6h16' stroke-width='0.9'/%3E%3Cpath d='M3 9c5 0 8 3 8 8M9 3c0 5 3 8 8 8' stroke-width='1'/%3E%3C/g%3E%3Ccircle cx='34' cy='6' r='2' fill='%23ffffff' stroke='%23c96b92' stroke-width='1'/%3E%3C/svg%3E") calc(100% - 1px) 1px / 30px 30px no-repeat,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg transform='rotate(180 20 20)' fill='none' stroke='%23c96b92' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M3 30V9a6 6 0 0 1 6-6h21'/%3E%3Cpath d='M8 30V14a6 6 0 0 1 6-6h16' stroke-width='0.9'/%3E%3Cpath d='M3 9c5 0 8 3 8 8M9 3c0 5 3 8 8 8' stroke-width='1'/%3E%3C/g%3E%3Ccircle cx='34' cy='34' r='2' fill='%23ffffff' stroke='%23c96b92' stroke-width='1'/%3E%3C/svg%3E") calc(100% - 1px) calc(100% - 1px) / 30px 30px no-repeat,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg transform='rotate(270 20 20)' fill='none' stroke='%23c96b92' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M3 30V9a6 6 0 0 1 6-6h21'/%3E%3Cpath d='M8 30V14a6 6 0 0 1 6-6h16' stroke-width='0.9'/%3E%3Cpath d='M3 9c5 0 8 3 8 8M9 3c0 5 3 8 8 8' stroke-width='1'/%3E%3C/g%3E%3Ccircle cx='6' cy='34' r='2' fill='%23ffffff' stroke='%23c96b92' stroke-width='1'/%3E%3C/svg%3E") 1px calc(100% - 1px) / 30px 30px no-repeat,
+        radial-gradient(circle at 18% 14%, rgba(255, 220, 235, 0.55), transparent 9%),
+        radial-gradient(circle at 78% 9%, rgba(255, 235, 245, 0.5), transparent 7%),
+        radial-gradient(circle at 60% 22%, rgba(255, 200, 225, 0.35), transparent 6%),
+        radial-gradient(circle at 34% 6%, rgba(255, 255, 255, 0.4), transparent 5%);
+}
+/* Pétales qui tombent : un calque deux fois plus haut que la carte, qui glisse d'une moitié en boucle */
+.carte.promo-neon.promo-serie-5::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -100%;
+    height: 200%;
+    z-index: 3;
+    pointer-events: none;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffd6e6'/%3E%3Cstop offset='1' stop-color='%23f7a1c4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath transform='rotate(20 10 10)' fill='url(%23g)' d='M10 18.5C4.5 13.5 4 7 7.6 2.2L10 4.4l2.4-2.2C16 7 15.5 13.5 10 18.5z'/%3E%3C/svg%3E") 10% 4% / 13px 13px no-repeat,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffd6e6'/%3E%3Cstop offset='1' stop-color='%23f7a1c4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath transform='rotate(20 10 10)' fill='url(%23g)' d='M10 18.5C4.5 13.5 4 7 7.6 2.2L10 4.4l2.4-2.2C16 7 15.5 13.5 10 18.5z'/%3E%3C/svg%3E") 10% 54% / 13px 13px no-repeat,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffd6e6'/%3E%3Cstop offset='1' stop-color='%23f7a1c4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath transform='rotate(-35 10 10)' fill='url(%23g)' d='M10 18.5C4.5 13.5 4 7 7.6 2.2L10 4.4l2.4-2.2C16 7 15.5 13.5 10 18.5z'/%3E%3C/svg%3E") 72% 2% / 10px 10px no-repeat,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffd6e6'/%3E%3Cstop offset='1' stop-color='%23f7a1c4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath transform='rotate(-35 10 10)' fill='url(%23g)' d='M10 18.5C4.5 13.5 4 7 7.6 2.2L10 4.4l2.4-2.2C16 7 15.5 13.5 10 18.5z'/%3E%3C/svg%3E") 72% 52% / 10px 10px no-repeat,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffd6e6'/%3E%3Cstop offset='1' stop-color='%23f7a1c4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath transform='rotate(60 10 10)' fill='url(%23g)' d='M10 18.5C4.5 13.5 4 7 7.6 2.2L10 4.4l2.4-2.2C16 7 15.5 13.5 10 18.5z'/%3E%3C/svg%3E") 40% 14% / 15px 15px no-repeat,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffd6e6'/%3E%3Cstop offset='1' stop-color='%23f7a1c4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath transform='rotate(60 10 10)' fill='url(%23g)' d='M10 18.5C4.5 13.5 4 7 7.6 2.2L10 4.4l2.4-2.2C16 7 15.5 13.5 10 18.5z'/%3E%3C/svg%3E") 40% 64% / 15px 15px no-repeat,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffd6e6'/%3E%3Cstop offset='1' stop-color='%23f7a1c4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath transform='rotate(-10 10 10)' fill='url(%23g)' d='M10 18.5C4.5 13.5 4 7 7.6 2.2L10 4.4l2.4-2.2C16 7 15.5 13.5 10 18.5z'/%3E%3C/svg%3E") 88% 22% / 11px 11px no-repeat,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffd6e6'/%3E%3Cstop offset='1' stop-color='%23f7a1c4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath transform='rotate(-10 10 10)' fill='url(%23g)' d='M10 18.5C4.5 13.5 4 7 7.6 2.2L10 4.4l2.4-2.2C16 7 15.5 13.5 10 18.5z'/%3E%3C/svg%3E") 88% 72% / 11px 11px no-repeat,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffd6e6'/%3E%3Cstop offset='1' stop-color='%23f7a1c4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath transform='rotate(110 10 10)' fill='url(%23g)' d='M10 18.5C4.5 13.5 4 7 7.6 2.2L10 4.4l2.4-2.2C16 7 15.5 13.5 10 18.5z'/%3E%3C/svg%3E") 22% 30% / 9px 9px no-repeat,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffd6e6'/%3E%3Cstop offset='1' stop-color='%23f7a1c4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath transform='rotate(110 10 10)' fill='url(%23g)' d='M10 18.5C4.5 13.5 4 7 7.6 2.2L10 4.4l2.4-2.2C16 7 15.5 13.5 10 18.5z'/%3E%3C/svg%3E") 22% 80% / 9px 9px no-repeat,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffd6e6'/%3E%3Cstop offset='1' stop-color='%23f7a1c4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath transform='rotate(35 10 10)' fill='url(%23g)' d='M10 18.5C4.5 13.5 4 7 7.6 2.2L10 4.4l2.4-2.2C16 7 15.5 13.5 10 18.5z'/%3E%3C/svg%3E") 58% 36% / 14px 14px no-repeat,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffd6e6'/%3E%3Cstop offset='1' stop-color='%23f7a1c4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath transform='rotate(35 10 10)' fill='url(%23g)' d='M10 18.5C4.5 13.5 4 7 7.6 2.2L10 4.4l2.4-2.2C16 7 15.5 13.5 10 18.5z'/%3E%3C/svg%3E") 58% 86% / 14px 14px no-repeat,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffd6e6'/%3E%3Cstop offset='1' stop-color='%23f7a1c4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath transform='rotate(-70 10 10)' fill='url(%23g)' d='M10 18.5C4.5 13.5 4 7 7.6 2.2L10 4.4l2.4-2.2C16 7 15.5 13.5 10 18.5z'/%3E%3C/svg%3E") 6% 44% / 12px 12px no-repeat,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffd6e6'/%3E%3Cstop offset='1' stop-color='%23f7a1c4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath transform='rotate(-70 10 10)' fill='url(%23g)' d='M10 18.5C4.5 13.5 4 7 7.6 2.2L10 4.4l2.4-2.2C16 7 15.5 13.5 10 18.5z'/%3E%3C/svg%3E") 6% 94% / 12px 12px no-repeat,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffd6e6'/%3E%3Cstop offset='1' stop-color='%23f7a1c4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath transform='rotate(80 10 10)' fill='url(%23g)' d='M10 18.5C4.5 13.5 4 7 7.6 2.2L10 4.4l2.4-2.2C16 7 15.5 13.5 10 18.5z'/%3E%3C/svg%3E") 82% 46% / 10px 10px no-repeat,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffd6e6'/%3E%3Cstop offset='1' stop-color='%23f7a1c4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath transform='rotate(80 10 10)' fill='url(%23g)' d='M10 18.5C4.5 13.5 4 7 7.6 2.2L10 4.4l2.4-2.2C16 7 15.5 13.5 10 18.5z'/%3E%3C/svg%3E") 82% 96% / 10px 10px no-repeat;
+    filter: drop-shadow(0 1px 1px rgba(120, 30, 70, 0.25));
+    animation: sakura 11s linear infinite;
+    animation-play-state: var(--effets);
+}
+@keyframes sakura {
+    from { transform: translate(0, 0); }
+    to { transform: translate(-8%, 50%); }
+}
+.carte.promo-neon.promo-serie-5 .carte-bas::before {
+    content: '桜';
+    position: absolute;
+    right: 0;
+    top: -16cqi;
+    font: 700 22cqi/1 'Cinzel', serif;
+    color: rgba(255, 220, 235, 0.22);
+    text-shadow: 0 0 10px rgba(255, 143, 191, 0.35);
+    pointer-events: none;
+}
+.carte.promo-neon.promo-serie-5 .full-art-fond::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    filter: none;
+    background:
+        radial-gradient(circle at 22% 30%, #fff 0 1px, transparent 2px),
+        radial-gradient(circle at 74% 18%, #fff 0 1.2px, transparent 2.4px),
+        radial-gradient(circle at 63% 48%, #ffe3ee 0 1px, transparent 2px),
+        radial-gradient(circle at 12% 58%, #fff 0 0.8px, transparent 1.8px),
+        radial-gradient(circle at 86% 40%, #ffe3ee 0 1px, transparent 2px),
+        radial-gradient(circle at 40% 12%, #fff 0 0.9px, transparent 1.9px);
+    animation: scintille 2.6s ease-in-out infinite alternate;
+    animation-play-state: var(--effets);
+}
+@keyframes scintille { from { opacity: 0.35; } to { opacity: 1; } }
+/* Voile rose de printemps : doux, les couleurs de l'illustration restent */
+.carte.promo-neon.promo-serie-5.full-art .carte-corps::before {
+    background: linear-gradient(160deg, rgba(255, 214, 231, 0.7), rgba(255, 255, 255, 0.2) 45%, rgba(255, 182, 213, 0.55));
+    mix-blend-mode: soft-light;
+    opacity: 1;
+}
+.carte.promo-neon.promo-serie-5 .full-art-fond img { filter: brightness(1.05) saturate(1.05); }
+.carte.promo-neon.promo-serie-5 .full-art-fond::after {
+    background: linear-gradient(180deg, rgba(70, 20, 50, 0.5) 0%, transparent 16%, transparent 48%, rgba(60, 18, 44, 0.92) 74%);
+}
+/* Reflet nacré qui suit la souris */
+.carte.promo-neon.promo-serie-5 .carte-corps::after {
+    background:
+        radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.55), transparent 38%),
+        linear-gradient(125deg, #ffd6e7, #ffffff, #e9d8ff, #ffd6e7, #ffffff) var(--mx) var(--my) / 300% 300%;
+}
+.carte.promo-neon.promo-serie-5 .carte-rarete,
+.fiche-infos.promo-serie-5 .fiche-rarete,
+.titre-serie.serie-5 {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    background: none;
+    color: #ffe3ee;
+    text-shadow: 0 0 6px rgba(255, 143, 191, 0.9), 0 1px 2px rgba(80, 20, 50, 0.8);
+}
+.fiche-infos.promo-serie-5 .fiche-rarete, .titre-serie.serie-5 { color: #ff8fbf; text-shadow: none; }
+
+/* ── Série 6 « Nintendo Switch » : la carte est l'écran d'une Switch, une Joy-Con de chaque côté
+   (bleu néon à gauche, rouge néon à droite, comme la console) avec ses boutons ; bord d'écran noir, textes blancs ── */
+.carte.promo-neon.promo-serie-6 {
+    --rar: #ffffff;
+    --joycon: 26px;
+    padding: 6px calc(var(--joycon) + 4px);
+    border-radius: 24px;
+    background:
+        linear-gradient(90deg, #0ab9e6 0 var(--joycon), transparent var(--joycon) calc(100% - var(--joycon)), #ff3c28 calc(100% - var(--joycon))),
+        #1d1d21;
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.18), inset 0 -2px 0 rgba(0, 0, 0, 0.4),
+        -6px 0 18px rgba(10, 185, 230, 0.35), 6px 0 18px rgba(255, 60, 40, 0.35), 0 10px 26px rgba(0, 0, 0, 0.6);
+    animation: none;
+}
+/* Écran : bord noir et reflet de verre */
+.carte.promo-neon.promo-serie-6 .carte-corps {
+    border-radius: 4px;
+    box-shadow: 0 0 0 2px #0b0b0d, inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+/* Boutons des Joy-Con, comme sur la console : stick puis croix de flèches à gauche, ABXY puis stick à droite,
+   boutons - et + en haut, capture et home en bas */
+.carte.promo-neon.promo-serie-6::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background:
+        linear-gradient(#1a1a1d, #1a1a1d) calc(var(--joycon) / 2 - 3.5px) 20px / 7px 2.5px no-repeat,
+        linear-gradient(#1a1a1d, #1a1a1d) right calc(var(--joycon) / 2 - 3.5px) top 20px / 7px 2.5px no-repeat,
+        linear-gradient(#1a1a1d, #1a1a1d) right calc(var(--joycon) / 2 - 1.25px) top 17.25px / 2.5px 8px no-repeat,
+        radial-gradient(circle at calc(var(--joycon) / 2) 34%, #45454c 0 4px, #222226 5px 7.5px, #0e0e10 7.5px 9px, rgba(0, 0, 0, 0.3) 9px 10px, transparent 10.5px),
+        radial-gradient(circle at calc(var(--joycon) / 2 + 0px) calc(56% + -8px), #3a3a40 0 1.4400000000000002px, #1a1a1d 1.7600000000000002px 3.2px, rgba(0, 0, 0, 0.35) 3.2px 4.2px, transparent 4.7px),
+        radial-gradient(circle at calc(var(--joycon) / 2 + 0px) calc(56% + 8px), #3a3a40 0 1.4400000000000002px, #1a1a1d 1.7600000000000002px 3.2px, rgba(0, 0, 0, 0.35) 3.2px 4.2px, transparent 4.7px),
+        radial-gradient(circle at calc(var(--joycon) / 2 + -8px) calc(56% + 0px), #3a3a40 0 1.4400000000000002px, #1a1a1d 1.7600000000000002px 3.2px, rgba(0, 0, 0, 0.35) 3.2px 4.2px, transparent 4.7px),
+        radial-gradient(circle at calc(var(--joycon) / 2 + 8px) calc(56% + 0px), #3a3a40 0 1.4400000000000002px, #1a1a1d 1.7600000000000002px 3.2px, rgba(0, 0, 0, 0.35) 3.2px 4.2px, transparent 4.7px),
+        radial-gradient(circle at calc(100% - var(--joycon) / 2 + 0px) calc(34% + -8px), #3a3a40 0 1.4400000000000002px, #1a1a1d 1.7600000000000002px 3.2px, rgba(0, 0, 0, 0.35) 3.2px 4.2px, transparent 4.7px),
+        radial-gradient(circle at calc(100% - var(--joycon) / 2 + 0px) calc(34% + 8px), #3a3a40 0 1.4400000000000002px, #1a1a1d 1.7600000000000002px 3.2px, rgba(0, 0, 0, 0.35) 3.2px 4.2px, transparent 4.7px),
+        radial-gradient(circle at calc(100% - var(--joycon) / 2 + -8px) calc(34% + 0px), #3a3a40 0 1.4400000000000002px, #1a1a1d 1.7600000000000002px 3.2px, rgba(0, 0, 0, 0.35) 3.2px 4.2px, transparent 4.7px),
+        radial-gradient(circle at calc(100% - var(--joycon) / 2 + 8px) calc(34% + 0px), #3a3a40 0 1.4400000000000002px, #1a1a1d 1.7600000000000002px 3.2px, rgba(0, 0, 0, 0.35) 3.2px 4.2px, transparent 4.7px),
+        radial-gradient(circle at calc(100% - var(--joycon) / 2) 56%, #45454c 0 4px, #222226 5px 7.5px, #0e0e10 7.5px 9px, rgba(0, 0, 0, 0.3) 9px 10px, transparent 10.5px),
+        linear-gradient(#1a1a1d, #1a1a1d) calc(var(--joycon) / 2 - 3.5px) 74% / 7px 7px no-repeat,
+        radial-gradient(circle at calc(100% - var(--joycon) / 2) 74%, #3a3a40 0 2.025px, #1a1a1d 2.475px 4.5px, rgba(0, 0, 0, 0.35) 4.5px 5.5px, transparent 6px);
+}
+.carte.promo-neon.promo-serie-6.full-art .carte-corps::before {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 30%);
+    mix-blend-mode: normal;
+    opacity: 1;
+}
+.carte.promo-neon.promo-serie-6 .full-art-fond img { filter: saturate(1.15) contrast(1.05); }
+.carte.promo-neon.promo-serie-6 .carte-corps::after {
+    background:
+        radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.45), transparent 36%),
+        linear-gradient(125deg, #ff3c28, #ffffff, #0ab9e6) var(--mx) var(--my) / 300% 300%;
+}
+.carte.promo-neon.promo-serie-6 .carte-rarete,
+.fiche-infos.promo-serie-6 .fiche-rarete,
+.titre-serie.serie-6 {
+    background: linear-gradient(90deg, #0ab9e6, #ffffff 50%, #ff3c28);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+}
+.carte.promo-neon.promo-serie-6 .carte-rarete { filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.9)); }
 
 /* ── Mythique : prisme cosmique ── */
 .carte.rarete-mythique {
@@ -2300,6 +2561,9 @@ main {
 .defi-promo .titre-serie { margin: 0.3rem 0 0; justify-self: auto; }
 .defi-promo > span:not(.defi-apercu) { color: var(--texte-doux); font-size: 0.9rem; line-height: 1.45; }
 .defi-promo small { margin-top: auto; color: var(--accent); font-family: 'Space Mono', monospace; font-size: 0.8rem; font-weight: 700; }
+/* Code cadeau d'une série entière : toutes ses promos dans la fenêtre */
+.promos-obtenues { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.8rem; margin-top: 1rem; }
+.promos-obtenues .carte-choix { position: relative; }
 /* Fenêtre de récompense du Défi Promo */
 .recompense-defi-gain { margin: 0.8rem 0 1rem; font-size: 1.35rem; }
 /* Règle de la série, rappelée pendant la composition du deck et la partie */

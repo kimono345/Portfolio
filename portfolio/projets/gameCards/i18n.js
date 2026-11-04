@@ -127,6 +127,8 @@ const EN = {
     'Booster Série {n}': 'Series {n} booster',
     'Promo S{n}': 'Promo S{n}',
     '{genre} +{n}': '{genre} +{n}',
+    'Les jeux romance (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des plus belles romances Épiques, en holo.': 'Romance games (and every promo of the series) get +3 on all their stats, for you and for the computer. It plays 3 of the finest Epic romances, in holo.',
+    'Les jeux multijoueur (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des meilleurs jeux multijoueur Épiques, en holo.': 'Multiplayer games (and every promo of the series) get +3 on all their stats, for you and for the computer. It plays 3 of the best Epic multiplayer games, in holo.',
     'Les jeux indé (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des meilleures pépites indé Épiques, en holo.': 'Indie games (and every promo of the series) get +3 on all their stats, for you and for the computer. It plays 3 of the best Epic indie gems, in holo.',
     'Tu as': 'You have',
     ' : revends des doublons ou gagne des duels pour en avoir plus.': ': sell duplicates or win duels to earn more.',
@@ -415,6 +417,9 @@ const EN = {
     'Voir la fiche': 'See card details',
     'Carte promo : une édition spéciale, obtenue seulement avec un code cadeau': 'Promo card: a special edition, only obtainable with a gift code',
     'Carte promo obtenue !': 'Promo card unlocked!',
+    'Série {n} complète !': 'Series {n} complete!',
+    '{n} carte promo rejoint ta collection.': '{n} promo card joins your collection.',
+    '{n} cartes promo rejoignent ta collection.': '{n} promo cards join your collection.',
     'Changer de série': 'Change series',
     'Manche décisive : {stat}': 'Deciding round: {stat}',
     'Pas de règle spéciale : l’ordinateur joue une des cartes les plus fortes du jeu dans chaque stat (Qualité, Popularité, Ancienneté), toutes en holo ou Full Art.': 'No special rule: the computer plays one of the game’s strongest cards in each stat (Quality, Popularity, Age), all holo or Full Art.',
@@ -606,7 +611,7 @@ const EN = {
 // ---------- Anglais : longs paragraphes de la page (data-i18n="cle") ----------
 
 const EN_PAGE = {
-    'regle-defi-promo': 'Pick a promo card series, then 3 cards from your collection, with no rarity cap. The game plays like a deck duel, with the series rule. Series 1: the computer plays one of the game’s strongest cards in each stat (Quality, Popularity, Age), all holo or Full Art. Series 2: only Popularity counts, and the computer plays 3 Full Art Legendaries or Mythics that share a theme. Series 3: indie games (and every promo of the series) get +3 on all their stats, for you and for the computer, which plays 3 of the best Epic indie gems in holo. Series 4: only Age counts, against the oldest Legendaries and Mythics in holo. Each win gives a random reward: a booster added to your reserve (60%), 200 coins (30%), or a series booster with one of its promo cards (10%).',
+    'regle-defi-promo': 'Pick a promo card series, then 3 cards from your collection, with no rarity cap. The game plays like a deck duel, with the series rule. Series 1: the computer plays one of the game’s strongest cards in each stat (Quality, Popularity, Age), all holo or Full Art. Series 2: only Popularity counts, and the computer plays 3 Full Art Legendaries or Mythics that share a theme. Series 3: indie games (and every promo of the series) get +3 on all their stats, for you and for the computer, which plays 3 of the best Epic indie gems in holo. Series 4: only Age counts, against the oldest Legendaries and Mythics in holo. Series 5: romance games (and every promo of the series) get +3 on all their stats, for you and for the computer, which plays 3 of the finest Epic romances in holo. Series 6: multiplayer games (and every promo of the series) get +3 on all their stats, for you and for the computer, which plays 3 of the best Epic multiplayer games in holo. Each win gives a random reward: a booster added to your reserve (60%), 200 coins (30%), or a series booster with one of its promo cards (10%).',
     'intro-catalogue': 'Every card in the game. You can buy the one you are missing directly, but it costs much more than trying your luck with boosters.',
     'duel-intro': 'First to 3 rounds. Each round, a card from your collection faces an opposing card: you see the opposing game but neither its rarity nor its stats, it is up to you to pick the stat that beats it.',
     'regles-intro': `Every card is a real Steam game. The 22 Mythics are the most iconic games, hand-picked.
