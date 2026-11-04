@@ -2537,6 +2537,8 @@ main {
 .retour-modes { display: flex; margin: 0 auto 1.2rem; padding: 0.45rem 1rem; font-size: 0.9rem; }
 /* Défi Promo : une tuile par série, avec une de ses cartes en aperçu */
 .defis-promo { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 0.4rem; }
+/* Sur ordinateur : deux lignes de trois séries */
+@media (min-width: 900px) { .defis-promo { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .defi-promo {
     display: flex;
     flex-direction: column;
