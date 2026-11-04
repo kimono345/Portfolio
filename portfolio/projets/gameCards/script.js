@@ -412,13 +412,13 @@ const PROMOS = {
     [-1451940]: { steam: 1451940, serie: 5, numero: 10, stats: { attaque: 94, popularite: 80 }, image: 'promos/s5-010.jpg', nom: 'NEEDY GIRL OVERDOSE' }, // NEEDY STREAMER OVERLOAD sur Steam
 
     // Série 6 « Nintendo Switch » : les exclusivités de la console, hors Steam (identifiants -900201…)
-    [-900201]: { serie: 6, numero: 1, stats: { attaque: 96, popularite: 92 }, image: 'promos/s6-001.jpg?v=3', site: 'https://www.zelda.com',
+    [-900201]: { serie: 6, numero: 1, stats: { attaque: 97, popularite: 95 }, image: 'promos/s6-001.jpg?v=3', site: 'https://www.zelda.com',
         jeu: { nom: 'The Legend of Zelda: Breath of the Wild', annee: 2017, metacritic: 97, genres: ['Action', 'Aventure'], tags: ['Monde ouvert', 'Survie', 'Fantasy'] } },
-    [-900202]: { serie: 6, numero: 2, stats: { attaque: 95, popularite: 90 }, image: 'promos/s6-002.jpg?v=3', site: 'https://www.nintendo.com',
+    [-900202]: { serie: 6, numero: 2, stats: { attaque: 96, popularite: 96 }, image: 'promos/s6-002.jpg?v=3', site: 'https://www.nintendo.com',
         jeu: { nom: 'Super Mario Odyssey', annee: 2017, metacritic: 97, genres: ['Action', 'Aventure'], tags: ['Plateforme', 'Monde ouvert', 'Coopération'] } },
-    [-900203]: { serie: 6, numero: 3, stats: { attaque: 91, popularite: 93 }, image: 'promos/s6-003.jpg?v=3', site: 'https://www.smashbros.com',
+    [-900203]: { serie: 6, numero: 3, stats: { attaque: 93, popularite: 93 }, image: 'promos/s6-003.jpg?v=3', site: 'https://www.smashbros.com',
         jeu: { nom: 'Super Smash Bros. Ultimate', annee: 2018, metacritic: 93, genres: ['Action'], tags: ['Combat en duel', 'Multijoueur', 'Coopération'] } },
-    [-900204]: { serie: 6, numero: 4, stats: { attaque: 86, popularite: 94 }, image: 'promos/s6-004.jpg?v=3', site: 'https://www.animal-crossing.com',
+    [-900204]: { serie: 6, numero: 4, stats: { attaque: 90, popularite: 94 }, image: 'promos/s6-004.jpg?v=3', site: 'https://www.animal-crossing.com',
         jeu: { nom: 'Animal Crossing: New Horizons', annee: 2020, metacritic: 90, genres: ['Simulation', 'Casual'], tags: ['Simulation de vie', 'Relaxant', 'Multijoueur', 'Coopération'] } },
     [-900205]: { serie: 6, numero: 5, stats: { attaque: 80, popularite: 92 }, image: 'promos/s6-005.jpg?v=3', site: 'https://www.pokemon.com',
         jeu: { nom: 'Pokémon Legends: Z-A', annee: 2025, genres: ['Action', 'RPG'], tags: ['JRPG', 'Monde ouvert', 'Fantasy'] } },
