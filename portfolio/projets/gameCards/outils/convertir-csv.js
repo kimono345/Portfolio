@@ -101,6 +101,7 @@ const col = Object.fromEntries(entete.map((nom, i) => [nom, i]));
 // (à lire sur la page Steam du jeu). Format : identifiant: { avis: total des avis, note: % d'avis positifs }
 const CORRECTIONS = {
     1223750: { avis: 5518, note: 85 },  // Cloud Meadow
+    3602290: { avis: 4258, note: 89 },  // FEMBOY FUTA HOUSE
     1449850: { avis: 102707, note: 72 }, // Yu-Gi-Oh! Master Duel
     2357570: { avis: 429544, note: 32 },
     3764200: { avis: 109711, note: 95 }, // Resident Evil Requiem

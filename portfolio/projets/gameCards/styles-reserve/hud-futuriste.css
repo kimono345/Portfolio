@@ -1,0 +1,115 @@
+/* Style de carte promo « HUD futuriste » (bleu roi et or), mis de côté pour être réutilisé.
+   Pour l'appliquer à une autre série : remplacer promo-serie-2 et serie-2 par le numéro voulu, puis coller dans style.css.
+   Utilise --angle-promo et @keyframes neon-promo, définis dans style.css. */
+
+/* ── Série 2 (jeux hors Steam) « HUD » : interface futuriste de jeu en ligne, bleu roi et or.
+   Cadre bleu nuit quadrillé, crochets dorés aux coins, deux traits de lumière (bleu et or) qui font le tour du bord,
+   écran à coins biseautés avec lignes de scan, barre de balayage et repères de visée ── */
+@property --scan-hud { syntax: '<percentage>'; inherits: false; initial-value: -30%; }
+.carte.promo-neon.promo-serie-2 {
+    --rar: #f3d27a;
+    padding: 9px;
+    border-radius: 6px;
+    background:
+        repeating-linear-gradient(0deg, rgba(79, 141, 255, 0.14) 0 1px, transparent 1px 6px),
+        repeating-linear-gradient(90deg, rgba(79, 141, 255, 0.14) 0 1px, transparent 1px 6px),
+        linear-gradient(160deg, #10246a, #060c2a 55%, #0b1a4d);
+    box-shadow: 0 0 0 1px rgba(111, 182, 255, 0.55), 0 0 22px rgba(50, 100, 255, 0.5), 0 10px 26px rgba(0, 0, 0, 0.6);
+    animation: none;
+}
+/* Crochets dorés aux quatre coins, graduations bleues sur les côtés, traits du biseau de l'écran */
+.carte.promo-neon.promo-serie-2::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background:
+        linear-gradient(#f3d27a, #f3d27a) left 3px top 3px / 16px 2px no-repeat,
+        linear-gradient(#f3d27a, #f3d27a) left 3px top 3px / 2px 16px no-repeat,
+        linear-gradient(#f3d27a, #f3d27a) right 3px top 3px / 16px 2px no-repeat,
+        linear-gradient(#f3d27a, #f3d27a) right 3px top 3px / 2px 16px no-repeat,
+        linear-gradient(#f3d27a, #f3d27a) left 3px bottom 3px / 16px 2px no-repeat,
+        linear-gradient(#f3d27a, #f3d27a) left 3px bottom 3px / 2px 16px no-repeat,
+        linear-gradient(#f3d27a, #f3d27a) right 3px bottom 3px / 16px 2px no-repeat,
+        linear-gradient(#f3d27a, #f3d27a) right 3px bottom 3px / 2px 16px no-repeat,
+        linear-gradient(#f3d27a, #f3d27a) 50% 3px / 26px 2px no-repeat,
+        linear-gradient(#f3d27a, #f3d27a) 50% calc(100% - 3px) / 26px 2px no-repeat,
+        repeating-linear-gradient(180deg, #6fb6ff 0 1px, transparent 1px 5px) left 3px top 38% / 4px 24% no-repeat,
+        repeating-linear-gradient(180deg, #6fb6ff 0 1px, transparent 1px 5px) right 3px top 38% / 4px 24% no-repeat,
+        linear-gradient(to bottom right, transparent calc(50% - 1px), #f3d27a calc(50% - 1px) calc(50% + 0.6px), transparent calc(50% + 0.6px)) left 9px top 9px / 14px 14px no-repeat,
+        linear-gradient(to bottom right, transparent calc(50% - 1px), #f3d27a calc(50% - 1px) calc(50% + 0.6px), transparent calc(50% + 0.6px)) right 9px bottom 9px / 14px 14px no-repeat;
+}
+/* Deux traits de lumière qui courent sur le bord de la carte */
+.carte.promo-neon.promo-serie-2::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    padding: 2px;
+    border-radius: inherit;
+    pointer-events: none;
+    background: conic-gradient(from var(--angle-promo), transparent 0 32%, rgba(111, 182, 255, 0.9) 44%, #ffffff 46%, transparent 47% 82%,
+        rgba(243, 210, 122, 0.9) 94%, #fff6d0 96%, transparent 97%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    animation: neon-promo 4s linear infinite;
+    animation-play-state: var(--effets);
+}
+/* Écran : coins haut gauche et bas droit biseautés, liseré bleu et lueur intérieure */
+.carte.promo-neon.promo-serie-2 .carte-corps {
+    border-radius: 0;
+    clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+    box-shadow: inset 0 0 0 1px rgba(111, 182, 255, 0.6), inset 0 0 22px rgba(40, 90, 255, 0.5);
+}
+.carte.promo-neon.promo-serie-2 .full-art-fond img { filter: brightness(1.05) contrast(1.08) saturate(1.1); }
+.carte.promo-neon.promo-serie-2 .full-art-fond::after {
+    background: linear-gradient(180deg, rgba(4, 10, 45, 0.6) 0%, transparent 17%, transparent 45%, rgba(4, 10, 45, 0.93) 72%);
+}
+/* Barre de balayage qui descend l'écran, repères de visée dans deux coins */
+.carte.promo-neon.promo-serie-2 .full-art-fond::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+        linear-gradient(180deg, transparent, rgba(111, 182, 255, 0.22) 70%, rgba(220, 240, 255, 0.55) 96%, transparent) 0 var(--scan-hud) / 100% 16% no-repeat,
+        linear-gradient(#6fb6ff, #6fb6ff) right 7px top 7px / 10px 1px no-repeat,
+        linear-gradient(#6fb6ff, #6fb6ff) right 7px top 7px / 1px 10px no-repeat,
+        linear-gradient(#6fb6ff, #6fb6ff) left 7px bottom 7px / 10px 1px no-repeat,
+        linear-gradient(#6fb6ff, #6fb6ff) left 7px bottom 7px / 1px 10px no-repeat;
+    animation: balayage-hud 3.2s linear infinite;
+    animation-play-state: var(--effets);
+}
+@keyframes balayage-hud { to { --scan-hud: 130%; } }
+/* À la place du voile coloré : lignes de scan fines, bords de l'écran teintés de bleu (les couleurs du jeu restent) */
+.carte.promo-neon.promo-serie-2.full-art .carte-corps::before {
+    background:
+        repeating-linear-gradient(0deg, rgba(8, 20, 70, 0.16) 0 1px, transparent 1px 3px),
+        radial-gradient(ellipse at center, transparent 62%, rgba(25, 60, 200, 0.32));
+    mix-blend-mode: normal;
+    opacity: 1;
+}
+/* Reflet : lumière bleutée qui suit la souris, trame verticale et irisation bleu et or */
+.carte.promo-neon.promo-serie-2 .carte-corps::after {
+    background:
+        radial-gradient(circle at var(--mx) var(--my), rgba(200, 225, 255, 0.55), transparent 38%),
+        repeating-linear-gradient(90deg, rgba(150, 200, 255, 0.14) 0 1px, transparent 1px 4px),
+        linear-gradient(125deg, #7fa6ff, #cfe6ff, #f7e3a1, #cfe6ff, #7fa6ff) var(--mx) var(--my) / 300% 300%;
+}
+/* « PROMO S2 · #001 » en or lumineux, précédé d'un curseur bleu */
+.carte.promo-neon.promo-serie-2 .carte-rarete,
+.fiche-infos.promo-serie-2 .fiche-rarete,
+.titre-serie.serie-2 {
+    background: none;
+    color: #f3d27a;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-shadow: 0 0 6px rgba(243, 210, 122, 0.55), 0 1px 2px rgba(0, 0, 30, 0.9);
+}
+.fiche-infos.promo-serie-2 .fiche-rarete, .titre-serie.serie-2 { color: #c9a24c; text-shadow: none; }
+.carte.promo-neon.promo-serie-2 .carte-rarete::before { content: '▸ '; color: #6fb6ff; text-shadow: 0 0 6px #6fb6ff; }
+.carte.promo-neon.promo-serie-2 .carte-nom { text-shadow: 0 0 10px rgba(79, 141, 255, 0.85), 0 1px 2px rgba(0, 0, 30, 0.9); }

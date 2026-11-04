@@ -323,6 +323,7 @@ const CODES_CADEAUX = {
     SERIE4: { serie: 4 },
     SERIE5: { serie: 5 },
     SERIE6: { serie: 6 },
+    SERIE7: { serie: 7 },
     // Un booster d'une série, ouvert tout de suite ({ boosterSerie: n })
     BOOSTERSERIE1: { boosterSerie: 1 },
     BOOSTERSERIE2: { boosterSerie: 2 },
@@ -330,6 +331,7 @@ const CODES_CADEAUX = {
     BOOSTERSERIE4: { boosterSerie: 4 },
     BOOSTERSERIE5: { boosterSerie: 5 },
     BOOSTERSERIE6: { boosterSerie: 6 },
+    BOOSTERSERIE7: { boosterSerie: 7 },
     BIENVENUE: { pieces: 300 },
     BOOSTERS: { boosters: 10 },
     PRESTIGE: { prestiges: 2 },
@@ -350,7 +352,7 @@ const CODES_CADEAUX = {
 // `site` : lien officiel d'un jeu hors Steam, à la place de la page Steam ;
 // `encres` : les deux encres de la risographie (série 3) : [ombres, lumières] ; `nom` : nom affiché, s'il diffère de celui de Steam
 const PROMOS = {
-    [-3602290]: { steam: 3602290, serie: 1, numero: 1, stats: { attaque: 67, popularite: 67 }, image: 'promos/001.png?v=2' }, // FEMBOY FUTA HOUSE
+    [-3602290]: { steam: 3602290, serie: 1, numero: 1, stats: { attaque: 89, popularite: 67 }, image: 'promos/001.png?v=2' }, // FEMBOY FUTA HOUSE
     [-1245620]: { steam: 1245620, serie: 1, numero: 2, stats: { attaque: 99, popularite: 99 }, image: 'promos/002.png' }, // ELDEN RING
     [-553850]: { steam: 553850, serie: 1, numero: 3, stats: { attaque: 94, popularite: 97 }, image: 'promos/003.png' }, // HELLDIVERS 2
     [-753640]: { steam: 753640, serie: 1, numero: 4, stats: { attaque: 97, popularite: 92 }, image: 'promos/004.png' }, // OUTER WILDS
@@ -422,6 +424,18 @@ const PROMOS = {
         jeu: { nom: 'Animal Crossing: New Horizons', annee: 2020, metacritic: 90, genres: ['Simulation', 'Casual'], tags: ['Simulation de vie', 'Relaxant', 'Multijoueur', 'Coopération'] } },
     [-900205]: { serie: 6, numero: 5, stats: { attaque: 80, popularite: 92 }, image: 'promos/s6-005.jpg?v=3', site: 'https://www.pokemon.com',
         jeu: { nom: 'Pokémon Legends: Z-A', annee: 2025, genres: ['Action', 'RPG'], tags: ['JRPG', 'Monde ouvert', 'Fantasy'] } },
+
+    // Série 7 « Science-fiction » : cyberpunk, androïdes et futurs proches, sur Steam (style HUD futuriste)
+    [-1091500]: { steam: 1091500, serie: 7, numero: 1, stats: { attaque: 95, popularite: 98 }, image: 'promos/s7-001.jpg' }, // CYBERPUNK 2077
+    [-238010]: { steam: 238010, serie: 7, numero: 2, stats: { attaque: 85, popularite: 78 }, image: 'promos/s7-002.jpg', nom: 'Deus Ex: Human Revolution' }, // DEUS EX: HUMAN REVOLUTION
+    [-1328670]: { steam: 1328670, serie: 7, numero: 3, stats: { attaque: 96, popularite: 91 }, image: 'promos/s7-003.jpg', nom: 'Mass Effect Legendary Edition' }, // MASS EFFECT LEGENDARY EDITION
+    [-620]: { steam: 620, serie: 7, numero: 4, stats: { attaque: 99, popularite: 94 }, image: 'promos/s7-004.jpg' }, // PORTAL 2
+    [-220]: { steam: 220, serie: 7, numero: 5, stats: { attaque: 98, popularite: 95 }, image: 'promos/s7-005.jpg' }, // HALF-LIFE 2
+    [-1237970]: { steam: 1237970, serie: 7, numero: 6, stats: { attaque: 92, popularite: 88 }, image: 'promos/s7-006.jpg', nom: 'Titanfall 2' }, // TITANFALL 2
+    [-1222140]: { steam: 1222140, serie: 7, numero: 7, stats: { attaque: 92, popularite: 92 }, image: 'promos/s7-007.jpg' }, // DETROIT: BECOME HUMAN
+    [-282140]: { steam: 282140, serie: 7, numero: 8, stats: { attaque: 88, popularite: 78 }, image: 'promos/s7-008.jpg' }, // SOMA
+    [-1139900]: { steam: 1139900, serie: 7, numero: 9, stats: { attaque: 88, popularite: 83 }, image: 'promos/s7-009.jpg' }, // GHOSTRUNNER
+    [-480490]: { steam: 480490, serie: 7, numero: 10, stats: { attaque: 83, popularite: 79 }, image: 'promos/s7-010.jpg' }, // PREY
 };
 // Carte promo d'une carte (ou undefined) ; une promo sans `steam` est un jeu hors Steam (séries 2, 4 et 6)
 const promoDe = carte => PROMOS[carte.id];
@@ -889,7 +903,7 @@ function pucesRaretesHTML({ actif = '', totaux = false } = {}) {
     const puce = (id, nom, n, total) => `
         <button class="puce${id ? ` rarete-${id}` : ''}${actif === id ? ' active' : ''}" data-rarete="${id}" aria-pressed="${actif === id}">
             <i></i>${nom} <b>${nombre(n)}${totaux ? ` / ${nombre(total)}` : ''}</b></button>`;
-    return puce('', t('Toutes'), possedees().length, totalJeux())
+    return puce('', t('Toutes'), jeuxPossedes().length, totalJeux())
         // Le catalogue (avec les totaux) ne montre que les jeux : pas de pastille Promo
         + RARETES.filter(r => !(totaux && r.promo)).map(r => puce(r.id, r.nom, nombreDeRarete(r.id), totalDeRarete(r.id))).join('');
 }
@@ -923,7 +937,7 @@ const aLeGenre = (carte, valeur) => DISTINCTIONS[valeur]
 // ---------- Données ----------
 
 async function chargerJeux() {
-    const reponse = await fetch('data/jeux.json?v=16');
+    const reponse = await fetch('data/jeux.json?v=17');
     if (!reponse.ok) throw new Error(`data/jeux.json introuvable (${reponse.status})`);
     // Format compact (voir outils/convertir-csv.js) : un tableau par jeu, genres et thèmes codés en caractères
     const { genres: genresFr, tags: tagsFr, jeux, groupesTags: groupesFr, estimes = [] } = await reponse.json();
@@ -988,6 +1002,8 @@ const totalJeux = () => tousLesJeux.length;
 const totalDeRarete = id => (id === 'promo' ? Object.keys(PROMOS).length : jeuxParRarete[id]?.length || 0);
 // Cartes de la collection
 const possedees = () => Object.values(etat.collection);
+// Les jeux de la collection, sans les cartes promo (compteurs « jeux découverts », « jeux différents », succès de collection)
+const jeuxPossedes = () => possedees().filter(e => !e.promo);
 const nombreDeRarete = id => possedees().filter(e => e.rarete === id).length;
 const nombreCartes = () => possedees().reduce((n, e) => n + e.exemplaires, 0);
 const valeurTousDoublons = () => possedees().reduce((n, e) => n + valeurDoublons(e), 0);
@@ -1146,7 +1162,7 @@ function majPaquets() {
         $(`#charges-${type.id}`).hidden = charges === 0;
         $(`#charges-${type.id}`).textContent = `×${charges}`;
         $(`#legende-${type.id}`).innerHTML = charges
-            ? `<b>${charges} / ${type.stockMax}</b> ${type.stockMax > 1 ? t('gratuits') : t('gratuit')} · ${reste ? t('prochain dans {duree}', { duree: formatDuree(reste) }) : t('réserve pleine')}`
+            ? `<b>${charges > type.stockMax ? charges : `${charges} / ${type.stockMax}`}</b> ${type.stockMax > 1 ? t('gratuits') : t('gratuit')} · ${reste ? t('prochain dans {duree}', { duree: formatDuree(reste) }) : t('réserve pleine')}`
             : t('Prochain gratuit dans {duree}<br>Clique pour en acheter', { duree: formatDuree(reste) });
     }
 
@@ -1561,7 +1577,7 @@ function afficherAccueil() {
     const entrees = possedees();
     const total = totalJeux();
     $('#progression-texte').innerHTML = total
-        ? t('<b>{n}</b> / {total} jeux découverts', { n: nombre(entrees.length), total: nombre(total) })
+        ? t('<b>{n}</b> / {total} jeux découverts', { n: nombre(jeuxPossedes().length), total: nombre(total) })
         : t('Chargement des jeux…');
     $('#progression-raretes').innerHTML = progressionRaretesHTML();
     majTropheeGodPack();
@@ -1617,7 +1633,7 @@ function filtreCollection() {
     const seulementFullArt = $('#filtre-fullart').checked;
     const seulementEX = $('#filtre-ex').checked;
     return e => (!recherche || e.nom.toLowerCase().includes(recherche))
-        && (!filtreRarete || e.rarete === filtreRarete)
+        && (filtreRarete ? e.rarete === filtreRarete : e.rarete !== 'promo') // les promos n'apparaissent qu'avec leur filtre
         && (!genre || aLeGenre(e, genre))
         && (!doublons || e.exemplaires > 1)
         && (!seulementFullArt || e.fullArts > 0)
@@ -1659,11 +1675,11 @@ function filtrerCollection() {
 }
 
 function majResumeCollection() {
-    const jeux = possedees().length;
+    const jeux = jeuxPossedes().length;
     const total = nombreCartes();
     const valeur = valeurTousDoublons();
     $('#resume-collection').textContent =
-        t('{jeux} jeux différents · {cartes} cartes · {doublons} doublons', { jeux: nombre(jeux), cartes: nombre(total), doublons: nombre(total - jeux) });
+        t('{jeux} jeux différents · {cartes} cartes · {doublons} doublons', { jeux: nombre(jeux), cartes: nombre(total), doublons: nombre(total - possedees().length) });
     const bouton = $('#btn-vendre-tout');
     bouton.disabled = valeur === 0;
     bouton.innerHTML = valeur ? `${t('Revendre les doublons')} · +${nombre(valeur)} ${PIECE}` : t('Aucun doublon');
@@ -1762,7 +1778,7 @@ function vendreDepuisFiche(id, variante) {
 function vendreTousLesDoublons() {
     const valeur = valeurTousDoublons();
     if (!valeur || !confirm(t('Revendre tous tes doublons pour {n} pièces ? Tu gardes un exemplaire de chaque jeu (la holo en priorité).', { n: nombre(valeur) }))) return;
-    for (const e of possedees()) while (e.exemplaires > 1) vendreDoublon(e.id);
+    for (const e of possedees()) while (!e.promo && e.exemplaires > 1) vendreDoublon(e.id); // une promo ne se vend pas
     sauvegarder();
     majEntete();
     afficherCollection();
@@ -1970,7 +1986,7 @@ function afficherCatalogue() {
     const restantes = visibles.length - limiteCatalogue;
     $('#btn-catalogue-plus').hidden = restantes <= 0;
     $('#btn-catalogue-plus').textContent = t('Afficher plus ({n} restants)', { n: nombre(restantes) });
-    $('#resume-catalogue').textContent = t('{total} jeux · tu en possèdes {n}', { total: nombre(totalJeux()), n: nombre(possedees().length) })
+    $('#resume-catalogue').textContent = t('{total} jeux · tu en possèdes {n}', { total: nombre(totalJeux()), n: nombre(jeuxPossedes().length) })
         + (visibles.length !== totalJeux() ? ` · ${t('{n} avec ces filtres', { n: nombre(visibles.length) })}` : '');
 }
 
@@ -2358,9 +2374,9 @@ const ANNEES_GOTY = new Set(Object.values(GOTY).map(g => g[0])).size;
 const SUCCES = [
     // Collection
     { id: 'premier-pas', nom: t('Premier pas'), description: t('Obtenir ta première carte'), cible: 1, recompense: { boosters: 10 }, valeur: () => possedees().length },
-    { id: 'collectionneur', nom: t('Collectionneur'), description: t('Posséder 100 jeux différents'), cible: 100, recompense: { pieces: 50 }, valeur: () => possedees().length },
-    { id: 'archiviste', nom: t('Archiviste'), description: t('Posséder 500 jeux différents'), cible: 500, recompense: { prestiges: 1 }, valeur: () => possedees().length },
-    { id: 'conservateur', nom: t('Conservateur de musée'), description: t('Posséder 1 000 jeux différents'), cible: 1000, recompense: { prestiges: 2 }, valeur: () => possedees().length },
+    { id: 'collectionneur', nom: t('Collectionneur'), description: t('Posséder 100 jeux différents'), cible: 100, recompense: { pieces: 50 }, valeur: () => jeuxPossedes().length },
+    { id: 'archiviste', nom: t('Archiviste'), description: t('Posséder 500 jeux différents'), cible: 500, recompense: { prestiges: 1 }, valeur: () => jeuxPossedes().length },
+    { id: 'conservateur', nom: t('Conservateur de musée'), description: t('Posséder 1 000 jeux différents'), cible: 1000, recompense: { prestiges: 2 }, valeur: () => jeuxPossedes().length },
     { id: 'premiere-rare', nom: t('Ça devient rare'), description: t('Obtenir une carte Rare'), cible: 1, recompense: { pieces: 10 }, valeur: () => nombreDeRarete('rare') },
     { id: 'premiere-epique', nom: t('Épique !'), description: t('Obtenir une carte Épique'), cible: 1, recompense: { boosters: 10 }, valeur: () => nombreDeRarete('epique') },
     { id: 'premiere-legendaire', nom: t('Une légende'), description: t('Obtenir une carte Légendaire'), cible: 1, recompense: { pieces: 75 }, valeur: () => nombreDeRarete('legendaire') },
@@ -2373,10 +2389,10 @@ const SUCCES = [
     { id: 'critique', nom: t('Critique avisé'), description: t('Posséder 10 chefs-d’œuvre (Metacritic 90+)'), cible: 10, recompense: { boosters: 10 }, valeur: () => possedees().filter(e => !e.promo && e.metacritic >= SEUIL_CHEF_OEUVRE).length },
     { id: 'brillant', nom: t('Tout ce qui brille'), description: t('Obtenir une carte holo'), cible: 1, recompense: { pieces: 50 }, valeur: () => possedees().filter(e => e.holos > 0).length },
     { id: 'galerie-holo', nom: t('Galerie des glaces'), description: t('Posséder 10 cartes holo différentes'), cible: 10, recompense: { prestiges: 1 }, valeur: () => possedees().filter(e => e.holos > 0).length },
-    { id: 'oeuvre-art', nom: t('Œuvre d’art'), description: t('Obtenir une carte Full Art'), cible: 1, recompense: { pieces: 100 }, valeur: () => possedees().filter(e => e.fullArts > 0).length },
+    { id: 'oeuvre-art', nom: t('Œuvre d’art'), description: t('Obtenir une carte Full Art'), cible: 1, recompense: { pieces: 100 }, valeur: () => jeuxPossedes().filter(e => e.fullArts > 0).length },
     { id: 'premiere-ex', nom: t('Pépite dénichée'), description: t('Obtenir une carte EX'), cible: 1, recompense: { pieces: 50 }, valeur: () => possedees().filter(e => e.exs > 0).length },
     { id: 'chercheur-pepites', nom: t('Chercheur de pépites'), description: t('Posséder 10 cartes EX différentes'), cible: 10, recompense: { boosters: 10 }, valeur: () => possedees().filter(e => e.exs > 0).length },
-    { id: 'galerie-privee', nom: t('Galerie privée'), description: t('Posséder 5 cartes Full Art différentes'), cible: 5, recompense: { pieces: 500 }, valeur: () => possedees().filter(e => e.fullArts > 0).length },
+    { id: 'galerie-privee', nom: t('Galerie privée'), description: t('Posséder 5 cartes Full Art différentes'), cible: 5, recompense: { pieces: 500 }, valeur: () => jeuxPossedes().filter(e => e.fullArts > 0).length },
     { id: 'divin', nom: t('Intervention divine'), description: t('Ouvrir un god pack'), cible: 1, recompense: { prestiges: 2 }, valeur: () => etat.godPacks.nombre },
     // Boosters
     { id: 'boosters-10', nom: t('Déchireur'), description: t('Ouvrir 10 boosters'), cible: 10, recompense: { boosters: 10 }, valeur: () => etat.stats.boosters },
@@ -3101,15 +3117,17 @@ function draftHTML() {
 // ---------- Défi Promo ----------
 
 // Un défi par série de promos, avec toute ta collection (pas de plafond de rareté) : une règle spéciale
-// et un deck adverse propres à la série. `stat` : la seule stat jouée ; `deck` : comment l'ordinateur compose le sien
+// et un deck adverse propres à la série. `nom` : son thème ; `court` : la règle en quelques mots (tuile du choix de série) ;
+// `stat` : la seule stat jouée ; `deck` : comment l'ordinateur compose le sien
 const DEFIS_PROMO = {
-    1: { deck: 'top', regle: t('Pas de règle spéciale : l’ordinateur joue une des cartes les plus fortes du jeu dans chaque stat (Qualité, Popularité, Ancienneté), toutes en holo ou Full Art.') },
-    2: { deck: 'synergie', stat: 'popularite', regle: t('Seule la Popularité compte. L’ordinateur joue 3 Légendaires ou Mythiques Full Art qui partagent un thème (synergie +1).') },
-    4: { deck: 'anciens', stat: 'anciennete', regle: t('Seule l’Ancienneté compte. L’ordinateur joue les plus vieilles Légendaires et Mythiques, en holo.') },
+    1: { nom: t('Coups de cœur'), court: t('Face aux meilleures cartes'), deck: 'top', regle: t('Pas de règle spéciale : l’ordinateur joue une des cartes les plus fortes du jeu dans chaque stat (Qualité, Popularité, Ancienneté), toutes en holo ou Full Art.') },
+    2: { nom: t('Hors Steam'), court: t('Popularité seule'), deck: 'synergie', stat: 'popularite', regle: t('Seule la Popularité compte. L’ordinateur joue 3 Légendaires ou Mythiques Full Art qui partagent un thème (synergie +1).') },
+    4: { nom: t('Rétro'), court: t('Ancienneté seule'), deck: 'anciens', stat: 'anciennete', regle: t('Seule l’Ancienneté compte. L’ordinateur joue les plus vieilles Légendaires et Mythiques, en holo.') },
     // `genre` : les cartes de ce genre gagnent `bonus` sur toutes leurs stats (les tiennes comme celles de l'ordinateur)
-    3: { deck: 'genre', genre: t('Indé'), bonus: 3, regle: t('Les jeux indé (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des meilleures pépites indé Épiques, en holo.') },
-    5: { deck: 'genre', genre: t('Romance'), bonus: 3, regle: t('Les jeux romance (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des plus belles romances Épiques, en holo.') },
-    6: { deck: 'genre', genre: t('Multijoueur'), bonus: 3, regle: t('Les jeux multijoueur (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des meilleurs jeux multijoueur Épiques, en holo.') },
+    3: { nom: t('Pépites indé'), court: t('Indé +3'), deck: 'genre', genre: t('Indé'), bonus: 3, regle: t('Les jeux indé (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des meilleures pépites indé Épiques, en holo.') },
+    5: { nom: t('Romance'), court: t('Romance +3'), deck: 'genre', genre: t('Romance'), bonus: 3, regle: t('Les jeux romance (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des plus belles romances Épiques, en holo.') },
+    6: { nom: t('Nintendo Switch'), court: t('Multijoueur +3'), deck: 'genre', genre: t('Multijoueur'), bonus: 3, regle: t('Les jeux multijoueur (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des meilleurs jeux multijoueur Épiques, en holo.') },
+    7: { nom: t('Science-fiction'), court: t('Science-fiction +3'), deck: 'genre', genre: t('Science-fiction'), bonus: 3, regle: t('Les jeux de science-fiction (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des meilleurs jeux de science-fiction Épiques, en holo.') },
 };
 const defiDeSerie = serie => DEFIS_PROMO[serie] ?? DEFIS_PROMO[1];
 // Récompense d'une victoire, tirée au hasard (chances en %) : un booster pour la réserve, des pièces,
@@ -3160,7 +3178,7 @@ function deckDefiPromo(serie) {
     return deck.map(c => ({ ...c, ...(Math.random() < 0.5 ? { holos: 1 } : { fullArts: 1 }) }));
 }
 
-// Bonus d'une carte selon la règle du défi en cours (jeux indé de la série 3, romances de la série 5, multijoueur de la série 6, et les promos de la série), sinon 0
+// Bonus d'une carte selon la règle du défi en cours (jeux indé de la série 3, romances de la série 5, multijoueur de la série 6, science-fiction de la série 7, et les promos de la série), sinon 0
 function bonusRegleDefi(carte) {
     const regle = deckDuel.mode === 'promo' && deckDuel.niveau ? defiDeSerie(deckDuel.niveau.serie) : null;
     const concernee = regle?.genre && (aLeGenre(carte, regle.genre) || promoDe(carte)?.serie === deckDuel.niveau.serie);
@@ -3179,12 +3197,19 @@ function seriesDefiHTML() {
             const ids = promosDeSerie(serie);
             if (!ids.length) return '';
             const possedes = ids.filter(id => etat.collection[id]).length;
+            const defi = defiDeSerie(serie);
+            const complete = possedes === ids.length;
+            // Tuile compacte : une carte de la série, son thème, sa règle en quelques mots (en entier au survol) et la progression
             return `
-            <button class="defi-promo" data-serie="${serie}"${assez ? '' : ' disabled'}>
+            <button class="defi-promo${complete ? ' defi-complet' : ''}" data-serie="${serie}" title="${echapper(defi.regle)}"${assez ? '' : ' disabled'}>
                 <span class="defi-apercu" aria-hidden="true">${carteHTML(creerCarte(jeuxParId.get(ids[0])))}</span>
-                <b class="titre-serie serie-${serie}">${t('Série {n}', { n: serie })}</b>
-                <span>${defiDeSerie(serie).regle}</span>
-                <small>${t('{a} / {b} promos', { a: possedes, b: ids.length })}</small>
+                <span class="defi-texte">
+                    <b class="titre-serie serie-${serie}">${t('Série {n}', { n: serie })}</b>
+                    <strong class="defi-nom">${defi.nom ?? ''}</strong>
+                    <span class="defi-tag">${defi.court ?? ''}</span>
+                    <span class="defi-progression" aria-hidden="true"><i style="width: ${Math.round(possedes / ids.length * 100)}%"></i></span>
+                    <small>${t('{a} / {b} promos', { a: possedes, b: ids.length })}${complete ? ` · ${t('Complète')} ✓` : ''}</small>
+                </span>
             </button>`;
         }).join('')}</div>
         ${assez ? '' : `<p class="duel-message">${t('Il te faut au moins {n} cartes dans ta collection.', { n: TAILLE_DECK })}</p>`}`;
@@ -3261,6 +3286,7 @@ const FONDS_PAQUET_PROMO = {
     3: 'linear-gradient(160deg, #f3ead8 0%, #ff6b5b 55%, #1d2b64 100%)',
     5: 'linear-gradient(160deg, #ffffff 0%, #ffd6e7 50%, #ff8fbf 100%)',
     6: 'linear-gradient(90deg, #0ab9e6 0%, #0ab9e6 22%, #2b2b30 22%, #2b2b30 78%, #ff3c28 78%)',
+    7: 'linear-gradient(160deg, #10246a 0%, #060c2a 55%, #c9a24c 100%)',
 };
 // Paquet d'un booster de série : le modèle Full Art, recoloré et renommé
 function paquetPromo(serie) {
