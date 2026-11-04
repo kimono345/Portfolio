@@ -1112,10 +1112,10 @@ main {
         linear-gradient(125deg, #1c3faa, #f3d27a, #3a6df0, #f3d27a, #1c3faa) var(--mx) var(--my) / 300% 300%;
 }
 
-/* ── Série 3 « Rétro » : la carte est une console portable des années 90. Coque en plastique gris clair,
+/* ── Série 4 « Rétro » : la carte est une console portable des années 90. Coque en plastique gris clair,
    écran inséré dans un cadre sombre, coin bas droit très arrondi, LED rouge et marque en bas ;
    écran cathodique (scanlines, vignette) sur l'illustration, textes en police pixel ── */
-.carte.promo-neon.promo-serie-3 {
+.carte.promo-neon.promo-serie-4 {
     --rar: #9bbc0f;
     padding: 10px 10px 26px;
     border-radius: 10px 10px 34px 10px;
@@ -1126,12 +1126,12 @@ main {
     animation: none;
 }
 /* Cadre sombre autour de l'écran */
-.carte.promo-neon.promo-serie-3 .carte-corps {
+.carte.promo-neon.promo-serie-4 .carte-corps {
     border-radius: 4px 4px 22px 4px;
     box-shadow: 0 0 0 5px #55566a, 0 0 0 6px rgba(0, 0, 0, 0.25), inset 0 0 24px rgba(0, 0, 0, 0.55);
 }
 /* LED rouge allumée, à gauche sous l'écran */
-.carte.promo-neon.promo-serie-3::before {
+.carte.promo-neon.promo-serie-4::before {
     content: '';
     position: absolute;
     left: 14px;
@@ -1143,7 +1143,7 @@ main {
     box-shadow: 0 0 6px rgba(255, 40, 40, 0.8);
 }
 /* Marque sous l'écran */
-.carte.promo-neon.promo-serie-3::after {
+.carte.promo-neon.promo-serie-4::after {
     content: 'GameCards RETRO';
     position: absolute;
     left: 28px;
@@ -1152,9 +1152,9 @@ main {
     letter-spacing: 0.02em;
     color: #2b2f7a;
 }
-.carte.promo-neon.promo-serie-3 .carte-rarete,
-.fiche-infos.promo-serie-3 .fiche-rarete,
-.titre-serie.serie-3 {
+.carte.promo-neon.promo-serie-4 .carte-rarete,
+.fiche-infos.promo-serie-4 .fiche-rarete,
+.titre-serie.serie-4 {
     font-family: 'Press Start 2P', monospace;
     font-size: max(7px, 3.6cqi);
     letter-spacing: 0;
@@ -1162,10 +1162,10 @@ main {
     color: #9bbc0f;
     text-shadow: 2px 2px 0 #0f380f;
 }
-.fiche-infos.promo-serie-3 .fiche-rarete, .titre-serie.serie-3 { font-size: 0.8rem; }
-.carte.promo-neon.promo-serie-3 .full-art-fond img { filter: contrast(1.1) saturate(1.25); image-rendering: pixelated; }
+.fiche-infos.promo-serie-4 .fiche-rarete, .titre-serie.serie-4 { font-size: 0.8rem; }
+.carte.promo-neon.promo-serie-4 .full-art-fond img { filter: contrast(1.1) saturate(1.25); image-rendering: pixelated; }
 /* Écran cathodique : scanlines horizontales et coins assombris, à la place du voile coloré */
-.carte.promo-neon.promo-serie-3.full-art .carte-corps::before {
+.carte.promo-neon.promo-serie-4.full-art .carte-corps::before {
     background:
         repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.28) 0 1px, transparent 1px 3px),
         radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55));
@@ -1173,12 +1173,63 @@ main {
     opacity: 1;
 }
 /* Trame de pixels qui s'allume sous la lumière, et reflet de l'écran */
-.carte.promo-neon.promo-serie-3 .carte-corps::after {
+.carte.promo-neon.promo-serie-4 .carte-corps::after {
     background:
         radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.45), transparent 35%),
         repeating-conic-gradient(rgba(255, 255, 255, 0.22) 0 25%, transparent 0 50%) 0 0 / 4px 4px,
         linear-gradient(125deg, #e43b44, #feae34, #63c74d, #0099db) var(--mx) var(--my) / 300% 300%;
 }
+
+/* ── Série 3 « Indé » : affiche imprimée en risographie. Cadre crème, illustration en deux encres
+   propres à chaque carte (`encres` dans PROMOS ; bleu nuit et corail par défaut), trame de points d'impression, textes légèrement décalés comme un repérage imparfait ── */
+.carte.promo-neon.promo-serie-3 {
+    --rar: #ff6b5b;
+    --encre-1: #1d2b64;
+    --encre-2: #ff6b5b;
+    padding: 8px;
+    border-radius: 8px;
+    background:
+        radial-gradient(circle, color-mix(in srgb, var(--encre-1) 14%, transparent) 0 0.8px, transparent 1.2px) 0 0 / 5px 5px,
+        #f3ead8;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--encre-1) 30%, transparent), 0 12px 28px rgba(0, 0, 0, 0.55);
+    animation: none;
+}
+.carte.promo-neon.promo-serie-3 .carte-corps {
+    border-radius: 4px;
+    box-shadow: 0 0 0 2px var(--encre-1);
+}
+/* Duotone : l'illustration en niveaux de gris, imprimée en corail (multiply)… */
+.carte.promo-neon.promo-serie-3 .full-art-fond { background: color-mix(in srgb, var(--encre-2) 55%, #fff); }
+.carte.promo-neon.promo-serie-3 .full-art-fond img { filter: grayscale(0.45) contrast(1.15) brightness(1.2); mix-blend-mode: multiply; } /* voile doux : les vraies couleurs transparaissent */
+.carte.promo-neon.promo-serie-3 .full-art-fond .image-secours { display: none; } /* sa couleur se mélangerait à l'encre */
+.carte.promo-neon.promo-serie-3 .full-art-fond::after {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--encre-1) 55%, transparent) 0%, transparent 16%, transparent 50%, color-mix(in srgb, var(--encre-1) 95%, transparent) 76%);
+}
+/* … puis les noirs passent en bleu nuit (lighten), avec une trame de points d'impression */
+.carte.promo-neon.promo-serie-3.full-art .carte-corps::before {
+    background:
+        radial-gradient(circle, color-mix(in srgb, var(--encre-1) 40%, transparent) 0 0.7px, transparent 1.1px) 0 0 / 4px 4px,
+        var(--encre-1);
+    mix-blend-mode: lighten;
+    opacity: 0.7;
+}
+/* Reflet : une simple lueur crème, et un peu de grain */
+.carte.promo-neon.promo-serie-3 .carte-corps::after {
+    background:
+        radial-gradient(circle at var(--mx) var(--my), rgba(255, 245, 225, 0.4), transparent 38%),
+        radial-gradient(circle, rgba(243, 234, 216, 0.25) 0 0.6px, transparent 1px) 2px 2px / 5px 5px;
+}
+.carte.promo-neon.promo-serie-3 .carte-rarete,
+.fiche-infos.promo-serie-3 .fiche-rarete,
+.titre-serie.serie-3 {
+    background: none;
+    color: #f3ead8;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-shadow: 1.5px 1px 0 var(--encre-2, #ff6b5b);
+}
+.fiche-infos.promo-serie-3 .fiche-rarete, .titre-serie.serie-3 { color: #ff6b5b; text-shadow: 1.5px 1px 0 #1d2b64; }
+.carte.promo-neon.promo-serie-3 .carte-nom { text-shadow: 2px 1.5px 0 var(--encre-2); }
 
 /* ── Mythique : prisme cosmique ── */
 .carte.rarete-mythique {

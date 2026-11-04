@@ -347,13 +347,24 @@ const CODES_CADEAUX = {
     TETRIS: { promo: -900103 },
     POKEMON: { promo: -900104 },
     ZELDA: { promo: -900105 },
+    FEARANDHUNGER: { promo: -1002300 },
+    SLIMERANCHER: { promo: -433340 },
+    NOTAHUMAN: { promo: -3180070 },
+    ASHORTHIKE: { promo: -1055540 },
+    SENNAAR: { promo: -1931770 },
+    GOROGOA: { promo: -557600 },
+    HYPERLIGHT: { promo: -257850 },
+    NIGHTINTHEWOODS: { promo: -481510 },
+    BALLXPIT: { promo: -2062430 },
+    TUNIC: { promo: -553420 },
 };
 // Cartes promo (rareté Promo) : une édition spéciale d'un jeu, distincte de sa carte normale (identifiant à part, négatif),
 // obtenue seulement avec un code cadeau ({ promo: identifiant }) : jamais dans les boosters, le catalogue ni le draft.
 // `steam` : le jeu d'origine (image, fiche Steam) ; `serie` et `numero` : affichés « S1 · #001 » ; `stats` : Qualité et Popularité
 // choisies à la main (l'Ancienneté reste celle du jeu) ; `image` : illustration verticale à part (dossier promos/) ;
 // `jeu` : infos du jeu quand il manque au dataset (genres et thèmes en français, traduits au chargement) ;
-// `site` : lien officiel d'un jeu hors Steam, à la place de la page Steam
+// `site` : lien officiel d'un jeu hors Steam, à la place de la page Steam ;
+// `encres` : les deux encres de la risographie (série 3) : [ombres, lumières]
 const PROMOS = {
     [-3602290]: { steam: 3602290, serie: 1, numero: 1, stats: { attaque: 67, popularite: 67 }, image: 'promos/001.png?v=2' }, // FEMBOY FUTA HOUSE
     [-1245620]: { steam: 1245620, serie: 1, numero: 2, stats: { attaque: 99, popularite: 99 }, image: 'promos/002.png' }, // ELDEN RING
@@ -380,19 +391,31 @@ const PROMOS = {
     [-900005]: { serie: 2, numero: 5, stats: { attaque: 78, popularite: 99 }, image: 'promos/s2-005.png', site: 'https://www.fortnite.com',
         jeu: { nom: 'Fortnite', annee: 2017, metacritic: 81, genres: ['Action', 'Free-to-play'], tags: ['Battle royale', 'Tir', 'Bac à sable', 'Multijoueur', 'Coopération', 'Comédie'] } },
 
-    // Série 3 « Rétro » : les classiques d'avant 2000, hors Steam (identifiants -900101…)
-    [-900101]: { serie: 3, numero: 1, stats: { attaque: 83, popularite: 96 }, image: 'promos/s3-001.jpg', site: 'https://pacman.com',
+    // Série 4 « Rétro » : les classiques d'avant 2000, hors Steam (identifiants -900101…)
+    [-900101]: { serie: 4, numero: 1, stats: { attaque: 74, popularite: 86 }, image: 'promos/s4-001.jpg?v=3', site: 'https://pacman.com',
         jeu: { nom: 'PAC-MAN', annee: 1980, genres: ['Action', 'Casual'], tags: ['Pixel art'] } },
-    [-900102]: { serie: 3, numero: 2, stats: { attaque: 91, popularite: 98 }, image: 'promos/s3-002.jpg', site: 'https://mario.nintendo.com',
+    [-900102]: { serie: 4, numero: 2, stats: { attaque: 80, popularite: 87 }, image: 'promos/s4-002.jpg?v=3', site: 'https://mario.nintendo.com',
         jeu: { nom: 'Super Mario Bros.', annee: 1985, genres: ['Action', 'Aventure'], tags: ['Plateforme', 'Pixel art'] } },
-    [-900103]: { serie: 3, numero: 3, stats: { attaque: 86, popularite: 97 }, image: 'promos/s3-003.jpg', site: 'https://tetris.com',
+    [-900103]: { serie: 4, numero: 3, stats: { attaque: 78, popularite: 86 }, image: 'promos/s4-003.jpg?v=3', site: 'https://tetris.com',
         jeu: { nom: 'Tetris', annee: 1984, genres: ['Casual', 'Stratégie'], tags: ['Réflexion', 'Pixel art'] } },
-    [-900104]: { serie: 3, numero: 4, stats: { attaque: 89, popularite: 98 }, image: 'promos/s3-004.jpg?v=2', site: 'https://www.pokemon.com',
+    [-900104]: { serie: 4, numero: 4, stats: { attaque: 77, popularite: 88 }, image: 'promos/s4-004.jpg?v=4', site: 'https://www.pokemon.com',
         jeu: { nom: 'Pokémon Rouge / Bleu', annee: 1996, genres: ['RPG', 'Aventure'], tags: ['JRPG', 'Tour par tour', 'Pixel art'] } },
-    [-900105]: { serie: 3, numero: 5, stats: { attaque: 98, popularite: 90 }, image: 'promos/s3-005.jpg', site: 'https://www.zelda.com',
+    [-900105]: { serie: 4, numero: 5, stats: { attaque: 90, popularite: 77 }, image: 'promos/s4-005.jpg?v=3', site: 'https://www.zelda.com',
         jeu: { nom: 'The Legend of Zelda: Ocarina of Time', annee: 1998, metacritic: 99, genres: ['Action', 'Aventure'], tags: ['Fantasy', 'Réflexion'] } },
+
+    // Série 3 « Indé » : des pépites très bien notées, sur Steam
+    [-1002300]: { steam: 1002300, serie: 3, numero: 1, stats: { attaque: 92, popularite: 78 }, image: 'promos/s3-001.jpg?v=3', encres: ['#3a0d12', '#e9dcc4'] }, // FEAR & HUNGER
+    [-433340]: { steam: 433340, serie: 3, numero: 2, stats: { attaque: 95, popularite: 84 }, image: 'promos/s3-002.jpg?v=3', encres: ['#5b2a86', '#ff9ad5'] }, // SLIME RANCHER
+    [-3180070]: { steam: 3180070, serie: 3, numero: 3, stats: { attaque: 91, popularite: 79 }, image: 'promos/s3-003.jpg?v=3', encres: ['#0e3b2e', '#ff4a3d'] }, // NO, I'M NOT A HUMAN
+    [-1055540]: { steam: 1055540, serie: 3, numero: 4, stats: { attaque: 96, popularite: 74 }, image: 'promos/s3-004.jpg?v=3', encres: ['#5a3d8a', '#ffc38a'] }, // A SHORT HIKE
+    [-1931770]: { steam: 1931770, serie: 3, numero: 5, stats: { attaque: 95, popularite: 74 }, image: 'promos/s3-005.jpg?v=3', encres: ['#7a1838', '#ffe14d'] }, // CHANTS OF SENNAAR
+    [-557600]: { steam: 557600, serie: 3, numero: 6, stats: { attaque: 94, popularite: 72 }, image: 'promos/s3-006.jpg?v=3', encres: ['#1d3d2a', '#f2c94c'] }, // GOROGOA
+    [-257850]: { steam: 257850, serie: 3, numero: 7, stats: { attaque: 91, popularite: 74 }, image: 'promos/s3-007.jpg?v=3', encres: ['#3b1f8f', '#ff3fa4'] }, // HYPER LIGHT DRIFTER
+    [-481510]: { steam: 481510, serie: 3, numero: 8, stats: { attaque: 90, popularite: 74 }, image: 'promos/s3-008.jpg?v=3', encres: ['#1b2440', '#ff8a3d'] }, // NIGHT IN THE WOODS
+    [-2062430]: { steam: 2062430, serie: 3, numero: 9, stats: { attaque: 94, popularite: 80 }, image: 'promos/s3-009.jpg?v=3', encres: ['#3a0d1a', '#ff6a2a'] }, // BALL X PIT
+    [-553420]: { steam: 553420, serie: 3, numero: 10, stats: { attaque: 91, popularite: 73 }, image: 'promos/s3-010.jpg?v=3', encres: ['#123d33', '#ffb347'] }, // TUNIC
 };
-// Carte promo d'une carte (ou undefined) ; une promo sans `steam` est un jeu hors Steam (séries 2 et 3)
+// Carte promo d'une carte (ou undefined) ; une promo sans `steam` est un jeu hors Steam (séries 2 et 4)
 const promoDe = carte => PROMOS[carte.id];
 const horsSteam = carte => Boolean(promoDe(carte)) && !promoDe(carte).steam;
 // « S1 · #001 » : série, puis numéro dans la série
@@ -816,7 +839,7 @@ function carteHTML(carte, { holo = (carte.holos || 0) > 0, compteur = 0, cachee 
                 </ul>`;
     const secours = echapper(carte.image);
     return `
-        <article class="carte rarete-${rarete.id}${holo ? ' holo' : ''}${cachee ? ' stats-cachees' : ''}${chef ? ' chef-oeuvre' : ''}${goty ? ' goty' : ''}${fullArt ? ' full-art' : ''}${ex ? ' ex' : ''}${carte.promo ? ` promo promo-${STYLE_PROMO} promo-serie-${promoDe(carte)?.serie ?? 1}" data-incline` : '"'}>
+        <article class="carte rarete-${rarete.id}${holo ? ' holo' : ''}${cachee ? ' stats-cachees' : ''}${chef ? ' chef-oeuvre' : ''}${goty ? ' goty' : ''}${fullArt ? ' full-art' : ''}${ex ? ' ex' : ''}${carte.promo ? ` promo promo-${STYLE_PROMO} promo-serie-${promoDe(carte)?.serie ?? 1}" data-incline${promoDe(carte)?.encres ? ` style="--encre-1: ${promoDe(carte).encres[0]}; --encre-2: ${promoDe(carte).encres[1]}"` : ''}` : '"'}>
             <div class="carte-corps">
                 ${fullArt ? `<div class="full-art-fond" style="--secours: url('${secours}')" aria-hidden="true">${imageSecoursHTML(carte)}<img src="${imagePortrait(carte)}" alt="" loading="lazy"
                     onerror="if (this.dataset.repli) { this.parentNode.classList.remove('paysage'); this.remove(); } else { this.dataset.repli = 1; this.src = '${secours}'; this.parentNode.classList.add('paysage'); }"></div>` : ''}
@@ -2104,7 +2127,7 @@ const varianteCombat = carte => (carte.promo ? null : carte.fullArts > 0 ? 'full
 // Synergie (duel de decks et draft) : si les 3 cartes d'un deck partagent un genre ou un thème,
 // chacune gagne ce bonus sur toutes ses stats (`carte.synergie`, posé au début de la partie)
 const BONUS_SYNERGIE = 1;
-const bonusCombat = carte => (BONUS_COMBAT[varianteCombat(carte)] ?? 0) + (carte.synergie ?? 0);
+const bonusCombat = carte => (BONUS_COMBAT[varianteCombat(carte)] ?? 0) + (carte.synergie ?? 0) + (carte.bonusRegle ?? 0);
 const valeurCombat = (carte, stat) => carte[stat] + bonusCombat(carte);
 // « (bonus Holo +2, synergie +1 compris) » après le score, quand ta carte en a un
 function noteBonusCombat(carte) {
@@ -2112,6 +2135,7 @@ function noteBonusCombat(carte) {
     const parties = [
         variante && `${VARIANTES[variante].nom} +${BONUS_COMBAT[variante]}`,
         carte.synergie && t('synergie +{n}', { n: carte.synergie }),
+        carte.bonusRegle && t('{genre} +{n}', { genre: defiDeSerie(deckDuel.niveau?.serie).genre, n: carte.bonusRegle }),
     ].filter(Boolean);
     return parties.length ? ` ${t('(bonus {detail} compris)', { detail: parties.join(', ') })}` : '';
 }
@@ -2806,7 +2830,7 @@ function choixDeckHTML() {
             return carte
                 ? `<button class="deck-slot plein${carte.id === d.dernierAjout ? ' arrive' : ''}" data-choix-deck="${carte.id}"
                         aria-label="${t('Retirer {nom} du deck', { nom: echapper(carte.nom) })}">
-                        ${carteHTML(carte, { bonus: bonusCombat(carte) })}<span class="slot-retirer" aria-hidden="true">✕</span>
+                        ${carteHTML(carte, { bonus: bonusCombat(carte) + bonusRegleDefi(carte) })}<span class="slot-retirer" aria-hidden="true">✕</span>
                     </button>`
                 : `<div class="deck-slot"><span>${i + 1}</span></div>`;
         }).join('')}</div>
@@ -2827,7 +2851,7 @@ function choixDeckHTML() {
         </div>
         <div class="grille">${cartes.slice(0, d.limite).map(e => `
             <button class="carte-choix${d.choix.includes(e.id) ? ' choisie' : ''}" data-choix-deck="${e.id}" aria-pressed="${d.choix.includes(e.id)}">
-                ${!d.choix.includes(e.id) && completeSynergie(choisies, e) ? BADGE_SYNERGIE : ''}${carteHTML(e, { bonus: bonusCombat(e) })}
+                ${!d.choix.includes(e.id) && completeSynergie(choisies, e) ? BADGE_SYNERGIE : ''}${carteHTML(e, { bonus: bonusCombat(e) + bonusRegleDefi(e) })}
             </button>`).join('')}</div>
         ${cartes.length > d.limite ? `<div class="plus"><button class="btn" data-deck-action="plus">${t('Afficher plus')}</button></div>` : ''}`;
 }
@@ -2963,8 +2987,9 @@ function lancerPartieDecks() {
     const d = deckDuel;
     d.choix = d.choix.filter(id => etat.collection[id]);
     if (!donneesPretes() || d.choix.length < TAILLE_DECK) return afficherDuelDecks();
-    const ordi = d.mode === 'promo' ? deckDefiPromo(d.niveau.serie) : variantesOrdi(deckOrdinateur(d.niveau), d.niveau);
-    demarrerPartieDecks(d.choix.map(id => ({ ...etat.collection[id] })), ordi);
+    const moi = d.choix.map(id => ({ ...etat.collection[id] }));
+    if (d.mode === 'promo') return demarrerPartieDecks(avecBonusRegle(moi), avecBonusRegle(deckDefiPromo(d.niveau.serie)));
+    demarrerPartieDecks(moi, variantesOrdi(deckOrdinateur(d.niveau), d.niveau));
 }
 
 // Début d'une partie (duel de decks ou draft) : le premier attaquant est tiré au sort,
@@ -3040,7 +3065,9 @@ function draftHTML() {
 const DEFIS_PROMO = {
     1: { deck: 'top', regle: t('Pas de règle spéciale : l’ordinateur joue une des cartes les plus fortes du jeu dans chaque stat (Qualité, Popularité, Ancienneté), toutes en holo ou Full Art.') },
     2: { deck: 'synergie', stat: 'popularite', regle: t('Seule la Popularité compte. L’ordinateur joue 3 Légendaires ou Mythiques Full Art qui partagent un thème (synergie +1).') },
-    3: { deck: 'anciens', stat: 'anciennete', regle: t('Seule l’Ancienneté compte. L’ordinateur joue les plus vieilles Légendaires et Mythiques, en holo.') },
+    4: { deck: 'anciens', stat: 'anciennete', regle: t('Seule l’Ancienneté compte. L’ordinateur joue les plus vieilles Légendaires et Mythiques, en holo.') },
+    // `genre` : les cartes de ce genre gagnent `bonus` sur toutes leurs stats (les tiennes comme celles de l'ordinateur)
+    3: { deck: 'genre', genre: t('Indé'), bonus: 3, regle: t('Les jeux indé (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des meilleures pépites indé Épiques, en holo.') },
 };
 const defiDeSerie = serie => DEFIS_PROMO[serie] ?? DEFIS_PROMO[1];
 // Récompense d'une victoire, tirée au hasard (chances en %) : un booster pour la réserve, des pièces,
@@ -3071,6 +3098,11 @@ function deckDefiPromo(serie) {
         const groupe = auHasard(Object.values(parTag).filter(g => g.length >= TAILLE_DECK));
         return parmi(groupe, 5).map(c => ({ ...c, fullArts: 1 }));
     }
+    if (regle.deck === 'genre') {
+        const duGenre = classerParTotal(jeuxParRarete.epique).filter(c => aLeGenre(c, regle.genre))
+            .sort((a, b) => force(b) - force(a));
+        return parmi(duGenre, 8).map(c => ({ ...c, holos: 1 }));
+    }
     if (regle.deck === 'anciens') {
         const anciens = [...cartesHautes()].sort((a, b) => b.anciennete - a.anciennete || force(b) - force(a));
         return parmi(anciens, 8).map(c => ({ ...c, holos: 1 }));
@@ -3085,6 +3117,14 @@ function deckDefiPromo(serie) {
     }
     return deck.map(c => ({ ...c, ...(Math.random() < 0.5 ? { holos: 1 } : { fullArts: 1 }) }));
 }
+
+// Bonus d'une carte selon la règle du défi en cours (jeux indé de la série 3, et les promos de la série), sinon 0
+function bonusRegleDefi(carte) {
+    const regle = deckDuel.mode === 'promo' && deckDuel.niveau ? defiDeSerie(deckDuel.niveau.serie) : null;
+    const concernee = regle?.genre && (aLeGenre(carte, regle.genre) || promoDe(carte)?.serie === deckDuel.niveau.serie);
+    return concernee ? regle.bonus : 0;
+}
+const avecBonusRegle = deck => deck.map(carte => ({ ...carte, bonusRegle: bonusRegleDefi(carte) }));
 
 const regleDefiHTML = () => (deckDuel.mode === 'promo' && deckDuel.niveau
     ? `<p class="defi-regle">${defiDeSerie(deckDuel.niveau.serie).regle}</p>` : '');
@@ -3166,11 +3206,12 @@ function validerRecompenseDefi() {
         { paquet: paquetPromo(promo.serie), aide: t('Une carte <b>Promo</b>… laquelle ?'), classe: 'sans-prisme' }));
 }
 
-// Couleurs du paquet de chaque série (pastel, bleu et or, console grise)
+// Couleurs du paquet de chaque série (pastel, bleu et or, console grise, encres de risographie)
 const FONDS_PAQUET_PROMO = {
     1: 'linear-gradient(160deg, #ffc6e5 0%, #e3c7ff 50%, #b9d4ff 100%)',
     2: 'linear-gradient(160deg, #0a1a5c 0%, #1c3faa 55%, #c9a24c 100%)',
-    3: 'linear-gradient(160deg, #d3cfc6 0%, #8f8b82 100%)',
+    4: 'linear-gradient(160deg, #d3cfc6 0%, #8f8b82 100%)',
+    3: 'linear-gradient(160deg, #f3ead8 0%, #ff6b5b 55%, #1d2b64 100%)',
 };
 // Paquet d'un booster de série : le modèle Full Art, recoloré et renommé
 function paquetPromo(serie) {
