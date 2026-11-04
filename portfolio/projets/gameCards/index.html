@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&family=Cinzel:wght@700&family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=199">
+    <link rel="stylesheet" href="style.css?v=202">
 </head>
 <body>
 
@@ -461,16 +461,35 @@
             </div>
 
             <h2 class="profil-titre" data-i18n>Réglages</h2>
-            <div class="profil-bloc">
-                <label class="interrupteur" data-i18n-texte>
-                    <input type="checkbox" id="reglage-sons">
-                    <span></span> Sons (ouverture des boosters, cartes rares, succès, jeux)
+            <!-- Une ligne par réglage : icône, titre et description à gauche, le réglage aligné à droite -->
+            <div class="profil-bloc reglages">
+                <label class="reglage">
+                    <span class="reglage-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg></span>
+                    <span class="reglage-texte">
+                        <b data-i18n>Sons</b>
+                        <small data-i18n>Ouverture des boosters, cartes rares, succès, jeux</small>
+                    </span>
+                    <span class="interrupteur">
+                        <input type="checkbox" id="reglage-sons">
+                        <span></span>
+                    </span>
                 </label>
-                <label class="reglage-langue">
-                    <span data-i18n>Langue</span>
+                <label class="reglage">
+                    <span class="reglage-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"/></svg></span>
+                    <span class="reglage-texte">
+                        <b data-i18n>Langue</b>
+                        <small data-i18n>Langue des textes du jeu</small>
+                    </span>
                     <select id="reglage-langue"></select>
                 </label>
-                <button class="btn btn-guide" id="btn-guide" data-i18n>Revoir le guide de démarrage</button>
+                <div class="reglage">
+                    <span class="reglage-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg></span>
+                    <span class="reglage-texte">
+                        <b data-i18n>Guide de démarrage</b>
+                        <small data-i18n>Revoir la présentation du jeu, pas à pas</small>
+                    </span>
+                    <button class="btn" id="btn-guide" data-i18n>Revoir</button>
+                </div>
             </div>
 
             <h2 class="profil-titre" data-i18n>Sauvegarde</h2>
@@ -516,7 +535,7 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="i18n.js?v=136"></script>
-    <script src="script.js?v=247"></script>
+    <script src="i18n.js?v=139"></script>
+    <script src="script.js?v=250"></script>
 </body>
 </html>

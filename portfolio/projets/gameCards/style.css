@@ -540,6 +540,159 @@ main {
 .paquet-prestige .paquet-corps, .paquet-prestige .paquet-haut { box-shadow: inset 0 0 0 1.5px rgba(246, 220, 138, 0.55); }
 .paquet-prestige .paquet-type { background: rgba(246, 220, 138, 0.18); }
 
+/* ── Boosters des séries promo 1 et 2, aux couleurs de leurs cartes ── */
+/* Série 1 « Rainbow Rare » : feuille nacrée arc-en-ciel pastel, rayures gravées en diagonale, reflet blanc, paillettes */
+.paquet.paquet-serie-1 { --texte-paquet: #6a4c93; --ombre-paquet: rgba(255, 190, 240, 0.6); }
+.paquet.paquet-serie-1 .paquet-haut {
+    background:
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.55) 0 1.5px, rgba(120, 90, 160, 0.14) 1.5px 3.5px),
+        linear-gradient(90deg, #ffb3d9, #fdffb6, #caffbf, #9bf6ff, #bdb2ff, #ffc6ff);
+    border-bottom-color: rgba(255, 255, 255, 0.85);
+}
+.paquet.paquet-serie-1 .paquet-corps {
+    background:
+        radial-gradient(circle at 16% 12%, #ffffff 0 1.4px, transparent 2.4px),
+        radial-gradient(circle at 82% 9%, #ffffff 0 1px, transparent 2px),
+        radial-gradient(circle at 72% 30%, #ffffff 0 1.2px, transparent 2.2px),
+        radial-gradient(circle at 12% 46%, #ffffff 0 1px, transparent 2px),
+        radial-gradient(circle at 88% 58%, #ffffff 0 1.4px, transparent 2.4px),
+        radial-gradient(circle at 24% 76%, #ffffff 0 1.2px, transparent 2.2px),
+        radial-gradient(circle at 64% 88%, #ffffff 0 1px, transparent 2px),
+        radial-gradient(circle at 44% 22%, #ffffff 0 0.8px, transparent 1.8px),
+        radial-gradient(circle at 90% 82%, #ffffff 0 0.9px, transparent 1.9px),
+        linear-gradient(115deg, transparent 28%, rgba(255, 255, 255, 0.7) 42%, transparent 56%),
+        repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0 2px, transparent 2px 9px),
+        conic-gradient(from 200deg at 50% 42%, #ffb3d9, #ffd6a5, #fdffb6, #caffbf, #9bf6ff, #a0c4ff, #bdb2ff, #ffc6ff, #ffb3d9);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7), inset 0 0 24px rgba(255, 255, 255, 0.55);
+}
+.paquet.paquet-serie-1 .paquet-marque {
+    color: #8a63c9;
+    text-shadow: 0 -1px 0 #fff, 0 2px 0 #fff, 0 3px 0 #ffc6ff, 0 5px 8px rgba(120, 80, 170, 0.3), 0 0 14px rgba(255, 255, 255, 0.9);
+}
+.paquet.paquet-serie-1 .paquet-embleme { color: #a07ad8; filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.9)); }
+.paquet.paquet-serie-1 .paquet-embleme::after {
+    content: '✦';
+    color: #b28be0;
+    background: linear-gradient(160deg, #ffe0f3, #dce6ff 50%, #e0fff0);
+}
+.paquet.paquet-serie-1 .paquet-type {
+    background: linear-gradient(90deg, #ffb3d9, #fdffb6, #9bf6ff, #bdb2ff);
+    color: #5b3f86;
+    border-color: #fff;
+    text-shadow: none;
+}
+.paquet.paquet-serie-1 .paquet-mention { color: #6a4c93; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7); }
+
+/* Série 2 « Blason » : velours bleu roi, double filet d'or tout autour, chevrons dorés en V en bas,
+   paillettes bleues, joyau losange au centre, étiquette en or poli */
+.paquet.paquet-serie-2 { --texte-paquet: #f3d27a; --ombre-paquet: rgba(60, 100, 255, 0.5); }
+.paquet.paquet-serie-2 .paquet-haut {
+    background:
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.35) 0 1.5px, rgba(90, 60, 10, 0.22) 1.5px 3.5px),
+        linear-gradient(90deg, #b88c3a, #f7e3a1, #c9a24c, #fff3c4, #b88c3a);
+    border-bottom-color: rgba(255, 240, 200, 0.75);
+}
+.paquet.paquet-serie-2 .paquet-corps {
+    background:
+        radial-gradient(circle at 14% 10%, #cfe0ff 0 1.1px, transparent 2.1px),
+        radial-gradient(circle at 80% 14%, #cfe0ff 0 0.9px, transparent 1.9px),
+        radial-gradient(circle at 70% 32%, #cfe0ff 0 1.2px, transparent 2.2px),
+        radial-gradient(circle at 10% 50%, #cfe0ff 0 0.9px, transparent 1.9px),
+        radial-gradient(circle at 90% 56%, #cfe0ff 0 1.1px, transparent 2.1px),
+        radial-gradient(circle at 26% 70%, #cfe0ff 0 1px, transparent 2px),
+        radial-gradient(circle at 60% 82%, #cfe0ff 0 0.8px, transparent 1.8px),
+        radial-gradient(circle at 42% 24%, #cfe0ff 0 0.8px, transparent 1.8px),
+        radial-gradient(circle at 86% 76%, #cfe0ff 0 1px, transparent 2px),
+        repeating-linear-gradient(45deg, transparent 0 9px, rgba(243, 210, 122, 0.22) 9px 10px) 0 100% / 50% 30% no-repeat,
+        repeating-linear-gradient(-45deg, transparent 0 9px, rgba(243, 210, 122, 0.22) 9px 10px) 100% 100% / 50% 30% no-repeat,
+        radial-gradient(ellipse at 50% 38%, #2a52d0, #10246a 58%, #060c2a);
+    box-shadow: inset 0 0 0 5px #0b1a52, inset 0 0 0 6.5px #e2bd62, inset 0 0 0 9px #0b1a52, inset 0 0 0 10px rgba(226, 189, 98, 0.55);
+}
+.paquet.paquet-serie-2 .paquet-marque {
+    color: #f7e3a1;
+    text-shadow: 0 -1px 0 #fff6d0, 0 2px 0 #a97c2c, 0 3px 0 #6e4f16, 0 6px 10px rgba(0, 0, 30, 0.6), 0 0 16px rgba(243, 210, 122, 0.35);
+}
+.paquet.paquet-serie-2 .paquet-embleme { color: #e2bd62; filter: drop-shadow(0 0 12px rgba(243, 210, 122, 0.4)); }
+.paquet.paquet-serie-2 .paquet-embleme::after {
+    content: '◆';
+    color: #5b8cff;
+    border-color: #e2bd62;
+    text-shadow: 0 0 10px rgba(91, 140, 255, 0.9), 1px 1px 0 #e2bd62, -1px -1px 0 #e2bd62;
+    background: linear-gradient(160deg, #1c3faa, #0a1a5c);
+}
+.paquet.paquet-serie-2 .paquet-type {
+    background: linear-gradient(160deg, #fff3c4, #d9b25a 45%, #f7e3a1 60%, #a97c2c);
+    color: #0a1a5c;
+    border-color: #fff3c4;
+    text-shadow: none;
+}
+.paquet.paquet-serie-2 .paquet-mention { color: #f3d27a; text-shadow: 0 1px 2px rgba(0, 0, 30, 0.8); }
+
+/* Série 7 « Science-fiction » : interface HUD. Bleu nuit quadrillé, crochets dorés aux coins, graduations bleues
+   sur les côtés, barre de balayage qui descend le paquet, mire de visée sur la carte, étiquette en écran d'interface */
+@property --scan-paquet { syntax: '<percentage>'; inherits: false; initial-value: -20%; }
+.paquet.paquet-serie-7 { --texte-paquet: #6fb6ff; --ombre-paquet: rgba(50, 100, 255, 0.55); }
+.paquet.paquet-serie-7 .paquet-haut {
+    background:
+        repeating-linear-gradient(90deg, rgba(111, 182, 255, 0.35) 0 1.5px, rgba(0, 0, 20, 0.3) 1.5px 3.5px),
+        linear-gradient(90deg, #0b1a4d, #1c3faa 50%, #0b1a4d);
+    border-bottom: 2px solid #f3d27a;
+}
+.paquet.paquet-serie-7 .paquet-corps {
+    background:
+        linear-gradient(#f3d27a, #f3d27a) left 8px top 8px / 18px 2px no-repeat,
+        linear-gradient(#f3d27a, #f3d27a) left 8px top 8px / 2px 18px no-repeat,
+        linear-gradient(#f3d27a, #f3d27a) right 8px top 8px / 18px 2px no-repeat,
+        linear-gradient(#f3d27a, #f3d27a) right 8px top 8px / 2px 18px no-repeat,
+        linear-gradient(#f3d27a, #f3d27a) left 8px bottom 8px / 18px 2px no-repeat,
+        linear-gradient(#f3d27a, #f3d27a) left 8px bottom 8px / 2px 18px no-repeat,
+        linear-gradient(#f3d27a, #f3d27a) right 8px bottom 8px / 18px 2px no-repeat,
+        linear-gradient(#f3d27a, #f3d27a) right 8px bottom 8px / 2px 18px no-repeat,
+        repeating-linear-gradient(180deg, #6fb6ff 0 1px, transparent 1px 6px) left 6px top 36% / 5px 26% no-repeat,
+        repeating-linear-gradient(180deg, #6fb6ff 0 1px, transparent 1px 6px) right 6px top 36% / 5px 26% no-repeat,
+        linear-gradient(180deg, transparent, rgba(111, 182, 255, 0.25) 75%, rgba(220, 240, 255, 0.6) 97%, transparent) 0 var(--scan-paquet) / 100% 14% no-repeat,
+        repeating-linear-gradient(0deg, rgba(79, 141, 255, 0.13) 0 1px, transparent 1px 8px),
+        repeating-linear-gradient(90deg, rgba(79, 141, 255, 0.13) 0 1px, transparent 1px 8px),
+        radial-gradient(ellipse at 50% 40%, #16307f, #081340 62%, #040a24);
+    box-shadow: inset 0 0 0 1px rgba(111, 182, 255, 0.5), inset 0 0 26px rgba(40, 90, 255, 0.45);
+}
+/* Le balayage tourne tant que le paquet n'est pas déchiré (la déchirure anime aussi le corps) */
+.paquet.paquet-serie-7:not(.dechire) .paquet-corps { animation: balayage-paquet 3.2s linear infinite; }
+@keyframes balayage-paquet { to { --scan-paquet: 120%; } }
+.paquet.paquet-serie-7 .paquet-marque {
+    color: #e8f3ff;
+    letter-spacing: 0;
+    text-shadow: 0 0 6px #6fb6ff, 0 0 16px rgba(79, 141, 255, 0.8), 0 2px 0 #1c3faa;
+}
+/* Mire de visée sur la carte de devant : cercle et croix bleus, point doré au centre */
+.paquet.paquet-serie-7 .paquet-embleme { color: #6fb6ff; filter: drop-shadow(0 0 10px rgba(111, 182, 255, 0.6)); }
+.paquet.paquet-serie-7 .paquet-embleme::before { border-color: rgba(111, 182, 255, 0.55); }
+.paquet.paquet-serie-7 .paquet-embleme::after {
+    content: '';
+    border-color: #f3d27a;
+    background:
+        radial-gradient(circle, #f3d27a 0 2.5px, transparent 3.5px),
+        radial-gradient(circle, transparent 0 13px, #6fb6ff 13px 15px, transparent 16px),
+        linear-gradient(#6fb6ff, #6fb6ff) 50% 22% / 2px 14% no-repeat,
+        linear-gradient(#6fb6ff, #6fb6ff) 50% 78% / 2px 14% no-repeat,
+        linear-gradient(#6fb6ff, #6fb6ff) 22% 50% / 18% 2px no-repeat,
+        linear-gradient(#6fb6ff, #6fb6ff) 78% 50% / 18% 2px no-repeat,
+        linear-gradient(160deg, #12286e, #060c2a);
+}
+/* Étiquette : écran d'interface entre crochets, police à chasse fixe */
+.paquet.paquet-serie-7 .paquet-type {
+    border: 1px solid #6fb6ff;
+    border-radius: 3px;
+    background: rgba(8, 20, 70, 0.85);
+    color: #f3d27a;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.08em;
+    text-shadow: 0 0 6px rgba(243, 210, 122, 0.6);
+    box-shadow: 0 0 10px rgba(111, 182, 255, 0.45), inset 0 0 8px rgba(111, 182, 255, 0.25);
+}
+.paquet.paquet-serie-7 .paquet-type::before { content: '▸ '; color: #6fb6ff; }
+.paquet.paquet-serie-7 .paquet-mention { color: #6fb6ff; font-family: 'Space Mono', monospace; text-shadow: 0 0 6px rgba(111, 182, 255, 0.6); }
+
 /* ── Boosters des séries promo 3 à 5, aux couleurs de leurs cartes ── */
 /* Série 3 « Indé » : affiche en risographie (papier crème, aplats corail et bleu nuit, trame de points, repérage décalé) */
 .paquet.paquet-serie-3 { --texte-paquet: #1d2b64; --ombre-paquet: rgba(255, 107, 91, 0.45); }
@@ -3170,7 +3323,6 @@ main {
 .guide-points i { width: 8px; height: 8px; border-radius: 999px; background: var(--fond-4); transition: width 0.2s; }
 .guide-points i.actif { width: 24px; background: linear-gradient(90deg, var(--neon-1), var(--neon-2)); }
 .guide-actions { display: flex; justify-content: center; gap: 0.7rem; }
-.btn-guide { margin-top: 1rem; }
 
 /* Récompense du jour : 7 cases, celle du jour en or, les passées cochées */
 .modale-contenu:has(.connexion) { display: block; }
@@ -3223,9 +3375,30 @@ main {
     .connexion-jours { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 .profil-bloc .interrupteur { padding: 0; color: var(--texte); }
-/* Choix de la langue */
-.reglage-langue { display: flex; align-items: center; gap: 0.8rem; margin-top: 1rem; font-weight: 600; }
-.reglage-langue select {
+/* Réglages : une ligne par réglage (icône, titre et description, puis le réglage à droite), séparées d'un filet */
+.profil-bloc.reglages { padding: 0.3rem 1.3rem; }
+.reglage { display: flex; align-items: center; gap: 1rem; padding: 0.95rem 0; cursor: pointer; }
+.reglage + .reglage { border-top: 1px solid var(--bord); }
+div.reglage { cursor: default; }
+.reglage-icone {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    color: var(--neon-1);
+    background: color-mix(in srgb, var(--neon-1) 12%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--neon-1) 30%, transparent);
+}
+.reglage-icone svg { width: 20px; height: 20px; }
+.reglage-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.reglage-texte b { font-weight: 700; }
+.reglage-texte small { color: var(--texte-doux); font-size: 0.85rem; line-height: 1.35; }
+.reglage .interrupteur { flex-shrink: 0; padding: 0; }
+.reglage .btn { flex-shrink: 0; padding: 0.5rem 1.1rem; }
+.reglage select {
+    flex-shrink: 0;
     padding: 0.5rem 0.8rem;
     border-radius: 10px;
     border: 1px solid var(--bord);
@@ -3234,7 +3407,7 @@ main {
     font: inherit;
     cursor: pointer;
 }
-.reglage-langue select option { background: var(--fond-2); }
+.reglage select option { background: var(--fond-2); }
 .profil-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
 
 /* Compteur de malchance sur l'accueil */
