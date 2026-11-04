@@ -400,7 +400,7 @@ const PROMOS = {
     [-553420]: { steam: 553420, serie: 3, numero: 10, stats: { attaque: 91, popularite: 73 }, image: 'promos/s3-010.jpg?v=3', encres: ['#123d33', '#ffb347'] }, // TUNIC
 
     // Série 5 « Romance » : des jeux dont l'histoire d'amour est le cœur, sur Steam
-    [-698780]: { steam: 698780, serie: 5, numero: 1, stats: { attaque: 94, popularite: 90 }, image: 'promos/s5-001.jpg' }, // DOKI DOKI LITERATURE CLUB!
+    [-698780]: { steam: 698780, serie: 5, numero: 1, stats: { attaque: 96, popularite: 90 }, image: 'promos/s5-001.jpg' }, // DOKI DOKI LITERATURE CLUB!
     [-1289310]: { steam: 1289310, serie: 5, numero: 2, stats: { attaque: 92, popularite: 84 }, image: 'promos/s5-002.jpg' }, // HELLTAKER
     [-1144400]: { steam: 1144400, serie: 5, numero: 3, stats: { attaque: 93, popularite: 79 }, image: 'promos/s5-003.jpg' }, // SENREN＊BANKA
     [-1230140]: { steam: 1230140, serie: 5, numero: 4, stats: { attaque: 93, popularite: 78 }, image: 'promos/s5-004.jpg' }, // ATRI -MY DEAR MOMENTS-
@@ -409,7 +409,7 @@ const PROMOS = {
     [-2322560]: { steam: 2322560, serie: 5, numero: 7, stats: { attaque: 88, popularite: 80 }, image: 'promos/s5-007.jpg' }, // LOVE IS ALL AROUND
     [-331470]: { steam: 331470, serie: 5, numero: 8, stats: { attaque: 89, popularite: 81 }, image: 'promos/s5-008.jpg' }, // EVERLASTING SUMMER
     [-333600]: { steam: 333600, serie: 5, numero: 9, stats: { attaque: 89, popularite: 78 }, image: 'promos/s5-009.jpg' }, // NEKOPARA VOL. 1
-    [-1451940]: { steam: 1451940, serie: 5, numero: 10, stats: { attaque: 89, popularite: 80 }, image: 'promos/s5-010.jpg', nom: 'NEEDY GIRL OVERDOSE' }, // NEEDY STREAMER OVERLOAD sur Steam
+    [-1451940]: { steam: 1451940, serie: 5, numero: 10, stats: { attaque: 94, popularite: 80 }, image: 'promos/s5-010.jpg', nom: 'NEEDY GIRL OVERDOSE' }, // NEEDY STREAMER OVERLOAD sur Steam
 
     // Série 6 « Nintendo Switch » : les exclusivités de la console, hors Steam (identifiants -900201…)
     [-900201]: { serie: 6, numero: 1, stats: { attaque: 96, popularite: 92 }, image: 'promos/s6-001.jpg?v=3', site: 'https://www.zelda.com',
