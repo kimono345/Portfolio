@@ -2670,6 +2670,7 @@ function changerModeJeu(mode) {
     if (mode === 'draft' && deckDuel.mode !== 'draft') nouveauDraft();
     if (mode === 'promo' && deckDuel.mode !== 'promo') Object.assign(deckDuel, { mode: 'promo', etape: 'serie' });
     if (surLaTable) afficherDuelDecks();
+    window.scrollTo(0, 0); // nouveau mode (ou retour au choix des modes) : en haut de la page
 }
 
 // ---------- Duel de decks ----------
@@ -3000,8 +3001,13 @@ function synergiesPartieHTML() {
     </p>`;
 }
 
+// Étape affichée en dernier : quand on passe à une autre (niveau, série, deck, draft, partie), on remonte en haut de la page
+let etapeAffichee = null;
+
 function afficherDuelDecks() {
     const d = deckDuel;
+    if (d.etape !== etapeAffichee) window.scrollTo(0, 0);
+    etapeAffichee = d.etape;
     const zone = $('#mode-decks');
     if (d.etape === 'niveau') zone.innerHTML = niveauxDeckHTML();
     else if (d.etape === 'serie') zone.innerHTML = seriesDefiHTML();
