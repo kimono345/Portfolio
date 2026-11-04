@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&family=Cinzel:wght@700&family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=203">
+    <link rel="stylesheet" href="style.css?v=205">
 </head>
 <body>
 
@@ -231,7 +231,7 @@
                     <input type="search" id="catalogue-nom" placeholder="Rechercher parmi tous les jeux…" aria-label="Rechercher un jeu dans le catalogue" data-i18n-attr="placeholder,aria-label">
                 </label>
                 <select id="catalogue-genre" aria-label="Filtrer par genre ou thème" data-i18n-attr="aria-label">
-                    <option value="" data-i18n>Tous les genres et thèmes</option>
+                    <option value="" data-i18n>Tous les genres</option>
                 </select>
                 <select id="catalogue-tri" aria-label="Trier" data-i18n-attr="aria-label">
                     <option value="rarete" selected data-i18n>Tri : rareté</option>
@@ -451,6 +451,7 @@
             <h2 class="profil-titre" data-i18n-texte>Succès <span id="succes-compte"></span>
                 <button class="btn btn-or" id="btn-tout-recuperer" hidden data-i18n>Tout récupérer</button></h2>
             <div class="succes-grille" id="succes-grille"></div>
+            <button class="btn btn-tous-succes" id="btn-tous-succes" hidden></button>
 
             <h2 class="profil-titre" data-i18n>Code cadeau</h2>
             <div class="profil-bloc">
@@ -535,7 +536,7 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="i18n.js?v=140"></script>
-    <script src="script.js?v=251"></script>
+    <script src="i18n.js?v=142"></script>
+    <script src="script.js?v=253"></script>
 </body>
 </html>

@@ -341,7 +341,6 @@ const CODES_CADEAUX = {
     FULLART3: { fullArt: true },
     FULLART4: { fullArt: true },
     FULLART5: { fullArt: true },
-    PORTAL: { carte: 620 },
     FEMBOY: { pieces: 500000 },
 };
 // Cartes promo (rareté Promo) : une édition spéciale d'un jeu, distincte de sa carte normale (identifiant à part, négatif),
@@ -434,7 +433,7 @@ const PROMOS = {
     [-1237970]: { steam: 1237970, serie: 7, numero: 6, stats: { attaque: 92, popularite: 88 }, image: 'promos/s7-006.jpg', nom: 'Titanfall 2' }, // TITANFALL 2
     [-1222140]: { steam: 1222140, serie: 7, numero: 7, stats: { attaque: 92, popularite: 92 }, image: 'promos/s7-007.jpg' }, // DETROIT: BECOME HUMAN
     [-282140]: { steam: 282140, serie: 7, numero: 8, stats: { attaque: 88, popularite: 78 }, image: 'promos/s7-008.jpg' }, // SOMA
-    [-1139900]: { steam: 1139900, serie: 7, numero: 9, stats: { attaque: 88, popularite: 83 }, image: 'promos/s7-009.jpg' }, // GHOSTRUNNER
+    [-1139900]: { steam: 1139900, serie: 7, numero: 9, stats: { attaque: 93, popularite: 83 }, image: 'promos/s7-009.jpg' }, // GHOSTRUNNER
     [-480490]: { steam: 480490, serie: 7, numero: 10, stats: { attaque: 83, popularite: 79 }, image: 'promos/s7-010.jpg' }, // PREY
 };
 // Carte promo d'une carte (ou undefined) ; une promo sans `steam` est un jeu hors Steam (séries 2, 4 et 6)
@@ -917,7 +916,7 @@ function optionsGenresHTML(choisi, presents = null) {
                 `<option value="${echapper(v)}"${v === choisi ? ' selected' : ''}>${echapper(v)}</option>`).join('')}</optgroup>`
             : '';
     };
-    return `<option value="">${t('Tous les genres et thèmes')}</option>`
+    return `<option value="">${t('Tous les genres')}</option>`
         + groupe(t('Distinctions'), Object.keys(DISTINCTIONS))
         + groupe(t('Genres'), genresCatalogue)
         + Object.entries(groupesTags).map(([titre, liste]) => groupe(titre, liste)).join('');
@@ -1678,8 +1677,11 @@ function majResumeCollection() {
     const jeux = jeuxPossedes().length;
     const total = nombreCartes();
     const valeur = valeurTousDoublons();
-    $('#resume-collection').textContent =
-        t('{jeux} jeux différents · {cartes} cartes · {doublons} doublons', { jeux: nombre(jeux), cartes: nombre(total), doublons: nombre(total - possedees().length) });
+    $('#resume-collection').textContent = [
+        tn(jeux, '{n} jeu différent', '{n} jeux différents'),
+        tn(total, '{n} carte', '{n} cartes'),
+        tn(total - possedees().length, '{n} doublon', '{n} doublons'),
+    ].join(' · ');
     const bouton = $('#btn-vendre-tout');
     bouton.disabled = valeur === 0;
     bouton.innerHTML = valeur ? `${t('Revendre les doublons')} · +${nombre(valeur)} ${PIECE}` : t('Aucun doublon');
@@ -2648,7 +2650,15 @@ function afficherProfil() {
     $('#resume-profil').textContent = t('{boosters} boosters ouverts · {duels} duels gagnés · {drafts} drafts gagnés',
         { boosters: nombre(stats.boosters), duels: nombre(stats.duelsGagnes), drafts: nombre(stats.draftsGagnes) });
     $('#succes-compte').textContent = `${faits} / ${SUCCES.length}`;
-    $('#succes-grille').innerHTML = SUCCES.map(succes => {
+    // Ordre : à récupérer, puis en cours (les plus avancés d'abord), puis obtenus (les plus récents d'abord)
+    const rang = s => (etat.succes[s.id] ? (etat.succesRecuperes[s.id] ? 2 : 0) : 1);
+    const avancement = s => Math.min(s.valeur(), s.cible) / s.cible;
+    const tries = [...SUCCES].sort((a, b) => rang(a) - rang(b)
+        || (rang(a) === 1 ? avancement(b) - avancement(a) : (etat.succes[b.id] || 0) - (etat.succes[a.id] || 0)));
+    const visibles = tousLesSucces ? tries : tries.slice(0, Math.max(SUCCES_VISIBLES, succesARecuperer().length));
+    $('#btn-tous-succes').hidden = visibles.length === tries.length && !tousLesSucces;
+    $('#btn-tous-succes').textContent = tousLesSucces ? t('Réduire la liste') : t('Voir tous les succès ({n})', { n: SUCCES.length });
+    $('#succes-grille').innerHTML = visibles.map(succes => {
         const obtenu = etat.succes[succes.id];
         const aRecuperer = obtenu && !etat.succesRecuperes[succes.id];
         const valeur = Math.min(succes.valeur(), succes.cible);
@@ -2672,6 +2682,10 @@ function afficherProfil() {
     $('#reglage-sons').checked = etat.reglages.sons;
     $('#reglage-langue').value = LANGUE;
 }
+
+// Succès affichés avant « Voir tous les succès » (tous ceux à récupérer le sont toujours)
+const SUCCES_VISIBLES = 6;
+let tousLesSucces = false;
 
 // Écran « Jouer » : d'abord le choix du mode (mode = null), puis Duel, Duel de decks, Draft ou Défi Promo.
 // Une partie en cours reste en mémoire : la reprendre, c'est rechoisir son mode.
@@ -3780,6 +3794,11 @@ function init() {
         etat.reglages.langue = e.target.value;
         sauvegarder();
         location.reload();
+    });
+    $('#btn-tous-succes').addEventListener('click', () => {
+        tousLesSucces = !tousLesSucces;
+        afficherProfil();
+        if (!tousLesSucces) $('#succes-grille').scrollIntoView({ block: 'nearest' });
     });
     $('#succes-grille').addEventListener('click', e => {
         const bouton = e.target.closest('[data-recuperer]');
