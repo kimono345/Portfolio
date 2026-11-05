@@ -324,6 +324,7 @@ const CODES_CADEAUX = {
     SERIE5: { serie: 5 },
     SERIE6: { serie: 6 },
     SERIE7: { serie: 7 },
+    SERIE8: { serie: 8 },
     // Un booster d'une série, ouvert tout de suite ({ boosterSerie: n })
     BOOSTERSERIE1: { boosterSerie: 1 },
     BOOSTERSERIE2: { boosterSerie: 2 },
@@ -332,6 +333,7 @@ const CODES_CADEAUX = {
     BOOSTERSERIE5: { boosterSerie: 5 },
     BOOSTERSERIE6: { boosterSerie: 6 },
     BOOSTERSERIE7: { boosterSerie: 7 },
+    BOOSTERSERIE8: { boosterSerie: 8 },
     BIENVENUE: { pieces: 300 },
     BOOSTERS: { boosters: 10 },
     PRESTIGE: { prestiges: 2 },
@@ -351,7 +353,7 @@ const CODES_CADEAUX = {
 // `site` : lien officiel d'un jeu hors Steam, à la place de la page Steam ;
 // `encres` : les deux encres de la risographie (série 3) : [ombres, lumières] ; `nom` : nom affiché, s'il diffère de celui de Steam
 const PROMOS = {
-    [-3602290]: { steam: 3602290, serie: 1, numero: 1, stats: { attaque: 89, popularite: 67 }, image: 'promos/001.png?v=2' }, // FEMBOY FUTA HOUSE
+    [-3602290]: { steam: 3602290, serie: 1, numero: 1, stats: { attaque: 93, popularite: 85 }, image: 'promos/001.png?v=2' }, // FEMBOY FUTA HOUSE
     [-1245620]: { steam: 1245620, serie: 1, numero: 2, stats: { attaque: 99, popularite: 99 }, image: 'promos/002.png' }, // ELDEN RING
     [-553850]: { steam: 553850, serie: 1, numero: 3, stats: { attaque: 94, popularite: 97 }, image: 'promos/003.png' }, // HELLDIVERS 2
     [-753640]: { steam: 753640, serie: 1, numero: 4, stats: { attaque: 97, popularite: 92 }, image: 'promos/004.png' }, // OUTER WILDS
@@ -359,7 +361,7 @@ const PROMOS = {
     [-1903340]: { steam: 1903340, serie: 1, numero: 6, stats: { attaque: 98, popularite: 96 }, image: 'promos/006.png' }, // CLAIR OBSCUR: EXPEDITION 33
     [-1150690]: { steam: 1150690, serie: 1, numero: 7, stats: { attaque: 96, popularite: 80 }, image: 'promos/007.png' }, // OMORI
     [-2592160]: { steam: 2592160, serie: 1, numero: 8, stats: { attaque: 95, popularite: 90 }, image: 'promos/008.png' }, // DISPATCH
-    [-1223750]: { steam: 1223750, serie: 1, numero: 9, stats: { attaque: 85, popularite: 55 }, image: 'promos/009.png' }, // CLOUD MEADOW
+    [-1223750]: { steam: 1223750, serie: 1, numero: 9, stats: { attaque: 92, popularite: 80 }, image: 'promos/009.png' }, // CLOUD MEADOW
     // Absent du dataset Steam : infos du jeu données ici (avis et note relevés sur Steam)
     [-242050]: { steam: 242050, serie: 1, numero: 10, stats: { attaque: 95, popularite: 92 }, image: 'promos/010.png', // ASSASSIN'S CREED IV BLACK FLAG
         jeu: { nom: 'Assassin’s Creed® IV Black Flag', annee: 2013, avis: 72357, note: 88, metacritic: 84, genres: ['Action', 'Aventure'], tags: ['Monde ouvert', 'Infiltration', 'Multijoueur', 'Narratif'] } },
@@ -369,48 +371,48 @@ const PROMOS = {
         jeu: { nom: 'Minecraft', annee: 2011, metacritic: 93, genres: ['Aventure', 'Simulation'], tags: ['Bac à sable', 'Survie', 'Monde ouvert', 'Multijoueur', 'Coopération', 'Pixel art'] } },
     [-900002]: { serie: 2, numero: 2, stats: { attaque: 94, popularite: 98 }, image: 'promos/s2-002.png', site: 'https://www.leagueoflegends.com',
         jeu: { nom: 'League of Legends', annee: 2009, metacritic: 78, genres: ['Stratégie', 'Action', 'Free-to-play'], tags: ['Multijoueur', 'Fantasy'] } },
-    [-900003]: { serie: 2, numero: 3, stats: { attaque: 86, popularite: 95 }, image: 'promos/s2-003.jpg', site: 'https://playvalorant.com',
+    [-900003]: { serie: 2, numero: 3, stats: { attaque: 89, popularite: 96 }, image: 'promos/s2-003.jpg', site: 'https://playvalorant.com',
         jeu: { nom: 'VALORANT', annee: 2020, metacritic: 80, genres: ['Action', 'Free-to-play'], tags: ['Tir', 'Multijoueur', 'Science-fiction'] } },
     [-900004]: { serie: 2, numero: 4, stats: { attaque: 89, popularite: 96 }, image: 'promos/s2-004.png', site: 'https://genshin.hoyoverse.com',
         jeu: { nom: 'Genshin Impact', annee: 2020, metacritic: 84, genres: ['Action', 'Aventure', 'RPG', 'Free-to-play'], tags: ['Monde ouvert', 'Anime', 'Fantasy', 'Coopération'] } },
-    [-900005]: { serie: 2, numero: 5, stats: { attaque: 78, popularite: 99 }, image: 'promos/s2-005.png', site: 'https://www.fortnite.com',
+    [-900005]: { serie: 2, numero: 5, stats: { attaque: 86, popularite: 99 }, image: 'promos/s2-005.png', site: 'https://www.fortnite.com',
         jeu: { nom: 'Fortnite', annee: 2017, metacritic: 81, genres: ['Action', 'Free-to-play'], tags: ['Battle royale', 'Tir', 'Bac à sable', 'Multijoueur', 'Coopération', 'Comédie'] } },
 
     // Série 4 « Rétro » : les classiques d'avant 2000, hors Steam (identifiants -900101…)
-    [-900101]: { serie: 4, numero: 1, stats: { attaque: 74, popularite: 86 }, image: 'promos/s4-001.jpg?v=3', site: 'https://pacman.com',
+    [-900101]: { serie: 4, numero: 1, stats: { attaque: 85, popularite: 92 }, image: 'promos/s4-001.jpg?v=3', site: 'https://pacman.com',
         jeu: { nom: 'PAC-MAN', annee: 1980, genres: ['Action', 'Casual'], tags: ['Pixel art'] } },
-    [-900102]: { serie: 4, numero: 2, stats: { attaque: 80, popularite: 87 }, image: 'promos/s4-002.jpg?v=3', site: 'https://mario.nintendo.com',
+    [-900102]: { serie: 4, numero: 2, stats: { attaque: 90, popularite: 93 }, image: 'promos/s4-002.jpg?v=3', site: 'https://mario.nintendo.com',
         jeu: { nom: 'Super Mario Bros.', annee: 1985, genres: ['Action', 'Aventure'], tags: ['Plateforme', 'Pixel art'] } },
-    [-900103]: { serie: 4, numero: 3, stats: { attaque: 78, popularite: 86 }, image: 'promos/s4-003.jpg?v=3', site: 'https://tetris.com',
+    [-900103]: { serie: 4, numero: 3, stats: { attaque: 88, popularite: 92 }, image: 'promos/s4-003.jpg?v=3', site: 'https://tetris.com',
         jeu: { nom: 'Tetris', annee: 1984, genres: ['Casual', 'Stratégie'], tags: ['Réflexion', 'Pixel art'] } },
-    [-900104]: { serie: 4, numero: 4, stats: { attaque: 77, popularite: 88 }, image: 'promos/s4-004.jpg?v=4', site: 'https://www.pokemon.com',
+    [-900104]: { serie: 4, numero: 4, stats: { attaque: 87, popularite: 93 }, image: 'promos/s4-004.jpg?v=4', site: 'https://www.pokemon.com',
         jeu: { nom: 'Pokémon Rouge / Bleu', annee: 1996, genres: ['RPG', 'Aventure'], tags: ['JRPG', 'Tour par tour', 'Pixel art'] } },
-    [-900105]: { serie: 4, numero: 5, stats: { attaque: 90, popularite: 77 }, image: 'promos/s4-005.jpg?v=3', site: 'https://www.zelda.com',
+    [-900105]: { serie: 4, numero: 5, stats: { attaque: 95, popularite: 85 }, image: 'promos/s4-005.jpg?v=3', site: 'https://www.zelda.com',
         jeu: { nom: 'The Legend of Zelda: Ocarina of Time', annee: 1998, metacritic: 99, genres: ['Action', 'Aventure'], tags: ['Fantasy', 'Réflexion'] } },
 
     // Série 3 « Indé » : des pépites très bien notées, sur Steam
-    [-1002300]: { steam: 1002300, serie: 3, numero: 1, stats: { attaque: 92, popularite: 78 }, image: 'promos/s3-001.jpg?v=3', encres: ['#3a0d12', '#e9dcc4'] }, // FEAR & HUNGER
+    [-1002300]: { steam: 1002300, serie: 3, numero: 1, stats: { attaque: 95, popularite: 82 }, image: 'promos/s3-001.jpg?v=3', encres: ['#3a0d12', '#e9dcc4'] }, // FEAR & HUNGER
     [-433340]: { steam: 433340, serie: 3, numero: 2, stats: { attaque: 95, popularite: 84 }, image: 'promos/s3-002.jpg?v=3', encres: ['#5b2a86', '#ff9ad5'] }, // SLIME RANCHER
-    [-3180070]: { steam: 3180070, serie: 3, numero: 3, stats: { attaque: 91, popularite: 79 }, image: 'promos/s3-003.jpg?v=3', encres: ['#0e3b2e', '#ff4a3d'] }, // NO, I'M NOT A HUMAN
-    [-1055540]: { steam: 1055540, serie: 3, numero: 4, stats: { attaque: 96, popularite: 74 }, image: 'promos/s3-004.jpg?v=3', encres: ['#5a3d8a', '#ffc38a'] }, // A SHORT HIKE
-    [-1931770]: { steam: 1931770, serie: 3, numero: 5, stats: { attaque: 95, popularite: 74 }, image: 'promos/s3-005.jpg?v=3', encres: ['#7a1838', '#ffe14d'] }, // CHANTS OF SENNAAR
-    [-557600]: { steam: 557600, serie: 3, numero: 6, stats: { attaque: 94, popularite: 72 }, image: 'promos/s3-006.jpg?v=3', encres: ['#1d3d2a', '#f2c94c'] }, // GOROGOA
-    [-257850]: { steam: 257850, serie: 3, numero: 7, stats: { attaque: 91, popularite: 74 }, image: 'promos/s3-007.jpg?v=3', encres: ['#3b1f8f', '#ff3fa4'] }, // HYPER LIGHT DRIFTER
-    [-481510]: { steam: 481510, serie: 3, numero: 8, stats: { attaque: 90, popularite: 74 }, image: 'promos/s3-008.jpg?v=3', encres: ['#1b2440', '#ff8a3d'] }, // NIGHT IN THE WOODS
-    [-2062430]: { steam: 2062430, serie: 3, numero: 9, stats: { attaque: 94, popularite: 80 }, image: 'promos/s3-009.jpg?v=3', encres: ['#3a0d1a', '#ff6a2a'] }, // BALL X PIT
-    [-553420]: { steam: 553420, serie: 3, numero: 10, stats: { attaque: 91, popularite: 73 }, image: 'promos/s3-010.jpg?v=3', encres: ['#123d33', '#ffb347'] }, // TUNIC
+    [-3180070]: { steam: 3180070, serie: 3, numero: 3, stats: { attaque: 95, popularite: 82 }, image: 'promos/s3-003.jpg?v=3', encres: ['#0e3b2e', '#ff4a3d'] }, // NO, I'M NOT A HUMAN
+    [-1055540]: { steam: 1055540, serie: 3, numero: 4, stats: { attaque: 97, popularite: 80 }, image: 'promos/s3-004.jpg?v=3', encres: ['#5a3d8a', '#ffc38a'] }, // A SHORT HIKE
+    [-1931770]: { steam: 1931770, serie: 3, numero: 5, stats: { attaque: 96, popularite: 80 }, image: 'promos/s3-005.jpg?v=3', encres: ['#7a1838', '#ffe14d'] }, // CHANTS OF SENNAAR
+    [-557600]: { steam: 557600, serie: 3, numero: 6, stats: { attaque: 95, popularite: 80 }, image: 'promos/s3-006.jpg?v=3', encres: ['#1d3d2a', '#f2c94c'] }, // GOROGOA
+    [-257850]: { steam: 257850, serie: 3, numero: 7, stats: { attaque: 94, popularite: 80 }, image: 'promos/s3-007.jpg?v=3', encres: ['#3b1f8f', '#ff3fa4'] }, // HYPER LIGHT DRIFTER
+    [-481510]: { steam: 481510, serie: 3, numero: 8, stats: { attaque: 94, popularite: 80 }, image: 'promos/s3-008.jpg?v=3', encres: ['#1b2440', '#ff8a3d'] }, // NIGHT IN THE WOODS
+    [-2062430]: { steam: 2062430, serie: 3, numero: 9, stats: { attaque: 95, popularite: 82 }, image: 'promos/s3-009.jpg?v=3', encres: ['#3a0d1a', '#ff6a2a'] }, // BALL X PIT
+    [-553420]: { steam: 553420, serie: 3, numero: 10, stats: { attaque: 95, popularite: 80 }, image: 'promos/s3-010.jpg?v=3', encres: ['#123d33', '#ffb347'] }, // TUNIC
 
     // Série 5 « Romance » : des jeux dont l'histoire d'amour est le cœur, sur Steam
     [-698780]: { steam: 698780, serie: 5, numero: 1, stats: { attaque: 96, popularite: 90 }, image: 'promos/s5-001.jpg' }, // DOKI DOKI LITERATURE CLUB!
-    [-1289310]: { steam: 1289310, serie: 5, numero: 2, stats: { attaque: 92, popularite: 84 }, image: 'promos/s5-002.jpg' }, // HELLTAKER
-    [-1144400]: { steam: 1144400, serie: 5, numero: 3, stats: { attaque: 93, popularite: 79 }, image: 'promos/s5-003.jpg' }, // SENREN＊BANKA
-    [-1230140]: { steam: 1230140, serie: 5, numero: 4, stats: { attaque: 93, popularite: 78 }, image: 'promos/s5-004.jpg' }, // ATRI -MY DEAR MOMENTS-
-    [-1669980]: { steam: 1669980, serie: 5, numero: 5, stats: { attaque: 92, popularite: 79 }, image: 'promos/s5-005.jpg' }, // VOLCANO PRINCESS
-    [-339800]: { steam: 339800, serie: 5, numero: 6, stats: { attaque: 90, popularite: 79 }, image: 'promos/s5-006.jpg' }, // HUNIEPOP
-    [-2322560]: { steam: 2322560, serie: 5, numero: 7, stats: { attaque: 88, popularite: 80 }, image: 'promos/s5-007.jpg' }, // LOVE IS ALL AROUND
-    [-331470]: { steam: 331470, serie: 5, numero: 8, stats: { attaque: 89, popularite: 81 }, image: 'promos/s5-008.jpg' }, // EVERLASTING SUMMER
-    [-333600]: { steam: 333600, serie: 5, numero: 9, stats: { attaque: 89, popularite: 78 }, image: 'promos/s5-009.jpg' }, // NEKOPARA VOL. 1
-    [-1451940]: { steam: 1451940, serie: 5, numero: 10, stats: { attaque: 94, popularite: 80 }, image: 'promos/s5-010.jpg', nom: 'NEEDY GIRL OVERDOSE' }, // NEEDY STREAMER OVERLOAD sur Steam
+    [-1289310]: { steam: 1289310, serie: 5, numero: 2, stats: { attaque: 94, popularite: 87 }, image: 'promos/s5-002.jpg' }, // HELLTAKER
+    [-1144400]: { steam: 1144400, serie: 5, numero: 3, stats: { attaque: 94, popularite: 85 }, image: 'promos/s5-003.jpg' }, // SENREN＊BANKA
+    [-1230140]: { steam: 1230140, serie: 5, numero: 4, stats: { attaque: 94, popularite: 84 }, image: 'promos/s5-004.jpg' }, // ATRI -MY DEAR MOMENTS-
+    [-1669980]: { steam: 1669980, serie: 5, numero: 5, stats: { attaque: 93, popularite: 85 }, image: 'promos/s5-005.jpg' }, // VOLCANO PRINCESS
+    [-339800]: { steam: 339800, serie: 5, numero: 6, stats: { attaque: 92, popularite: 85 }, image: 'promos/s5-006.jpg' }, // HUNIEPOP
+    [-2322560]: { steam: 2322560, serie: 5, numero: 7, stats: { attaque: 92, popularite: 85 }, image: 'promos/s5-007.jpg' }, // LOVE IS ALL AROUND
+    [-331470]: { steam: 331470, serie: 5, numero: 8, stats: { attaque: 92, popularite: 85 }, image: 'promos/s5-008.jpg' }, // EVERLASTING SUMMER
+    [-333600]: { steam: 333600, serie: 5, numero: 9, stats: { attaque: 92, popularite: 84 }, image: 'promos/s5-009.jpg' }, // NEKOPARA VOL. 1
+    [-1451940]: { steam: 1451940, serie: 5, numero: 10, stats: { attaque: 95, popularite: 86 }, image: 'promos/s5-010.jpg', nom: 'NEEDY GIRL OVERDOSE' }, // NEEDY STREAMER OVERLOAD sur Steam
 
     // Série 6 « Nintendo Switch » : les exclusivités de la console, hors Steam (identifiants -900201…)
     [-900201]: { serie: 6, numero: 1, stats: { attaque: 97, popularite: 95 }, image: 'promos/s6-001.jpg?v=3', site: 'https://www.zelda.com',
@@ -419,22 +421,36 @@ const PROMOS = {
         jeu: { nom: 'Super Mario Odyssey', annee: 2017, metacritic: 97, genres: ['Action', 'Aventure'], tags: ['Plateforme', 'Monde ouvert', 'Coopération'] } },
     [-900203]: { serie: 6, numero: 3, stats: { attaque: 93, popularite: 93 }, image: 'promos/s6-003.jpg?v=3', site: 'https://www.smashbros.com',
         jeu: { nom: 'Super Smash Bros. Ultimate', annee: 2018, metacritic: 93, genres: ['Action'], tags: ['Combat en duel', 'Multijoueur', 'Coopération'] } },
-    [-900204]: { serie: 6, numero: 4, stats: { attaque: 90, popularite: 94 }, image: 'promos/s6-004.jpg?v=3', site: 'https://www.animal-crossing.com',
+    [-900204]: { serie: 6, numero: 4, stats: { attaque: 92, popularite: 95 }, image: 'promos/s6-004.jpg?v=3', site: 'https://www.animal-crossing.com',
         jeu: { nom: 'Animal Crossing: New Horizons', annee: 2020, metacritic: 90, genres: ['Simulation', 'Casual'], tags: ['Simulation de vie', 'Relaxant', 'Multijoueur', 'Coopération'] } },
-    [-900205]: { serie: 6, numero: 5, stats: { attaque: 80, popularite: 92 }, image: 'promos/s6-005.jpg?v=3', site: 'https://www.pokemon.com',
+    [-900205]: { serie: 6, numero: 5, stats: { attaque: 90, popularite: 95 }, image: 'promos/s6-005.jpg?v=3', site: 'https://www.pokemon.com',
         jeu: { nom: 'Pokémon Legends: Z-A', annee: 2025, genres: ['Action', 'RPG'], tags: ['JRPG', 'Monde ouvert', 'Fantasy'] } },
 
     // Série 7 « Science-fiction » : cyberpunk, androïdes et futurs proches, sur Steam (style HUD futuriste)
-    [-1091500]: { steam: 1091500, serie: 7, numero: 1, stats: { attaque: 95, popularite: 98 }, image: 'promos/s7-001.jpg' }, // CYBERPUNK 2077
-    [-238010]: { steam: 238010, serie: 7, numero: 2, stats: { attaque: 85, popularite: 78 }, image: 'promos/s7-002.jpg', nom: 'Deus Ex: Human Revolution' }, // DEUS EX: HUMAN REVOLUTION
+    [-1091500]: { steam: 1091500, serie: 7, numero: 1, stats: { attaque: 98, popularite: 98 }, image: 'promos/s7-001.jpg' }, // CYBERPUNK 2077
+    [-238010]: { steam: 238010, serie: 7, numero: 2, stats: { attaque: 92, popularite: 84 }, image: 'promos/s7-002.jpg', nom: 'Deus Ex: Human Revolution' }, // DEUS EX: HUMAN REVOLUTION
     [-1328670]: { steam: 1328670, serie: 7, numero: 3, stats: { attaque: 96, popularite: 91 }, image: 'promos/s7-003.jpg', nom: 'Mass Effect Legendary Edition' }, // MASS EFFECT LEGENDARY EDITION
     [-620]: { steam: 620, serie: 7, numero: 4, stats: { attaque: 99, popularite: 94 }, image: 'promos/s7-004.jpg' }, // PORTAL 2
     [-220]: { steam: 220, serie: 7, numero: 5, stats: { attaque: 98, popularite: 95 }, image: 'promos/s7-005.jpg' }, // HALF-LIFE 2
-    [-1237970]: { steam: 1237970, serie: 7, numero: 6, stats: { attaque: 92, popularite: 88 }, image: 'promos/s7-006.jpg', nom: 'Titanfall 2' }, // TITANFALL 2
+    [-1237970]: { steam: 1237970, serie: 7, numero: 6, stats: { attaque: 94, popularite: 90 }, image: 'promos/s7-006.jpg', nom: 'Titanfall 2' }, // TITANFALL 2
     [-1222140]: { steam: 1222140, serie: 7, numero: 7, stats: { attaque: 92, popularite: 92 }, image: 'promos/s7-007.jpg' }, // DETROIT: BECOME HUMAN
-    [-282140]: { steam: 282140, serie: 7, numero: 8, stats: { attaque: 88, popularite: 78 }, image: 'promos/s7-008.jpg' }, // SOMA
-    [-1139900]: { steam: 1139900, serie: 7, numero: 9, stats: { attaque: 93, popularite: 83 }, image: 'promos/s7-009.jpg' }, // GHOSTRUNNER
-    [-480490]: { steam: 480490, serie: 7, numero: 10, stats: { attaque: 83, popularite: 79 }, image: 'promos/s7-010.jpg' }, // PREY
+    [-282140]: { steam: 282140, serie: 7, numero: 8, stats: { attaque: 93, popularite: 82 }, image: 'promos/s7-008.jpg' }, // SOMA
+    [-1139900]: { steam: 1139900, serie: 7, numero: 9, stats: { attaque: 94, popularite: 86 }, image: 'promos/s7-009.jpg' }, // GHOSTRUNNER
+    [-480490]: { steam: 480490, serie: 7, numero: 10, stats: { attaque: 92, popularite: 83 }, image: 'promos/s7-010.jpg' }, // PREY
+
+    // Série 8 « Duo » : deux jeux sur une même carte. `duo` : [jeu de gauche, jeu de droite], `images` dans le même ordre,
+    // `couleurs` : celles de chaque moitié du cadre. `stats` : la meilleure des deux cartes dans chaque stat (à défaut, calculée
+    // au chargement) ; l'Ancienneté est celle du plus ancien des deux (`steam`)
+    [-900801]: { steam: 319510, duo: [391540, 319510], serie: 8, numero: 1, stats: { attaque: 97, popularite: 97 }, nom: 'Undertale × Five Nights at Freddy’s',
+        images: ['promos/s8-001a.jpg', 'promos/s8-001b.jpg'], couleurs: ['#ffc27a', '#c99bff'] },
+    [-900802]: { steam: 10, duo: [4000, 10], serie: 8, numero: 2, stats: { attaque: 94, popularite: 98 }, nom: 'Garry’s Mod × Counter-Strike',
+        images: ['promos/s8-002a.jpg', 'promos/s8-002b.jpg'], couleurs: ['#7cc6ff', '#ffd97a'] },
+    [-900803]: { steam: 271590, duo: [271590, 1174180], serie: 8, numero: 3, stats: { attaque: 95, popularite: 100 }, nom: 'GTA V × Red Dead Redemption 2',
+        images: ['promos/s8-003a.jpg', 'promos/s8-003b.jpg'], couleurs: ['#ffd27f', '#ff6f61'] },
+    [-900804]: { steam: 489830, duo: [1245620, 489830], serie: 8, numero: 4, stats: { attaque: 100, popularite: 98 }, nom: 'Elden Ring × Skyrim',
+        images: ['promos/s8-004a.jpg', 'promos/s8-004b.jpg'], couleurs: ['#f2c46d', '#8fd6d0'] },
+    [-900805]: { steam: 698780, duo: [1451940, 698780], serie: 8, numero: 5, stats: { attaque: 99, popularite: 92 }, nom: 'NEEDY GIRL OVERDOSE × Doki Doki Literature Club!',
+        images: ['promos/s5-010.jpg', 'promos/s5-001.jpg'], couleurs: ['#6fd3ff', '#ff8fc7'] },
 };
 // Carte promo d'une carte (ou undefined) ; une promo sans `steam` est un jeu hors Steam (séries 2, 4 et 6)
 const promoDe = carte => PROMOS[carte.id];
@@ -843,7 +859,7 @@ function carteHTML(carte, { holo = (carte.holos || 0) > 0, compteur = 0, cachee 
     const plaque = chef ? `<span class="plaque-chef" title="${t('Metacritic : {n} / 100', { n: carte.metacritic })}">${ICONES.medaille}<span>${t('Chef-d’œuvre')}</span></span>` : '';
     const texte = `
                 <div class="carte-titre">
-                    <h3 class="carte-nom">${echapper(carte.nom)}</h3>
+                    <h3 class="carte-nom">${promoDe(carte)?.duo ? echapper(carte.nom).split(' × ').map((nom, i) => `<span class="duo-nom-${i ? 'b' : 'a'}">${nom}</span>`).join(' <i class="duo-x">×</i> ') : echapper(carte.nom)}</h3>
                     ${ex ? '<span class="badge-ex">EX</span>' : ''}
                 </div>
                 <p class="carte-infos">${echapper(infos) || '&nbsp;'}</p>
@@ -859,10 +875,14 @@ function carteHTML(carte, { holo = (carte.holos || 0) > 0, compteur = 0, cachee 
                         </li>`).join('')}
                 </ul>`;
     const secours = echapper(carte.image);
+    const duo = promoDe(carte)?.duo ? promoDe(carte) : null;
+    // Carte Duo : un jeu de chaque côté d'une diagonale soulignée d'un filet métallique (style.css, série 8)
+    const fondDuo = duo && `<div class="full-art-fond fond-duo" aria-hidden="true">${duo.images.map((src, i) =>
+        `<img class="duo-${i ? 'b' : 'a'}" src="${src}" alt="" loading="lazy">`).join('')}<span class="duo-filet"></span></div>`;
     return `
-        <article class="carte rarete-${rarete.id}${holo ? ' holo' : ''}${cachee ? ' stats-cachees' : ''}${chef ? ' chef-oeuvre' : ''}${goty ? ' goty' : ''}${fullArt ? ' full-art' : ''}${ex ? ' ex' : ''}${carte.promo ? ` promo promo-${STYLE_PROMO} promo-serie-${promoDe(carte)?.serie ?? 1}" data-incline${promoDe(carte)?.encres ? ` style="--encre-1: ${promoDe(carte).encres[0]}; --encre-2: ${promoDe(carte).encres[1]}"` : ''}` : '"'}>
+        <article class="carte rarete-${rarete.id}${holo ? ' holo' : ''}${cachee ? ' stats-cachees' : ''}${chef ? ' chef-oeuvre' : ''}${goty ? ' goty' : ''}${fullArt ? ' full-art' : ''}${ex ? ' ex' : ''}${carte.promo ? ` promo promo-${STYLE_PROMO} promo-serie-${promoDe(carte)?.serie ?? 1}" data-incline${promoDe(carte)?.encres ? ` style="--encre-1: ${promoDe(carte).encres[0]}; --encre-2: ${promoDe(carte).encres[1]}"` : ''}${duo ? ` style="--duo-1: ${duo.couleurs[0]}; --duo-2: ${duo.couleurs[1]}"` : ''}` : '"'}>
             <div class="carte-corps">
-                ${fullArt ? `<div class="full-art-fond" style="--secours: url('${secours}')" aria-hidden="true">${imageSecoursHTML(carte)}<img src="${imagePortrait(carte)}" alt="" loading="lazy"
+                ${fondDuo || ''}${fullArt && !fondDuo ? `<div class="full-art-fond" style="--secours: url('${secours}')" aria-hidden="true">${imageSecoursHTML(carte)}<img src="${imagePortrait(carte)}" alt="" loading="lazy"
                     onerror="if (this.dataset.repli) { this.parentNode.classList.remove('paysage'); this.remove(); } else { this.dataset.repli = 1; this.src = '${secours}'; this.parentNode.classList.add('paysage'); }"></div>` : ''}
                 ${goty ? `<span class="ruban-goty" title="${t('Jeu de l’année {annee}', { annee: goty.annee })} · ${goty.ceremonie}"><span>${BRIN_LAURIER}GOTY ${goty.annee}${BRIN_LAURIER}</span></span>` : ''}
                 ${goty && !fullArt ? `<span class="filigrane-goty" aria-hidden="true">${LAURIER}</span>` : ''}
@@ -956,10 +976,20 @@ async function chargerJeux() {
     for (const jeu of tousLesJeux) jeuxParRarete[jeu.rarete].push(jeu);
     jeuxParId = new Map(tousLesJeux.map(jeu => [jeu.id, jeu]));
     // Les cartes promo ne sont connues que par leur identifiant (hors de tousLesJeux et des raretés)
-    for (const [id, { steam, numero, stats, nom, jeu: infos }] of Object.entries(PROMOS)) {
-        const jeu = jeuxParId.get(steam) ?? (infos && { ...infos, nomMin: infos.nom.toLowerCase(), genres: infos.genres.map(t), tags: infos.tags.map(t) });
+    for (const [id, { steam, numero, stats, nom, jeu: infos, duo }] of Object.entries(PROMOS)) {
+        let jeu = jeuxParId.get(steam) ?? (infos && { ...infos, nomMin: infos.nom.toLowerCase(), genres: infos.genres.map(t), tags: infos.tags.map(t) });
         if (!jeu) continue;
-        STATS_FORCEES[id] = stats;
+        // L'Ancienneté d'une promo est celle de la carte normale : l'année de sortie d'origine, pas celle de la réédition Steam
+        if (steam && jeuxParId.get(steam)) jeu = { ...jeu, annee: anneeOriginale(jeu) };
+        let statsPromo = stats;
+        if (duo) {
+            // Carte Duo : les genres et thèmes des deux jeux ; sans `stats` écrites, la meilleure des deux cartes dans chaque stat
+            const [a, b] = duo.map(i => jeuxParId.get(i));
+            if (!a || !b) continue;
+            statsPromo ??= { attaque: Math.max(statQualite(a), statQualite(b)), popularite: Math.max(statPopularite(a), statPopularite(b)) };
+            jeu = { ...jeu, annee: Math.min(anneeOriginale(a), anneeOriginale(b)), avis: a.avis + b.avis, genres: [...new Set([...a.genres, ...b.genres])], tags: [...new Set([...(a.tags || []), ...(b.tags || [])])] };
+        }
+        STATS_FORCEES[id] = statsPromo;
         jeuxParId.set(Number(id), { ...jeu, ...(nom && { nom, nomMin: nom.toLowerCase() }), id: Number(id), steam, numero, rarete: 'promo', promo: true, statPopularite: undefined, statQualite: undefined });
     }
     calculerAnciennete();
@@ -2903,7 +2933,7 @@ function choixDeckHTML() {
             ${d.mode === 'promo'
                 ? `<button class="btn" data-deck-action="series">${t('Changer de série')}</button>`
                 : `<button class="btn" data-deck-action="niveaux">${t('Changer de difficulté')}</button>`}
-            <button class="btn btn-principal" data-deck-action="lancer"${d.choix.length === TAILLE_DECK ? '' : ' disabled'}>${t('Lancer la partie')}</button>
+            <button class="btn btn-principal" data-deck-action="lancer"${d.choix.length === TAILLE_DECK ? '' : ' disabled'}>${t('Lancer la partie')}${d.mode === 'promo' && !defisGratuitsRestants() ? ` · ${PRIX_DEFI} ${PIECE}` : ''}</button>
         </div>
         <div class="deck-outils">
             <label class="recherche">
@@ -3058,7 +3088,10 @@ function lancerPartieDecks() {
     d.choix = d.choix.filter(id => etat.collection[id]);
     if (!donneesPretes() || d.choix.length < TAILLE_DECK) return afficherDuelDecks();
     const moi = d.choix.map(id => ({ ...etat.collection[id] }));
-    if (d.mode === 'promo') return demarrerPartieDecks(avecBonusRegle(moi), avecBonusRegle(deckDefiPromo(d.niveau.serie)));
+    if (d.mode === 'promo') {
+        if (!payerDefi()) return afficherDuelDecks();
+        return demarrerPartieDecks(avecBonusRegle(moi), avecBonusRegle(deckDefiPromo(d.niveau.serie)));
+    }
     demarrerPartieDecks(moi, variantesOrdi(deckOrdinateur(d.niveau), d.niveau));
 }
 
@@ -3138,12 +3171,41 @@ const DEFIS_PROMO = {
     2: { nom: t('Hors Steam'), court: t('Popularité seule'), deck: 'synergie', stat: 'popularite', regle: t('Seule la Popularité compte. L’ordinateur joue 3 Légendaires ou Mythiques Full Art qui partagent un thème (synergie +1).') },
     4: { nom: t('Rétro'), court: t('Ancienneté seule'), deck: 'anciens', stat: 'anciennete', regle: t('Seule l’Ancienneté compte. L’ordinateur joue les plus vieilles Légendaires et Mythiques, en holo.') },
     // `genre` : les cartes de ce genre gagnent `bonus` sur toutes leurs stats (les tiennes comme celles de l'ordinateur)
-    3: { nom: t('Pépites indé'), court: t('Indé +3'), deck: 'genre', genre: t('Indé'), bonus: 3, regle: t('Les jeux indé (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des meilleures pépites indé Épiques, en holo.') },
-    5: { nom: t('Romance'), court: t('Romance +3'), deck: 'genre', genre: t('Romance'), bonus: 3, regle: t('Les jeux romance (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des plus belles romances Épiques, en holo.') },
-    6: { nom: t('Nintendo Switch'), court: t('Multijoueur +3'), deck: 'genre', genre: t('Multijoueur'), bonus: 3, regle: t('Les jeux multijoueur (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des meilleurs jeux multijoueur Épiques, en holo.') },
-    7: { nom: t('Science-fiction'), court: t('Science-fiction +3'), deck: 'genre', genre: t('Science-fiction'), bonus: 3, regle: t('Les jeux de science-fiction (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des meilleurs jeux de science-fiction Épiques, en holo.') },
+    3: { nom: t('Pépites indé'), court: t('Indé +3'), deck: 'genre', genre: t('Indé'), bonus: 3, regle: t('Les jeux indé (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des meilleures Légendaires et Mythiques indé, en Full Art.') },
+    5: { nom: t('Romance'), court: t('Romance +3'), deck: 'genre', genre: t('Romance'), bonus: 3, regle: t('Les jeux romance (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des meilleures Légendaires et Mythiques romance, en Full Art.') },
+    6: { nom: t('Nintendo Switch'), court: t('Multijoueur +3'), deck: 'genre', genre: t('Multijoueur'), bonus: 3, regle: t('Les jeux multijoueur (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des meilleures Légendaires et Mythiques multijoueur, en Full Art.') },
+    7: { nom: t('Science-fiction'), court: t('Science-fiction +3'), deck: 'genre', genre: t('Science-fiction'), bonus: 3, regle: t('Les jeux de science-fiction (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des meilleures Légendaires et Mythiques de science-fiction, en Full Art.') },
+    8: { nom: t('Duo'), court: t('Face à 3 cartes Duo'), deck: 'duo', regle: t('Pas de bonus : l’ordinateur joue 3 cartes Duo de la série, les plus complètes du jeu, sans point faible.') },
 };
 const defiDeSerie = serie => DEFIS_PROMO[serie] ?? DEFIS_PROMO[1];
+// Défis gratuits chaque jour (compteur remis à zéro à minuit), puis chaque défi coûte PRIX_DEFI pièces
+const DEFIS_GRATUITS = 3;
+const PRIX_DEFI = 100;
+function defisJour() {
+    if (etat.defisJour?.jour !== jourLocal()) etat.defisJour = { jour: jourLocal(), joues: 0 };
+    return etat.defisJour;
+}
+const defisGratuitsRestants = () => Math.max(0, DEFIS_GRATUITS - defisJour().joues);
+// Compte le défi qui commence : gratuit s'il en reste, sinon payé. Renvoie false s'il manque des pièces
+function payerDefi() {
+    const gratuit = defisGratuitsRestants() > 0;
+    if (!gratuit && etat.pieces < PRIX_DEFI) {
+        toast(t('Il te faut {n} pièces pour un défi de plus aujourd’hui', { n: PRIX_DEFI }), 'erreur');
+        return false;
+    }
+    if (!gratuit) etat.pieces -= PRIX_DEFI;
+    defisJour().joues++;
+    sauvegarder();
+    majEntete();
+    return true;
+}
+// Ligne d'info sous le titre du choix de série et sur le bouton de lancement
+const infoDefisJourHTML = () => {
+    const restants = defisGratuitsRestants();
+    return restants
+        ? tn(restants, 'Encore <b>{n}</b> défi gratuit aujourd’hui', 'Encore <b>{n}</b> défis gratuits aujourd’hui')
+        : t('Plus de défi gratuit aujourd’hui : chaque défi coûte <b>{n}</b> {piece} (gratuits à nouveau demain)', { n: PRIX_DEFI, piece: PIECE });
+};
 // Récompense d'une victoire, tirée au hasard (chances en %) : un booster pour la réserve, des pièces,
 // ou un booster de la série avec une de ses promos (doublons gardés)
 const RECOMPENSES_DEFI = [
@@ -3173,9 +3235,13 @@ function deckDefiPromo(serie) {
         return parmi(groupe, 5).map(c => ({ ...c, fullArts: 1 }));
     }
     if (regle.deck === 'genre') {
-        const duGenre = classerParTotal(jeuxParRarete.epique).filter(c => aLeGenre(c, regle.genre))
-            .sort((a, b) => force(b) - force(a));
-        return parmi(duGenre, 8).map(c => ({ ...c, holos: 1 }));
+        // Très dur : 3 des 6 meilleures Légendaires et Mythiques du genre, en Full Art (+3), en plus du bonus de la règle
+        const duGenre = cartesHautes().filter(c => aLeGenre(c, regle.genre)).sort((a, b) => force(b) - force(a));
+        return parmi(duGenre, 6).map(c => ({ ...c, fullArts: 1 }));
+    }
+    if (regle.deck === 'duo') {
+        // 3 des cartes Duo de la série : la meilleure des deux jeux dans chaque stat
+        return melanger(promosDeSerie(serie).map(id => creerCarte(jeuxParId.get(id)))).slice(0, TAILLE_DECK);
     }
     if (regle.deck === 'anciens') {
         const anciens = [...cartesHautes()].sort((a, b) => b.anciennete - a.anciennete || force(b) - force(a));
@@ -3206,7 +3272,7 @@ const regleDefiHTML = () => (deckDuel.mode === 'promo' && deckDuel.niveau
 function seriesDefiHTML() {
     const assez = possedees().length >= TAILLE_DECK;
     return `
-        <p class="duel-message">${t('Choisis une série et affronte son défi avec toute ta collection. Victoire : un booster, des pièces, ou parfois un booster de la série avec une de ses cartes promo.')}</p>
+        <p class="defis-jour">${infoDefisJourHTML()}</p>
         <div class="defis-promo">${seriesPromo().map(serie => {
             const ids = promosDeSerie(serie);
             if (!ids.length) return '';
@@ -3301,6 +3367,7 @@ const FONDS_PAQUET_PROMO = {
     5: 'linear-gradient(160deg, #ffffff 0%, #ffd6e7 50%, #ff8fbf 100%)',
     6: 'linear-gradient(90deg, #0ab9e6 0%, #0ab9e6 22%, #2b2b30 22%, #2b2b30 78%, #ff3c28 78%)',
     7: 'linear-gradient(160deg, #10246a 0%, #060c2a 55%, #c9a24c 100%)',
+    8: 'linear-gradient(110deg, #6fd3ff 0%, #6fd3ff 49%, #ffffff 49%, #ffffff 51%, #ff8fc7 51%)',
 };
 // Paquet d'un booster de série : le modèle Full Art, recoloré et renommé
 function paquetPromo(serie) {
