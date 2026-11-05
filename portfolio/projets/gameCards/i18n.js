@@ -175,7 +175,7 @@ const EN = {
     'Tri : nom': 'Sort: name',
     'Tri : exemplaires': 'Sort: copies',
     'Doublons': 'Duplicates',
-    'Vendre les doublons': 'Sell duplicates',
+    'Vendre doublons': 'Sell duplicates',
     'Aucun doublon': 'No duplicates',
     'Afficher plus': 'Show more',
     'Toutes': 'All',
