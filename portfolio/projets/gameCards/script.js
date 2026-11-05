@@ -325,6 +325,7 @@ const CODES_CADEAUX = {
     SERIE6: { serie: 6 },
     SERIE7: { serie: 7 },
     SERIE8: { serie: 8 },
+    SERIE9: { serie: 9 },
     // Un booster d'une série, ouvert tout de suite ({ boosterSerie: n })
     BOOSTERSERIE1: { boosterSerie: 1 },
     BOOSTERSERIE2: { boosterSerie: 2 },
@@ -334,6 +335,7 @@ const CODES_CADEAUX = {
     BOOSTERSERIE6: { boosterSerie: 6 },
     BOOSTERSERIE7: { boosterSerie: 7 },
     BOOSTERSERIE8: { boosterSerie: 8 },
+    BOOSTERSERIE9: { boosterSerie: 9 },
     BIENVENUE: { pieces: 300 },
     BOOSTERS: { boosters: 10 },
     PRESTIGE: { prestiges: 2 },
@@ -451,6 +453,18 @@ const PROMOS = {
         images: ['promos/s8-004a.jpg', 'promos/s8-004b.jpg'], couleurs: ['#f2c46d', '#8fd6d0'] },
     [-900805]: { steam: 698780, duo: [1451940, 698780], serie: 8, numero: 5, stats: { attaque: 99, popularite: 92 }, nom: 'NEEDY GIRL OVERDOSE × Doki Doki Literature Club!',
         images: ['promos/s5-010.jpg', 'promos/s5-001.jpg'], couleurs: ['#6fd3ff', '#ff8fc7'] },
+
+    // Série 9 « Ténèbres » : gothique minimaliste en noir et blanc, sur Steam (illustration pleine carte, un seul filet blanc)
+    [-374320]: { steam: 374320, serie: 9, numero: 1, stats: { attaque: 97, popularite: 93 }, image: 'promos/s9-001.jpg', nom: 'Dark Souls III' }, // DARK SOULS III
+    [-367520]: { steam: 367520, serie: 9, numero: 2, stats: { attaque: 98, popularite: 92 }, image: 'promos/s9-002.jpg' }, // HOLLOW KNIGHT
+    [-774361]: { steam: 774361, serie: 9, numero: 3, stats: { attaque: 93, popularite: 82 }, image: 'promos/s9-003.jpg' }, // BLASPHEMOUS
+    [-1627720]: { steam: 1627720, serie: 9, numero: 4, stats: { attaque: 95, popularite: 85 }, image: 'promos/s9-004.jpg' }, // LIES OF P
+    [-692850]: { steam: 692850, serie: 9, numero: 5, stats: { attaque: 93, popularite: 82 }, image: 'promos/s9-005.jpg' }, // BLOODSTAINED: RITUAL OF THE NIGHT
+    [-262060]: { steam: 262060, serie: 9, numero: 6, stats: { attaque: 93, popularite: 86 }, image: 'promos/s9-006.jpg', nom: 'Darkest Dungeon' }, // DARKEST DUNGEON
+    [-1196590]: { steam: 1196590, serie: 9, numero: 7, stats: { attaque: 95, popularite: 90 }, image: 'promos/s9-007.jpg' }, // RESIDENT EVIL VILLAGE
+    [-205100]: { steam: 205100, serie: 9, numero: 8, stats: { attaque: 96, popularite: 84 }, image: 'promos/s9-008.jpg' }, // DISHONORED
+    [-1369630]: { steam: 1369630, serie: 9, numero: 9, stats: { attaque: 94, popularite: 80 }, image: 'promos/s9-009.jpg', nom: 'Ender Lilies' }, // ENDER LILIES
+    [-2171440]: { steam: 2171440, serie: 9, numero: 10, stats: { attaque: 97, popularite: 80 }, image: 'promos/s9-010.jpg' }, // FEAR & HUNGER 2: TERMINA
 };
 // Carte promo d'une carte (ou undefined) ; une promo sans `steam` est un jeu hors Steam (séries 2, 4 et 6)
 const promoDe = carte => PROMOS[carte.id];
@@ -3176,6 +3190,7 @@ const DEFIS_PROMO = {
     6: { nom: t('Nintendo Switch'), court: t('Multijoueur +3'), deck: 'genre', genre: t('Multijoueur'), bonus: 3, regle: t('Les jeux multijoueur (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des meilleures Légendaires et Mythiques multijoueur, en Full Art.') },
     7: { nom: t('Science-fiction'), court: t('Science-fiction +3'), deck: 'genre', genre: t('Science-fiction'), bonus: 3, regle: t('Les jeux de science-fiction (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des meilleures Légendaires et Mythiques de science-fiction, en Full Art.') },
     8: { nom: t('Duo'), court: t('Face à 3 cartes Duo'), deck: 'duo', regle: t('Pas de bonus : l’ordinateur joue 3 cartes Duo de la série, les plus complètes du jeu, sans point faible.') },
+    9: { nom: t('Ténèbres'), court: t('Horreur +3'), deck: 'genre', genre: t('Horreur'), bonus: 3, regle: t('Les jeux d’horreur (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 des meilleures Légendaires et Mythiques d’horreur, en Full Art.') },
 };
 const defiDeSerie = serie => DEFIS_PROMO[serie] ?? DEFIS_PROMO[1];
 // Défis gratuits chaque jour (compteur remis à zéro à minuit), puis chaque défi coûte PRIX_DEFI pièces
@@ -3258,7 +3273,7 @@ function deckDefiPromo(serie) {
     return deck.map(c => ({ ...c, ...(Math.random() < 0.5 ? { holos: 1 } : { fullArts: 1 }) }));
 }
 
-// Bonus d'une carte selon la règle du défi en cours (jeux indé de la série 3, romances de la série 5, multijoueur de la série 6, science-fiction de la série 7, et les promos de la série), sinon 0
+// Bonus d'une carte selon la règle du défi en cours (jeux indé de la série 3, romances de la série 5, multijoueur de la série 6, science-fiction de la série 7, horreur de la série 9, et les promos de la série), sinon 0
 function bonusRegleDefi(carte) {
     const regle = deckDuel.mode === 'promo' && deckDuel.niveau ? defiDeSerie(deckDuel.niveau.serie) : null;
     const concernee = regle?.genre && (aLeGenre(carte, regle.genre) || promoDe(carte)?.serie === deckDuel.niveau.serie);
@@ -3368,6 +3383,7 @@ const FONDS_PAQUET_PROMO = {
     6: 'linear-gradient(90deg, #0ab9e6 0%, #0ab9e6 22%, #2b2b30 22%, #2b2b30 78%, #ff3c28 78%)',
     7: 'linear-gradient(160deg, #10246a 0%, #060c2a 55%, #c9a24c 100%)',
     8: 'linear-gradient(110deg, #6fd3ff 0%, #6fd3ff 49%, #ffffff 49%, #ffffff 51%, #ff8fc7 51%)',
+    9: 'linear-gradient(160deg, #1e1e1e 0%, #050505 55%, #000000 100%)',
 };
 // Paquet d'un booster de série : le modèle Full Art, recoloré et renommé
 function paquetPromo(serie) {

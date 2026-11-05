@@ -748,6 +748,44 @@ main {
 }
 .paquet.paquet-serie-8 .paquet-mention { color: #ffffff; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7); }
 
+/* Série 9 « Ténèbres » : minimaliste. Noir uni, un seul filet blanc fin en retrait du bord, marque en capitales espacées,
+   cartes noires à filet blanc, étiquette blanche */
+.paquet.paquet-serie-9 { --texte-paquet: #ffffff; --ombre-paquet: rgba(255, 255, 255, 0.22); }
+.paquet.paquet-serie-9 .paquet-haut {
+    background:
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.12) 0 1.5px, rgba(0, 0, 0, 0.3) 1.5px 3.5px),
+        linear-gradient(90deg, #050505, #222222 50%, #050505);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.8);
+}
+.paquet.paquet-serie-9 .paquet-corps {
+    background: radial-gradient(ellipse at 50% 45%, #1a1a1a, #000000 72%);
+    box-shadow: inset 0 0 0 9px #000000, inset 0 0 0 10px rgba(255, 255, 255, 0.75), inset 0 0 30px rgba(0, 0, 0, 0.8);
+}
+.paquet.paquet-serie-9 .paquet-marque {
+    font-family: 'Cinzel', Georgia, serif;
+    letter-spacing: 0.12em;
+    color: #ffffff;
+    text-shadow: 0 2px 6px #000000;
+}
+.paquet.paquet-serie-9 .paquet-embleme { color: rgba(255, 255, 255, 0.85); filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.15)); }
+.paquet.paquet-serie-9 .paquet-embleme::before { background: linear-gradient(160deg, #262626, #050505); opacity: 0.85; }
+.paquet.paquet-serie-9 .paquet-embleme::after {
+    content: '';
+    background: linear-gradient(160deg, #1e1e1e, #000000);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3), inset 0 0 0 4px #000000, inset 0 0 0 5px rgba(255, 255, 255, 0.6);
+}
+.paquet.paquet-serie-9 .paquet-type {
+    border: 1px solid #000000;
+    border-radius: 3px;
+    background: #ffffff;
+    color: #000000;
+    font-family: 'Cinzel', Georgia, serif;
+    letter-spacing: 0.16em;
+    text-shadow: none;
+    box-shadow: 0 0 0 1.5px #ffffff;
+}
+.paquet.paquet-serie-9 .paquet-mention { color: #cfcfcf; font-family: 'Cinzel', Georgia, serif; letter-spacing: 0.24em; text-shadow: 0 1px 2px #000000; }
+
 /* ── Boosters des séries promo 3 à 5, aux couleurs de leurs cartes ── */
 /* Série 3 « Indé » : affiche en risographie (papier crème, aplats corail et bleu nuit, trame de points, repérage décalé) */
 .paquet.paquet-serie-3 { --texte-paquet: #1d2b64; --ombre-paquet: rgba(255, 107, 91, 0.45); }
@@ -1662,6 +1700,97 @@ main {
 .carte.promo-neon.promo-serie-8 .carte-stats span { color: #ffffff; }
 .carte.promo-neon.promo-serie-8 .carte-stats li:first-child span { color: var(--duo-1); }
 .carte.promo-neon.promo-serie-8 .carte-stats li:last-child span { color: var(--duo-2); }
+
+/* ── Série 9 « Ténèbres » : minimaliste, comme une affiche de luxe : illustration en noir et blanc pleine carte,
+   un seul filet blanc fin en retrait du bord, textes en capitales espacées ── */
+.carte.promo-neon.promo-serie-9 {
+    --rar: #ffffff;
+    padding: 5px;
+    border-radius: 8px;
+    background: #000000;
+    box-shadow: 0 0 0 1px #2e2e2e, 0 0 18px rgba(255, 255, 255, 0.06), 0 10px 26px rgba(0, 0, 0, 0.85);
+    animation: none;
+}
+.carte.promo-neon.promo-serie-9::before,
+.carte.promo-neon.promo-serie-9::after { content: none; }
+.carte.promo-neon.promo-serie-9 .carte-corps {
+    border-radius: 5px;
+    background: #000000;
+    box-shadow: none;
+}
+/* L'illustration pleine carte, en noir et blanc ; le bas s'efface dans le noir pour le nom */
+.carte.promo-neon.promo-serie-9 .full-art-fond img { filter: grayscale(1) contrast(1.15) brightness(0.9); }
+.carte.promo-neon.promo-serie-9 .full-art-fond::after {
+    background:
+        radial-gradient(ellipse at 50% 35%, transparent 50%, rgba(0, 0, 0, 0.45)),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, transparent 15%, transparent 42%, rgba(0, 0, 0, 0.8) 62%, #000000 84%);
+}
+/* Le seul filet : blanc, fin, en retrait du bord de la carte */
+.carte.promo-neon.promo-serie-9.full-art .carte-corps::before {
+    inset: 3cqi;
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 2px;
+    mix-blend-mode: normal;
+    opacity: 1;
+}
+/* Sous la lumière : reflet blanc discret et irisation argentée */
+.carte.promo-neon.promo-serie-9 .carte-corps::after {
+    background:
+        radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.4), transparent 36%),
+        linear-gradient(125deg, #2a2a2a, #d9d9d9, #5a5a5a, #d9d9d9, #2a2a2a) var(--mx) var(--my) / 300% 300%;
+}
+/* « PROMO S9 · #001 » : petites capitales très espacées, centrées en haut */
+.carte.promo-neon.promo-serie-9 .carte-haut { justify-content: center; margin-top: 1.4cqi; }
+.carte.promo-neon.promo-serie-9 .carte-rarete,
+.fiche-infos.promo-serie-9 .fiche-rarete,
+.titre-serie.serie-9 {
+    background: none;
+    color: #ffffff;
+    font-family: 'Cinzel', Georgia, serif;
+    font-weight: 700;
+    letter-spacing: 0.32em;
+    text-shadow: 0 1px 3px #000000;
+}
+.carte.promo-neon.promo-serie-9 .carte-rarete { font-size: 3.3cqi; filter: none; }
+.fiche-infos.promo-serie-9 .fiche-rarete, .titre-serie.serie-9 { color: #e6e6e6; letter-spacing: 0.2em; text-shadow: none; }
+/* Nom en capitales classiques, centré ; un petit trait blanc le sépare des stats */
+.carte.promo-neon.promo-serie-9 .carte-bas { padding: 0 3cqi 2.4cqi; }
+.carte.promo-neon.promo-serie-9 .carte-titre { justify-content: center; text-align: center; }
+.carte.promo-neon.promo-serie-9 .carte-nom {
+    font-family: 'Cinzel', Georgia, serif;
+    font-weight: 700;
+    font-size: 6.2cqi;
+    line-height: 1.15;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #ffffff;
+    text-shadow: 0 1px 4px #000000;
+}
+.carte.promo-neon.promo-serie-9 .carte-infos {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 2.9cqi;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+}
+.carte.promo-neon.promo-serie-9 .carte-stats {
+    position: relative;
+    margin-top: 2.2cqi;
+    padding-top: 2.4cqi;
+}
+.carte.promo-neon.promo-serie-9 .carte-stats::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 16cqi;
+    height: 1px;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, transparent, #ffffff, transparent);
+}
+.carte.promo-neon.promo-serie-9 .carte-stats span { color: rgba(255, 255, 255, 0.7); }
+.carte.promo-neon.promo-serie-9 .carte-stats b { color: #ffffff; font-weight: 700; }
 
 /* ── Série 4 « Rétro » : la carte est une console portable des années 90. Coque en plastique gris clair,
    écran inséré dans un cadre sombre, coin bas droit très arrondi, LED rouge et marque en bas ;
