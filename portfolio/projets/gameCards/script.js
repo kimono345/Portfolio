@@ -321,15 +321,15 @@ const CODES_CADEAUX = {
     'Qk9PU1RFUlM=': { boosters: 10 }, // boosters
     'UFJFU1RJR0U=': { prestiges: 1 }, // prestige
     'VEhYRk9SUExBWUlORw==': { fullArt: true }, // merci d'avoir joué
-    'SEVTT1lBTQ==': { pieces: 250 }, // triche de GTA San Andreas
-    'TU9USEVSTE9ERQ==': { pieces: 250 }, // triche des Sims
-    'SUREUUQ=': { prestiges: 1 }, // mode dieu de Doom
-    'VEhFQ0FLRUlTQUxJRQ==': { boosterSerie: 'hasard' }, // Portal : un booster promo d'une série au hasard
-    'R0FCRU4=': { fullArt: true }, // le patron de Steam
-    'REVWVE9PTFM=': { boosters: 3 }, // affiché dans la console du navigateur
-    'Q09ERVNPVVJDRQ==': { pieces: 300 }, // caché dans un commentaire d'index.html
-    'Q09VTlRFUlNUUklLRQ==': { prestiges: 1 }, // réponse de l'énigme du Profil (le jeu n° 10 sur Steam)
-};
+    'SEVTT1lBTQ==': { secret: true, pieces: 250 }, // triche de GTA San Andreas
+    'TU9USEVSTE9ERQ==': { secret: true, pieces: 250 }, // triche des Sims
+    'SUREUUQ=': { secret: true, prestiges: 1 }, // mode dieu de Doom
+    'VEhFQ0FLRUlTQUxJRQ==': { secret: true, boosterSerie: 'hasard' }, // Portal : un booster promo d'une série au hasard
+    'R0FCRU4=': { secret: true, fullArt: true }, // le patron de Steam
+    'REVWVE9PTFM=': { secret: true, boosters: 3 }, // affiché dans la console du navigateur
+    'Q09ERVNPVVJDRQ==': { secret: true, pieces: 300 }, // caché dans un commentaire d'index.html
+    'Q09VTlRFUlNUUklLRQ==': { secret: true, prestiges: 1 }, // réponse de l'énigme du Profil (le jeu n° 10 sur Steam) 
+}; 
 // Le code Konami (↑ ↑ ↓ ↓ ← → ← → B A) se tape au clavier n'importe où, pas dans le champ
 const CODE_KONAMI = { recompense: { prestiges: 1, pieces: 500 }, touches: ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'] };
 // Cartes promo (rareté Promo) : une édition spéciale d'un jeu, distincte de sa carte normale (identifiant à part, négatif),
@@ -450,7 +450,12 @@ const PROMOS = {
     [-205100]: { steam: 205100, serie: 9, numero: 8, stats: { attaque: 96, popularite: 84 }, image: 'promos/s9-008.jpg' }, // DISHONORED
     [-1369630]: { steam: 1369630, serie: 9, numero: 9, stats: { attaque: 94, popularite: 80 }, image: 'promos/s9-009.jpg', nom: 'Ender Lilies' }, // ENDER LILIES
     [-2171440]: { steam: 2171440, serie: 9, numero: 10, stats: { attaque: 97, popularite: 80 }, image: 'promos/s9-010.jpg' }, // FEAR & HUNGER 2: TERMINA
+
+    // Carte secrète, hors séries (série 0) : récompense du succès secret « Overdose ». Les trois stats au maximum,
+    // style « angel.exe » : une fenêtre de vieil ordinateur rose bonbon (style.css)
+    [-1451940]: { steam: 1451940, serie: 0, numero: 0, secrete: true, stats: { attaque: 100, popularite: 100 }, nom: 'Needy Girl Overdose' }, // NEEDY STREAMER OVERLOAD
 };
+const ID_CARTE_SECRETE = -1451940;
 // Carte promo d'une carte (ou undefined) ; une promo sans `steam` est un jeu hors Steam (séries 2, 4 et 6)
 const promoDe = carte => PROMOS[carte.id];
 const horsSteam = carte => Boolean(promoDe(carte)) && !promoDe(carte).steam;
@@ -619,7 +624,7 @@ const etat = {
         ...lire(CLES.charges, {}),
     },
     godPacks: lire(CLES.godPacks, { nombre: 0, premier: null }), // trophée : combien, et la date du premier
-    stats: { boosters: 0, prestiges: 0, duelsGagnes: 0, duelsParfaits: 0, ventes: 0, decksGagnes: 0, decksHardcore: 0, draftsGagnes: 0, defisGagnes: 0, ...lire(CLES.stats, {}) },
+    stats: { boosters: 0, prestiges: 0, duelsGagnes: 0, duelsParfaits: 0, ventes: 0, decksGagnes: 0, decksHardcore: 0, draftsGagnes: 0, defisGagnes: 0, logo: 0, nuit: 0, pireMalchance: 0, ...lire(CLES.stats, {}) },
     succes: lire(CLES.succes, {}),        // { id du succès: date d'obtention }
     // { id du succès: date de récupération de la récompense }. Les anciennes sauvegardes avaient reçu
     // leurs récompenses tout de suite : leurs succès déjà obtenus comptent comme récupérés.
@@ -817,7 +822,7 @@ function creerCarte(jeu, { ex = false } = {}) {
             : statQualite(jeu),
         ex,
         // Stat « joker » : la vraie ancienneté, sans lien avec la rareté (une vieille Commune peut battre une Mythique récente)
-        anciennete: anciennete(anneeOriginale(jeu)),
+        anciennete: STATS_FORCEES[jeu.id]?.anciennete ?? anciennete(anneeOriginale(jeu)),
         popularite: statPopularite(jeu),
         // Vraies données, affichées sur la fiche à côté des stats de jeu
         noteReelle: jeu.note,
@@ -887,7 +892,7 @@ function carteHTML(carte, { holo = (carte.holos || 0) > 0, compteur = 0, cachee 
                 ${goty && !fullArt ? `<span class="filigrane-goty" aria-hidden="true">${LAURIER}</span>` : ''}
                 <header class="carte-haut">
                     <span class="carte-rarete">${carte.promo
-                        ? `${rarete.nom}${promoDe(carte) ? ` ${numeroPromoHTML(promoDe(carte))}` : ''}`
+                        ? promoDe(carte)?.secrete ? '♡ angel.exe' : `${rarete.nom}${promoDe(carte) ? ` ${numeroPromoHTML(promoDe(carte))}` : ''}`
                         : `${rarete.nom}${fullArt ? ' · Full Art' : holo ? ' · Holo' : ''}`}</span>
                     ${compteur > 1 ? `<span class="carte-compteur">×${compteur}</span>` : ''}
                 </header>
@@ -1283,8 +1288,10 @@ async function ouvrirBooster(mode, nombreBoosters = 1, type = TYPES_BOOSTER.stan
         const booster = tirerBooster(type, etat.malchance >= MALCHANCE_MAX - 1);
         const hauteRarete = booster.some(t => estHauteRarete(t.carte.rarete));
         etat.malchance = hauteRarete ? 0 : etat.malchance + 1;
+        etat.stats.pireMalchance = Math.max(etat.stats.pireMalchance, etat.malchance);
         boosters.push(booster);
     }
+    if (new Date().getHours() < 5) etat.stats.nuit += nombreBoosters; // succès secret « Noctambule »
     etat.stats.boosters += nombreBoosters;
     if (type.prestige) etat.stats.prestiges += nombreBoosters;
     const tirage = boosters.flat();
@@ -1949,7 +1956,7 @@ function afficherFiche(id) {
     $('#modale-contenu').innerHTML = `
         <div class="fiche-visuel" data-incline>${carteHTML(carte, { holo: e?.holos > 0 })}</div>
         <div class="fiche-infos rarete-${rarete.id}${promoDe(carte) ? ` promo-serie-${promoDe(carte).serie}` : ''}">
-            <span class="fiche-rarete">${rarete.nom}${promoDe(carte) ? ` · ${t('Série {n}', { n: promoDe(carte).serie })}${horsSteam(carte) ? ` · ${t('hors Steam')}` : ''}` : ''}${carte.ex ? ' EX' : ''}${e?.holos ? ' · ✨ Holo' : ''}</span>
+            <span class="fiche-rarete">${rarete.nom}${promoDe(carte) ? ` · ${promoDe(carte).secrete ? t('Carte secrète') : t('Série {n}', { n: promoDe(carte).serie })}${horsSteam(carte) ? ` · ${t('hors Steam')}` : ''}` : ''}${carte.ex ? ' EX' : ''}${e?.holos ? ' · ✨ Holo' : ''}</span>
             <h2>${echapper(carte.nom)}</h2>
             <p class="fiche-meta">${[carte.annee, ...carte.genres].filter(Boolean).map(echapper).join(' · ')}</p>
             ${jeu ? `<p class="fiche-raison">${raisonRarete(jeu)}</p>` : ''}
@@ -2156,7 +2163,7 @@ function utiliserCode() {
 function activerCode(code, recompense) {
     etat.codes[code] = Date.now();
     // Une carte précise : elle rejoint la collection, le reste se verse comme une récompense de succès
-    const { carte: idCarte, promo: idPromo, serie, boosterSerie, ...reste } = recompense;
+    const { carte: idCarte, promo: idPromo, serie, boosterSerie, secret, ...reste } = recompense;
     const jeu = jeuxParId.get(idCarte);
     if (jeu) {
         ajouterACollection(creerCarte(jeu), false);
@@ -2189,6 +2196,23 @@ function activerCode(code, recompense) {
         verifierSucces();
         ouvrirPaquetPromo(carte, nouvelle, numero);
     }
+}
+
+// Logo cliqué 10 fois d'affilée (moins d'une seconde entre deux clics) : la petite carte fait des pirouettes
+let clicsLogo = 0, minuteurLogo = null;
+function compterClicLogo() {
+    clearTimeout(minuteurLogo);
+    minuteurLogo = setTimeout(() => (clicsLogo = 0), 1000);
+    if (++clicsLogo < 10) return;
+    clicsLogo = 0;
+    const carte = $('.logo-carte');
+    carte.classList.remove('logo-pirouette');
+    void carte.offsetWidth; // relance l'animation
+    carte.classList.add('logo-pirouette');
+    if (etat.stats.logo) return jouerSon('succes');
+    etat.stats.logo = 1;
+    sauvegarder();
+    verifierSucces();
 }
 
 // Code Konami : la suite de touches tapée n'importe où (hors champs de texte), une seule fois par sauvegarde
@@ -2467,6 +2491,7 @@ const ANNEES_GOTY = new Set(Object.values(GOTY).map(g => g[0])).size;
 
 // Chaque succès se débloque quand valeur() atteint cible ; sa récompense se récupère ensuite dans le profil :
 // { pieces }, { boosters } (classiques, ajoutés à la réserve), { prestiges } ou { fullArt } (une Légendaire ou Mythique au hasard)
+const TOTAL_CODES_SECRETS = Object.values(CODES_CADEAUX).filter(r => r.secret).length + 1; // + le code Konami
 const SUCCES = [
     // Collection
     { id: 'premier-pas', nom: t('Premier pas'), description: t('Obtenir ta première carte'), cible: 1, recompense: { boosters: 10 }, valeur: () => possedees().length },
@@ -2510,7 +2535,19 @@ const SUCCES = [
     // Commerce
     { id: 'marchand', nom: t('Marchand'), description: t('Revendre un doublon'), cible: 1, recompense: { pieces: 10 }, valeur: () => etat.stats.ventes },
     { id: 'grossiste', nom: t('Grossiste'), description: t('Revendre 100 doublons'), cible: 100, recompense: { pieces: 100 }, valeur: () => etat.stats.ventes },
+    // Secrets : le nom se voit, le détail reste flou tant qu'ils ne sont pas débloqués
+    { id: 'curieux', secret: true, nom: t('Curieux'), description: t('Cliquer 10 fois d’affilée sur le logo'), cible: 1, recompense: { pieces: 100 }, valeur: () => etat.stats.logo },
+    { id: 'fouineur', secret: true, nom: t('Fouineur'), description: t('Trouver 3 codes secrets'), cible: 3, recompense: { pieces: 200 }, valeur: codesSecretsTrouves },
+    { id: 'hacker', secret: true, nom: t('Hacker'), description: t('Trouver tous les codes secrets'), cible: TOTAL_CODES_SECRETS, recompense: { prestiges: 2 }, valeur: codesSecretsTrouves },
+    { id: 'old-school', secret: true, nom: t('Old school'), description: t('Taper le code Konami'), cible: 1, recompense: { boosters: 5 }, valeur: () => (etat.codes.KONAMI ? 1 : 0) },
+    { id: 'noctambule', secret: true, nom: t('Noctambule'), description: t('Ouvrir un booster entre minuit et 5 h du matin'), cible: 1, recompense: { boosters: 5 }, valeur: () => etat.stats.nuit },
+    { id: 'chat-noir', secret: true, nom: t('Chat noir'), description: t('Ouvrir 30 boosters d’affilée sans Légendaire ni Mythique'), cible: 30, recompense: { pieces: 300 }, valeur: () => etat.stats.pireMalchance },
+    { id: 'overdose', secret: true, nom: t('Overdose'), description: t('Débloquer tous les autres succès secrets'), cible: 6, recompense: { carteSecrete: true },
+        valeur: () => SUCCES.filter(x => x.secret && x.id !== 'overdose' && etat.succes[x.id]).length },
 ];
+
+// Codes secrets trouvés (les easter eggs, Konami compris), sur ce total
+function codesSecretsTrouves() { return Object.keys(etat.codes).filter(code => code === 'KONAMI' || CODES_CADEAUX[btoa(code)]?.secret).length; }
 
 // Débloque les succès atteints et les annonce ; leurs récompenses attendent d'être récupérées dans le profil
 function verifierSucces() {
@@ -2540,6 +2577,7 @@ function texteRecompense(r, piece = true) {
     if (r.pieces) return piece ? `+${nombre(r.pieces)} ${PIECE}` : t('+{n} pièces', { n: nombre(r.pieces) });
     if (r.boosters) return tn(r.boosters, '+{n} booster', '+{n} boosters');
     if (r.prestiges) return tn(r.prestiges, '+{n} Prestige', '+{n} Prestiges');
+    if (r.carteSecrete) return t('Carte secrète');
     return t('Carte Full Art');
 }
 
@@ -2554,6 +2592,11 @@ function verserRecompense(r) {
     if (r.prestiges) etat.charges.prestige.charges += r.prestiges;
     if (r.fullArt) {
         carte = piocher(tirerRarete('chance', HAUTES_RARETES));
+        nouvelle = ajouterACollection(carte, false, true);
+    }
+    // La carte secrète arrive elle aussi dans un paquet à ouvrir
+    if (r.carteSecrete && jeuxParId.get(ID_CARTE_SECRETE)) {
+        carte = creerCarte(jeuxParId.get(ID_CARTE_SECRETE));
         nouvelle = ajouterACollection(carte, false, true);
     }
     sauvegarder();
@@ -2756,19 +2799,23 @@ function afficherProfil() {
         const obtenu = etat.succes[succes.id];
         const aRecuperer = obtenu && !etat.succesRecuperes[succes.id];
         const valeur = Math.min(succes.valeur(), succes.cible);
+        const cache = succes.secret && !obtenu;
         return `
-            <article class="succes${obtenu ? ' obtenu' : ''}${aRecuperer ? ' a-recuperer' : ''}">
+            <article class="succes${obtenu ? ' obtenu' : ''}${aRecuperer ? ' a-recuperer' : ''}${cache ? ' succes-secret' : ''}">
                 ${ICONES.trophee}
                 <div class="succes-texte">
                     <h3>${succes.nom}</h3>
-                    <p>${succes.description}</p>
-                    ${aRecuperer
+                    ${cache
+                        ? `<p class="succes-flou" aria-label="${t('Succès secret')}"><span aria-hidden="true">${succes.description.replace(/\S/g, '•')}</span></p>
+                    <span class="succes-cadenas">${t('Succès secret')}</span>`
+                        : `<p>${succes.description}</p>`}
+                    ${cache ? '' : aRecuperer
                         ? `<button class="btn btn-or succes-recuperer" data-recuperer="${succes.id}">${t('Récupérer')}</button>`
                         : obtenu
                             ? `<span class="succes-date">${t('Obtenu le {date}', { date: new Date(obtenu).toLocaleDateString(LOCALE) })}</span>`
                             : `<span class="succes-progres"><i style="--v: ${(valeur / succes.cible) * 100}%"></i>${nombre(valeur)} / ${nombre(succes.cible)}</span>`}
                 </div>
-                <span class="succes-gain${succes.recompense.fullArt ? ' gain-full-art' : ''}">${texteRecompense(succes.recompense)}</span>
+                <span class="succes-gain${succes.recompense.fullArt || succes.recompense.carteSecrete ? ' gain-full-art' : ''}">${cache ? '???' : texteRecompense(succes.recompense)}</span>
             </article>`;
     }).join('');
     $('#btn-tout-recuperer').hidden = succesARecuperer().length < 2;
@@ -3278,7 +3325,7 @@ const RECOMPENSES_DEFI = [
     { id: 'pieces', chance: 30, pieces: 200 },
     { id: 'serie', chance: 10 },
 ];
-const seriesPromo = () => [...new Set(Object.values(PROMOS).map(p => p.serie))].sort((a, b) => a - b);
+const seriesPromo = () => [...new Set(Object.values(PROMOS).map(p => p.serie))].filter(n => n > 0).sort((a, b) => a - b); // sans la carte secrète
 const promosDeSerie = serie => Object.keys(PROMOS).map(Number).filter(id => PROMOS[id].serie === serie && jeuxParId.get(id));
 const niveauDefi = serie => ({ id: `defi-${serie}`, serie, nom: t('Série {n}', { n: serie }), max: 'mythique', intelligence: 0.67, stat: defiDeSerie(serie).stat ?? null });
 
@@ -3766,6 +3813,7 @@ const RENDUS_ECRAN = {
 
 function init() {
     document.addEventListener('keydown', suivreKonami);
+    $('.logo').addEventListener('click', compterClicLogo);
     // Pour les curieux qui ouvrent la console (F12)
     console.log(`%cGameCards%c\n${t('Tu fouilles dans la console ? Bien vu. Code secret :')} ${atob('REVWVE9PTFM=')}`,
         'font: 900 22px sans-serif; color: #f5c542', 'font: 14px sans-serif');

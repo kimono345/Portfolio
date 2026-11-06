@@ -1836,6 +1836,101 @@ main {
 .carte.promo-neon.promo-serie-9 .carte-stats span { color: rgba(255, 255, 255, 0.7); }
 .carte.promo-neon.promo-serie-9 .carte-stats b { color: #ffffff; font-weight: 700; }
 
+/* ── Carte secrète « angel.exe » (NEEDY GIRL OVERDOSE) : une fenêtre de vieil ordinateur rose bonbon.
+   Barre de titre dégradée rose → violet avec ses boutons, cadre violet nuit à ombre pixel, lignes de balayage,
+   nom en glitch cyan / magenta, cœurs pixel, et un léger sursaut glitch de temps en temps ── */
+.carte.promo-neon.promo-serie-0 {
+    --rar: #ff7ac8;
+    --nuit: #2b0f3d;
+    padding: 6px;
+    border-radius: 6px;
+    background:
+        radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.6) 0 1.5px, transparent 2px) 0 0 / 14px 14px,
+        linear-gradient(160deg, #ffd1ec, #f3b8ff 50%, #b9c6ff);
+    box-shadow: 0 0 0 2px var(--nuit), 4px 4px 0 2px var(--nuit), 0 0 28px rgba(255, 122, 200, 0.55), 0 10px 26px rgba(0, 0, 0, 0.6);
+    animation: angel-glitch 5s steps(1) infinite;
+    animation-play-state: var(--effets);
+}
+@keyframes angel-glitch {
+    0%, 92%, 100% { filter: none; }
+    93% { filter: hue-rotate(40deg) saturate(1.6); translate: 2px 0; }
+    95% { filter: hue-rotate(-30deg) contrast(1.3); translate: -2px 0; }
+    97% { filter: none; translate: 0; }
+}
+.carte.promo-neon.promo-serie-0::before,
+.carte.promo-neon.promo-serie-0::after { content: none; }
+.carte.promo-neon.promo-serie-0 .carte-corps {
+    border-radius: 3px;
+    border: 2px solid var(--nuit);
+    background: #ffe3f3;
+    box-shadow: none;
+}
+.carte.promo-neon.promo-serie-0 .full-art-fond img { filter: saturate(1.15) contrast(1.05); }
+/* Haut et bas rosés pour les textes ; lignes de balayage d'écran cathodique sur toute l'illustration */
+.carte.promo-neon.promo-serie-0 .full-art-fond::after {
+    background:
+        repeating-linear-gradient(180deg, rgba(43, 15, 61, 0.12) 0 1px, transparent 1px 3px),
+        linear-gradient(180deg, transparent 0%, transparent 55%, rgba(255, 209, 236, 0.85) 74%, #ffd1ec 88%);
+}
+.carte.promo-neon.promo-serie-0.full-art .carte-corps::before {
+    background:
+        radial-gradient(circle at var(--mx) var(--my), rgba(255, 140, 210, 0.45), transparent 45%),
+        linear-gradient(125deg, #ff7ac8, #9b7bff, #6fe3ff, #ff7ac8) calc(100% - var(--mx)) calc(100% - var(--my)) / 200% 200%;
+    mix-blend-mode: soft-light;
+    opacity: 0.55;
+}
+/* Barre de titre de la fenêtre : « ♡ angel.exe » et les trois boutons _ □ × */
+.carte.promo-neon.promo-serie-0 .carte-haut {
+    position: relative;
+    margin: 0;
+    padding: 1.6cqi 2.4cqi;
+    background: linear-gradient(90deg, #ff5fb4, #b26bff 70%, #7c6bff);
+    border-bottom: 2px solid var(--nuit);
+}
+.carte.promo-neon.promo-serie-0 .carte-haut::after {
+    content: '_ □ ×';
+    margin-left: auto;
+    padding: 0.4cqi 1.4cqi;
+    border: 1px solid var(--nuit);
+    background: #ffe3f3;
+    box-shadow: inset -1px -1px 0 rgba(43, 15, 61, 0.4), inset 1px 1px 0 #ffffff;
+    color: var(--nuit);
+    font: 400 2.6cqi/1 'Press Start 2P', monospace;
+    letter-spacing: 0.2em;
+}
+.carte.promo-neon.promo-serie-0 .carte-rarete {
+    background: none;
+    color: #ffffff;
+    font: 400 3cqi/1 'Press Start 2P', monospace;
+    text-shadow: 1px 1px 0 var(--nuit);
+    filter: none;
+}
+.fiche-infos.promo-serie-0 .fiche-rarete { background: linear-gradient(90deg, #ff7ac8, #b26bff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* Le bas : une boîte de dialogue rose à ombre pixel */
+.carte.promo-neon.promo-serie-0 .carte-bas {
+    margin: 0 2.6cqi 2.6cqi;
+    padding: 2cqi 2.6cqi 1.8cqi;
+    border: 2px solid var(--nuit);
+    border-radius: 2px;
+    background: rgba(255, 227, 243, 0.94);
+    box-shadow: 2cqi 2cqi 0 -0.4cqi rgba(43, 15, 61, 0.55);
+}
+.carte.promo-neon.promo-serie-0 .carte-nom {
+    font-weight: 900;
+    font-size: 6.4cqi;
+    line-height: 1.05;
+    color: #ff3fa4;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    text-shadow: -0.5cqi 0 0 rgba(0, 220, 255, 0.75), 0.5cqi 0 0 rgba(160, 60, 255, 0.6);
+}
+.carte.promo-neon.promo-serie-0 .carte-infos { color: rgba(43, 15, 61, 0.7); font-size: 2.9cqi; }
+.carte.promo-neon.promo-serie-0 .carte-stats span { color: #b03a8a; }
+.carte.promo-neon.promo-serie-0 .carte-stats b {
+    color: var(--nuit);
+    font: 400 3.4cqi/1 'Press Start 2P', monospace;
+}
+
 /* ── Série 4 « Rétro » : la carte est une console portable des années 90. Coque en plastique gris clair,
    écran inséré dans un cadre sombre, coin bas droit très arrondi, LED rouge et marque en bas ;
    écran cathodique (scanlines, vignette) sur l'illustration, textes en police pixel ── */
@@ -2990,6 +3085,18 @@ main {
 .code-cadeau { display: flex; flex-wrap: wrap; gap: 0.6rem; }
 /* Énigme discrète sous le champ : la réponse est un code secret */
 .code-enigme { margin: 0.7rem 0 0; color: var(--texte-doux); font-size: 0.85rem; font-style: italic; opacity: 0.75; }
+/* Succès secret : le nom se voit, le détail est flouté ; un cadenas à la place de la progression */
+.succes.succes-secret { border-style: dashed; }
+.succes-flou { filter: blur(3.5px); user-select: none; letter-spacing: 0.05em; }
+.succes-cadenas { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #c9a7ff; }
+.succes-cadenas::before { content: '🔒 '; }
+/* Logo cliqué 10 fois : la petite carte fait des pirouettes */
+.logo-carte.logo-pirouette { animation: logo-pirouette 1.1s cubic-bezier(0.3, 1.4, 0.5, 1); }
+@keyframes logo-pirouette {
+    0% { transform: rotate(-10deg); }
+    60% { transform: rotate(-10deg) rotateY(720deg) scale(1.6); filter: hue-rotate(180deg) brightness(1.4); }
+    100% { transform: rotate(-10deg) rotateY(720deg); }
+}
 /* Code Konami trouvé : la page fait un tour de couleurs */
 body.konami { animation: konami 1.6s ease-in-out; }
 @keyframes konami { 50% { filter: hue-rotate(180deg) saturate(1.6); } }
