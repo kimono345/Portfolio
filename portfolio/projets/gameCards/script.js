@@ -906,7 +906,7 @@ function carteHTML(carte, { holo = (carte.holos || 0) > 0, compteur = 0, cachee 
                         : `${rarete.nom}${fullArt ? ' · Full Art' : holo ? ' · Holo' : ''}`}</span>
                     ${compteur > 1 ? `<span class="carte-compteur">×${compteur}</span>` : ''}
                 </header>
-                ${fullArt
+                ${fullArt 
                     ? `<div class="carte-bas">${plaque}${texte}</div>`
                     : `<div class="carte-image">
                     ${imageSecoursHTML(carte)}
@@ -3181,7 +3181,7 @@ function draftHTML() {
 // et un deck adverse propres à la série. `nom` : son thème ; `court` : la règle en quelques mots (tuile du choix de série) ;
 // `stat` : la seule stat jouée ; `deck` : comment l'ordinateur compose le sien
 const DEFIS_PROMO = {
-    1: { nom: t('Coups de cœur'), court: t('Face aux meilleures cartes'), deck: 'top', regle: t('Pas de règle spéciale : l’ordinateur joue une des cartes les plus fortes du jeu dans chaque stat (Qualité, Popularité, Ancienneté), toutes en holo.') },
+    1: { nom: t('Coups de cœur'), court: t('Face aux meilleures cartes'), deck: 'top', regle: t('Pas de règle spéciale : l’ordinateur joue une des cartes les plus fortes du jeu dans chaque stat (Qualité, Popularité, Ancienneté).') },
     2: { nom: t('Hors Steam'), court: t('Popularité seule'), deck: 'synergie', stat: 'popularite', regle: t('Seule la Popularité compte. L’ordinateur joue 3 Légendaires ou Mythiques qui partagent un thème (synergie +1).') },
     4: { nom: t('Rétro'), court: t('Ancienneté seule'), deck: 'anciens', stat: 'anciennete', regle: t('Seule l’Ancienneté compte. L’ordinateur joue de vieilles Légendaires et Mythiques.') },
     // `genre` : les cartes de ce genre gagnent `bonus` sur toutes leurs stats (les tiennes comme celles de l'ordinateur)
@@ -3189,7 +3189,7 @@ const DEFIS_PROMO = {
     5: { nom: t('Romance'), court: t('Romance +3'), deck: 'genre', genre: t('Romance'), bonus: 3, regle: t('Les jeux romance (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 Légendaires ou Mythiques romance.') },
     6: { nom: t('Nintendo Switch'), court: t('Multijoueur +3'), deck: 'genre', genre: t('Multijoueur'), bonus: 3, regle: t('Les jeux multijoueur (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 Légendaires ou Mythiques multijoueur.') },
     7: { nom: t('Science-fiction'), court: t('Science-fiction +3'), deck: 'genre', genre: t('Science-fiction'), bonus: 3, regle: t('Les jeux de science-fiction (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 Légendaires ou Mythiques de science-fiction.') },
-    8: { nom: t('Duo'), court: t('Face à 3 cartes Duo'), deck: 'duo', regle: t('Pas de bonus : l’ordinateur joue 3 cartes Duo de la série, les plus complètes du jeu, sans point faible.') },
+    8: { nom: t('Duo'), court: t('Face à une carte Duo'), deck: 'duo', regle: t('Pas de bonus : l’ordinateur joue une carte Duo de la série (la meilleure des deux jeux dans chaque stat) et 2 Légendaires ou Mythiques.') },
     9: { nom: t('Ténèbres'), court: t('Horreur +3'), deck: 'genre', genre: t('Horreur'), bonus: 3, regle: t('Les jeux d’horreur (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 Légendaires ou Mythiques d’horreur.') },
 };
 const defiDeSerie = serie => DEFIS_PROMO[serie] ?? DEFIS_PROMO[1];
@@ -3230,7 +3230,7 @@ const RECOMPENSES_DEFI = [
 ];
 const seriesPromo = () => [...new Set(Object.values(PROMOS).map(p => p.serie))].sort((a, b) => a - b);
 const promosDeSerie = serie => Object.keys(PROMOS).map(Number).filter(id => PROMOS[id].serie === serie && jeuxParId.get(id));
-const niveauDefi = serie => ({ id: `defi-${serie}`, serie, nom: t('Série {n}', { n: serie }), max: 'mythique', intelligence: 0.7, stat: defiDeSerie(serie).stat ?? null });
+const niveauDefi = serie => ({ id: `defi-${serie}`, serie, nom: t('Série {n}', { n: serie }), max: 'mythique', intelligence: 0.5, stat: defiDeSerie(serie).stat ?? null });
 
 // Légendaires et Mythiques du jeu, calculées une seule fois
 let cartesHautesCache = null;
@@ -3242,35 +3242,36 @@ function deckDefiPromo(serie) {
     const parmi = (cartes, n) => melanger(cartes.slice(0, n)).slice(0, TAILLE_DECK);
     const regle = defiDeSerie(serie);
     if (regle.deck === 'synergie') {
-        // Un genre ou thème partagé par au moins 3 des cartes les plus populaires ; 3 de ses 12 premières
+        // Un genre ou thème partagé par au moins 3 des cartes les plus populaires ; 3 de ses 30 premières
         const populaires = [...cartesHautes()].sort((a, b) => b.popularite - a.popularite).slice(0, 80);
         const parTag = {};
         for (const c of populaires) for (const tag of [...c.genres, ...(c.tags || [])]) (parTag[tag] ??= []).push(c);
         const groupe = auHasard(Object.values(parTag).filter(g => g.length >= TAILLE_DECK));
-        return parmi(groupe, 12);
+        return parmi(groupe, 30);
     }
     if (regle.deck === 'genre') {
-        // 3 Légendaires ou Mythiques du genre, parmi ses 25 plus fortes (le bonus de la règle s'applique des deux côtés)
+        // 3 Légendaires ou Mythiques du genre, parmi ses 60 plus fortes (le bonus de la règle s'applique des deux côtés)
         const duGenre = cartesHautes().filter(c => aLeGenre(c, regle.genre)).sort((a, b) => force(b) - force(a));
-        return parmi(duGenre, 25);
+        return parmi(duGenre, 60);
     }
     if (regle.deck === 'duo') {
-        // 3 des cartes Duo de la série : la meilleure des deux jeux dans chaque stat
-        return melanger(promosDeSerie(serie).map(id => creerCarte(jeuxParId.get(id)))).slice(0, TAILLE_DECK);
+        // Une carte Duo de la série (la meilleure des deux jeux dans chaque stat) et 2 Légendaires ou Mythiques au hasard
+        const duo = creerCarte(jeuxParId.get(auHasard(promosDeSerie(serie))));
+        return melanger([duo, ...melanger(cartesHautes().filter(c => c.id !== duo.id)).slice(0, TAILLE_DECK - 1)]);
     }
     if (regle.deck === 'anciens') {
         const anciens = [...cartesHautes()].sort((a, b) => b.anciennete - a.anciennete || force(b) - force(a));
-        return parmi(anciens, 20);
+        return parmi(anciens, 40);
     }
-    // Un spécialiste par stat : une carte au hasard parmi les 25 meilleures en Qualité, puis en Popularité,
-    // puis en Ancienneté (à égalité, la plus forte), sans prendre deux fois le même jeu ; toutes en holo
+    // Un spécialiste par stat : une carte au hasard parmi les 60 meilleures en Qualité, puis en Popularité,
+    // puis en Ancienneté (à égalité, la plus forte), sans prendre deux fois le même jeu
     const deck = [];
     for (const stat of STATS_DECK) {
         const meilleures = [...cartesHautes()].filter(c => !deck.some(d => d.id === c.id))
             .sort((a, b) => b[stat] - a[stat] || force(b) - force(a));
-        deck.push(auHasard(meilleures.slice(0, 25)));
+        deck.push(auHasard(meilleures.slice(0, 60)));
     }
-    return deck.map(c => ({ ...c, holos: 1 }));
+    return deck;
 }
 
 // Bonus d'une carte selon la règle du défi en cours (jeux indé de la série 3, romances de la série 5, multijoueur de la série 6, science-fiction de la série 7, horreur de la série 9, et les promos de la série), sinon 0
