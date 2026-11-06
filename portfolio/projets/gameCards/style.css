@@ -42,6 +42,10 @@
 
 /* Couleurs des rappels néon (halos, titres, menu, survols) : le duo de l'identité sur tous les écrans */
 body { --theme: var(--neon-1); --theme-2: var(--neon-2); }
+/* Navigation au curseur de Chrome (touche F7) : elle fait clignoter un curseur de saisie dans n'importe quel texte.
+   On le cache partout sauf dans les vrais champs */
+body { caret-color: transparent; }
+input, textarea, [contenteditable] { caret-color: auto; }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 

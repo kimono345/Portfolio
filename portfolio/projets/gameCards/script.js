@@ -319,7 +319,7 @@ const CODES_CADEAUX = {
     // Clés en base64 (btoa du code en majuscules) : les codes sont à trouver, pas à lire dans le script
     'V0VMQ09NRQ==': { pieces: 300 }, // bienvenue
     'Qk9PU1RFUlM=': { boosters: 10 }, // boosters
-    'UFJFU1RJR0U=': { prestiges: 2 }, // prestige
+    'UFJFU1RJR0U=': { prestiges: 1 }, // prestige
     'VEhYRk9SUExBWUlORw==': { fullArt: true }, // merci d'avoir joué
     'SEVTT1lBTQ==': { pieces: 250 }, // triche de GTA San Andreas
     'TU9USEVSTE9ERQ==': { pieces: 250 }, // triche des Sims
@@ -331,7 +331,7 @@ const CODES_CADEAUX = {
     'Q09VTlRFUlNUUklLRQ==': { prestiges: 1 }, // réponse de l'énigme du Profil (le jeu n° 10 sur Steam)
 };
 // Le code Konami (↑ ↑ ↓ ↓ ← → ← → B A) se tape au clavier n'importe où, pas dans le champ
-const CODE_KONAMI = { recompense: { prestiges: 1, pieces: 300 }, touches: ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'] };
+const CODE_KONAMI = { recompense: { prestiges: 1, pieces: 500 }, touches: ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'] };
 // Cartes promo (rareté Promo) : une édition spéciale d'un jeu, distincte de sa carte normale (identifiant à part, négatif),
 // obtenue seulement avec un code cadeau ({ promo: identifiant }) : jamais dans les boosters, le catalogue ni le draft.
 // `steam` : le jeu d'origine (image, fiche Steam) ; `serie` et `numero` : affichés « S1 · #001 » ; `stats` : Qualité et Popularité
