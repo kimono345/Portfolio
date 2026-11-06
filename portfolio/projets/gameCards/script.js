@@ -316,37 +316,22 @@ const REMISE_MARCHE = 0.5;
 // Codes cadeaux (Profil), un seul usage par sauvegarde. Récompenses : { pieces }, { boosters }, { prestiges },
 // { fullArt } (un paquet Full Art) et { carte: identifiant Steam } (cette carte précise)
 const CODES_CADEAUX = {
-    // Une série de promos entière d'un coup ({ serie: n })
-    SERIE1: { serie: 1 },
-    SERIE2: { serie: 2 },
-    SERIE3: { serie: 3 },
-    SERIE4: { serie: 4 },
-    SERIE5: { serie: 5 },
-    SERIE6: { serie: 6 },
-    SERIE7: { serie: 7 },
-    SERIE8: { serie: 8 },
-    SERIE9: { serie: 9 },
-    // Un booster d'une série, ouvert tout de suite ({ boosterSerie: n })
-    BOOSTERSERIE1: { boosterSerie: 1 },
-    BOOSTERSERIE2: { boosterSerie: 2 },
-    BOOSTERSERIE3: { boosterSerie: 3 },
-    BOOSTERSERIE4: { boosterSerie: 4 },
-    BOOSTERSERIE5: { boosterSerie: 5 },
-    BOOSTERSERIE6: { boosterSerie: 6 },
-    BOOSTERSERIE7: { boosterSerie: 7 },
-    BOOSTERSERIE8: { boosterSerie: 8 },
-    BOOSTERSERIE9: { boosterSerie: 9 },
-    BIENVENUE: { pieces: 300 },
-    BOOSTERS: { boosters: 10 },
-    PRESTIGE: { prestiges: 2 },
-    FULLART: { fullArt: true },
-    FULLART1: { fullArt: true },
-    FULLART2: { fullArt: true },
-    FULLART3: { fullArt: true },
-    FULLART4: { fullArt: true },
-    FULLART5: { fullArt: true },
-    FEMBOY: { pieces: 500000 },
+    // Clés en base64 (btoa du code en majuscules) : les codes sont à trouver, pas à lire dans le script
+    'V0VMQ09NRQ==': { pieces: 300 }, // bienvenue
+    'Qk9PU1RFUlM=': { boosters: 10 }, // boosters
+    'UFJFU1RJR0U=': { prestiges: 2 }, // prestige
+    'VEhYRk9SUExBWUlORw==': { fullArt: true }, // merci d'avoir joué
+    'SEVTT1lBTQ==': { pieces: 250 }, // triche de GTA San Andreas
+    'TU9USEVSTE9ERQ==': { pieces: 250 }, // triche des Sims
+    'SUREUUQ=': { prestiges: 1 }, // mode dieu de Doom
+    'VEhFQ0FLRUlTQUxJRQ==': { boosterSerie: 'hasard' }, // Portal : un booster promo d'une série au hasard
+    'R0FCRU4=': { fullArt: true }, // le patron de Steam
+    'REVWVE9PTFM=': { boosters: 3 }, // affiché dans la console du navigateur
+    'Q09ERVNPVVJDRQ==': { pieces: 300 }, // caché dans un commentaire d'index.html
+    'Q09VTlRFUlNUUklLRQ==': { prestiges: 1 }, // réponse de l'énigme du Profil (le jeu n° 10 sur Steam)
 };
+// Le code Konami (↑ ↑ ↓ ↓ ← → ← → B A) se tape au clavier n'importe où, pas dans le champ
+const CODE_KONAMI = { recompense: { prestiges: 1, pieces: 300 }, touches: ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'] };
 // Cartes promo (rareté Promo) : une édition spéciale d'un jeu, distincte de sa carte normale (identifiant à part, négatif),
 // obtenue seulement avec un code cadeau ({ promo: identifiant }) : jamais dans les boosters, le catalogue ni le draft.
 // `steam` : le jeu d'origine (image, fiche Steam) ; `serie` et `numero` : affichés « S1 · #001 » ; `stats` : Qualité et Popularité
@@ -492,7 +477,7 @@ function laurierSVG() {
     const bezier = t => [0, 1].map(k => (1 - t) ** 3 * p0[k] + 3 * (1 - t) ** 2 * t * p1[k] + 3 * (1 - t) * t ** 2 * p2[k] + t ** 3 * p3[k]);
     const tangente = t => {
         const d = [0, 1].map(k => 3 * (1 - t) ** 2 * (p1[k] - p0[k]) + 6 * (1 - t) * t * (p2[k] - p1[k]) + 3 * t ** 2 * (p3[k] - p2[k]));
-        const n = Math.hypot(...d);
+        const n = Math.hypot(...d); 
         return [d[0] / n, d[1] / n];
     };
     // Feuille en amande, base en (0, 0), pointe vers le haut, puis tournée dans la direction voulue
@@ -1326,6 +1311,18 @@ async function ouvrirBooster(mode, nombreBoosters = 1, type = TYPES_BOOSTER.stan
         await dechirerPaquet(modele, cartes[0].godPack, rang);
         if (!seance.passer) await defilerPile(cartes, rang);
     }
+    // ×10 passé : on fait quand même défiler les Épiques, Légendaires et Mythiques pas encore vues (la plus rare en dernier) ;
+    // « Tout passer » une seconde fois mène au récapitulatif
+    if (seance.passer && nombreBoosters > 1) {
+        const meilleures = tirage.filter(t => indexRarete(t.carte.rarete) <= INDEX_EPIQUE && !seance.vues.has(t))
+            .sort((a, b) => indexRarete(b.carte.rarete) - indexRarete(a.carte.rarete));
+        seance.passer = false;
+        if (meilleures.length) {
+            $('#btn-passer').textContent = t('Voir le récapitulatif');
+            await annoncerMeilleures(meilleures);
+            if (!seance.passer) await defilerPile(meilleures, `${t('Meilleures cartes')} · `);
+        }
+    }
     finOuverture(tirage, nombreBoosters, gain);
 }
 
@@ -1341,6 +1338,7 @@ function debutOuverture(multiple) {
     $('#ouverture-aide').hidden = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
     seance.passer = false;
+    seance.vues = new Set();
 }
 
 // Fin de l'ouverture : récapitulatif des cartes et bilan (`gain` : pièces rapportées par les boosters)
@@ -1395,7 +1393,8 @@ function majTropheeGodPack() {
 // ---------- Séance d'ouverture (paquet à déchirer, pile de cartes) ----------
 
 // `reprendre` débloque l'étape en cours (geste, clic, clavier) ; `passer` saute tout jusqu'au récapitulatif
-const seance = { passer: false, reprendre: null };
+// (en ×10, d'abord jusqu'aux meilleures cartes pas encore vues) ; `vues` : les cartes déjà montrées dans la pile
+const seance = { passer: false, reprendre: null, vues: new Set() };
 
 function passerOuverture() {
     seance.passer = true;
@@ -1514,6 +1513,32 @@ function glisserCarte(element) {
     });
 }
 
+// Transition du ×10 passé : « Les meilleures cartes du lot », le nombre de cartes par rareté (la plus rare en premier),
+// puis un clic (ou Espace, Entrée) pour les faire défiler
+async function annoncerMeilleures(cartes) {
+    const parRarete = RARETES.filter(r => indexRarete(r.id) <= INDEX_EPIQUE)
+        .map(r => [r, cartes.filter(c => c.carte.rarete === r.id).length]).filter(([, n]) => n);
+    const ecran = document.createElement('button');
+    ecran.type = 'button';
+    ecran.className = 'intermede';
+    ecran.innerHTML = `
+        <span class="intermede-sur-titre">${t('Paquets passés')}</span>
+        <strong class="intermede-titre">${t('Les meilleures cartes du lot')}</strong>
+        <span class="intermede-raretes">${parRarete.map(([r, n]) => `<span class="intermede-rarete rarete-${r.id}">${r.nom} <b>×${n}</b></span>`).join('')}</span>
+        <span class="intermede-suite">${t('Touche pour les découvrir')}</span>`;
+    $('#ouverture-scene').replaceChildren(ecran);
+    $('#ouverture-aide').innerHTML = t('Les autres cartes t’attendent dans le récapitulatif');
+    jouerSonRarete(parRarete[0][0].id);
+    await new Promise(resolve => {
+        seance.reprendre = resolve;
+        ecran.addEventListener('click', resolve, { once: true });
+    });
+    seance.reprendre = null;
+    if (seance.passer) return;
+    ecran.classList.add('intermede-sortie');
+    await attendre(350);
+}
+
 // Pile de cartes face visible : on les fait défiler une par une, la plus rare arrive en dernier
 async function defilerPile(cartes, rang) {
     const pile = document.createElement('div');
@@ -1528,6 +1553,7 @@ async function defilerPile(cartes, rang) {
     for (let i = 0; i < elements.length && !seance.passer; i++) {
         elements.forEach((element, k) => element.style.setProperty('--rang', k - i));
         const dessus = elements[i];
+        seance.vues.add(cartes[i]);
         if (estHauteRarete(cartes[i].carte.rarete) || cartes[i].ex) dessus.classList.add(cartes[i].fullArt ? 'apparition-full-art' : 'apparition-rare');
         jouerSonRarete(cartes[i].ex ? 'epique' : cartes[i].carte.rarete);
 
@@ -2116,13 +2142,19 @@ function acheterMarche(id) {
 
 function utiliserCode() {
     const champ = $('#code-cadeau');
-    const code = champ.value.toUpperCase().replace(/\s+/g, '');
+    // Majuscules, sans espaces ni ponctuation (« Counter-Strike » marche comme « COUNTERSTRIKE »)
+    const code = champ.value.toUpperCase().normalize('NFD').replace(/[^A-Z0-9]/g, '');
     if (!code || !donneesPretes()) return;
-    const recompense = CODES_CADEAUX[code];
+    const recompense = CODES_CADEAUX[btoa(code)];
     if (!recompense) return toast(t('Ce code n’existe pas'), 'erreur');
     if (etat.codes[code]) return toast(t('Tu as déjà utilisé ce code'), 'erreur');
-    etat.codes[code] = Date.now();
     champ.value = '';
+    activerCode(code, recompense);
+}
+
+// Verse la récompense d'un code (une seule fois par sauvegarde)
+function activerCode(code, recompense) {
+    etat.codes[code] = Date.now();
     // Une carte précise : elle rejoint la collection, le reste se verse comme une récompense de succès
     const { carte: idCarte, promo: idPromo, serie, boosterSerie, ...reste } = recompense;
     const jeu = jeuxParId.get(idCarte);
@@ -2150,12 +2182,30 @@ function utiliserCode() {
     }
     if (serie) obtenirSerie(serie);
     if (boosterSerie) {
-        const carte = creerCarte(jeuxParId.get(auHasard(promosDeSerie(boosterSerie))));
+        const numero = boosterSerie === 'hasard' ? auHasard(seriesPromo()) : boosterSerie;
+        const carte = creerCarte(jeuxParId.get(auHasard(promosDeSerie(numero))));
         const nouvelle = ajouterACollection(carte, false, true); // toutes les promos sont Full Art
         sauvegarder();
         verifierSucces();
-        ouvrirPaquetPromo(carte, nouvelle, boosterSerie);
+        ouvrirPaquetPromo(carte, nouvelle, numero);
     }
+}
+
+// Code Konami : la suite de touches tapée n'importe où (hors champs de texte), une seule fois par sauvegarde
+let progresKonami = 0;
+function suivreKonami(e) {
+    if (e.target.closest('input, textarea, select')) return;
+    const touche = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    progresKonami = touche === CODE_KONAMI.touches[progresKonami] ? progresKonami + 1 : (touche === CODE_KONAMI.touches[0] ? 1 : 0);
+    if (progresKonami < CODE_KONAMI.touches.length) return;
+    progresKonami = 0;
+    if (!donneesPretes()) return;
+    if (etat.codes.KONAMI) return toast(t('Tu connais déjà le code Konami'), 'erreur');
+    document.body.classList.add('konami');
+    setTimeout(() => document.body.classList.remove('konami'), 1600);
+    jouerSon('succes');
+    toast(t('Code Konami !'), 'gain');
+    activerCode('KONAMI', CODE_KONAMI.recompense);
 }
 
 // Toutes les promos d'une série d'un coup (code cadeau), présentées dans une fenêtre
@@ -3181,16 +3231,16 @@ function draftHTML() {
 // et un deck adverse propres à la série. `nom` : son thème ; `court` : la règle en quelques mots (tuile du choix de série) ;
 // `stat` : la seule stat jouée ; `deck` : comment l'ordinateur compose le sien
 const DEFIS_PROMO = {
-    1: { nom: t('Coups de cœur'), court: t('Face aux meilleures cartes'), deck: 'top', regle: t('Pas de règle spéciale : l’ordinateur joue une des cartes les plus fortes du jeu dans chaque stat (Qualité, Popularité, Ancienneté).') },
-    2: { nom: t('Hors Steam'), court: t('Popularité seule'), deck: 'synergie', stat: 'popularite', regle: t('Seule la Popularité compte. L’ordinateur joue 3 Légendaires ou Mythiques qui partagent un thème (synergie +1).') },
-    4: { nom: t('Rétro'), court: t('Ancienneté seule'), deck: 'anciens', stat: 'anciennete', regle: t('Seule l’Ancienneté compte. L’ordinateur joue de vieilles Légendaires et Mythiques.') },
+    1: { nom: t('Coups de cœur'), court: t('Face aux meilleures cartes'), deck: 'top', regle: t('Pas de règle spéciale : l’ordinateur joue une des cartes les plus fortes du jeu dans chaque stat (Qualité, Popularité, Ancienneté), dont une Mythique.') },
+    2: { nom: t('Hors Steam'), court: t('Popularité seule'), deck: 'synergie', stat: 'popularite', regle: t('Seule la Popularité compte. L’ordinateur joue une Mythique et 2 Légendaires qui partagent un thème (synergie +1).') },
+    4: { nom: t('Rétro'), court: t('Ancienneté seule'), deck: 'anciens', stat: 'anciennete', regle: t('Seule l’Ancienneté compte. L’ordinateur joue une vieille Mythique et 2 vieilles Légendaires.') },
     // `genre` : les cartes de ce genre gagnent `bonus` sur toutes leurs stats (les tiennes comme celles de l'ordinateur)
-    3: { nom: t('Pépites indé'), court: t('Indé +3'), deck: 'genre', genre: t('Indé'), bonus: 3, regle: t('Les jeux indé (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 Légendaires ou Mythiques indé.') },
-    5: { nom: t('Romance'), court: t('Romance +3'), deck: 'genre', genre: t('Romance'), bonus: 3, regle: t('Les jeux romance (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 Légendaires ou Mythiques romance.') },
-    6: { nom: t('Nintendo Switch'), court: t('Multijoueur +3'), deck: 'genre', genre: t('Multijoueur'), bonus: 3, regle: t('Les jeux multijoueur (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 Légendaires ou Mythiques multijoueur.') },
-    7: { nom: t('Science-fiction'), court: t('Science-fiction +3'), deck: 'genre', genre: t('Science-fiction'), bonus: 3, regle: t('Les jeux de science-fiction (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 Légendaires ou Mythiques de science-fiction.') },
-    8: { nom: t('Duo'), court: t('Face à une carte Duo'), deck: 'duo', regle: t('Pas de bonus : l’ordinateur joue une carte Duo de la série (la meilleure des deux jeux dans chaque stat) et 2 Légendaires ou Mythiques.') },
-    9: { nom: t('Ténèbres'), court: t('Horreur +3'), deck: 'genre', genre: t('Horreur'), bonus: 3, regle: t('Les jeux d’horreur (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue 3 Légendaires ou Mythiques d’horreur.') },
+    3: { nom: t('Pépites indé'), court: t('Indé +3'), deck: 'genre', genre: t('Indé'), bonus: 3, regle: t('Les jeux indé (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue une Mythique et 2 Légendaires indé.') },
+    5: { nom: t('Romance'), court: t('Romance +3'), deck: 'genre', genre: t('Romance'), bonus: 3, regle: t('Les jeux romance (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue une Mythique et 2 Légendaires romance.') },
+    6: { nom: t('Nintendo Switch'), court: t('Multijoueur +3'), deck: 'genre', genre: t('Multijoueur'), bonus: 3, regle: t('Les jeux multijoueur (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue une Mythique et 2 Légendaires multijoueur.') },
+    7: { nom: t('Science-fiction'), court: t('Science-fiction +3'), deck: 'genre', genre: t('Science-fiction'), bonus: 3, regle: t('Les jeux de science-fiction (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue une Mythique et 2 Légendaires de science-fiction.') },
+    8: { nom: t('Duo'), court: t('Face à une carte Duo'), deck: 'duo', regle: t('Pas de bonus : l’ordinateur joue une carte Duo de la série (la meilleure des deux jeux dans chaque stat) et 2 Légendaires.') },
+    9: { nom: t('Ténèbres'), court: t('Horreur +3'), deck: 'genre', genre: t('Horreur'), bonus: 3, regle: t('Les jeux d’horreur (et toutes les promos de la série) gagnent +3 sur toutes leurs stats, pour toi comme pour l’ordinateur. Il joue une Mythique et 2 Légendaires d’horreur.') },
 };
 const defiDeSerie = serie => DEFIS_PROMO[serie] ?? DEFIS_PROMO[1];
 // Défis gratuits chaque jour (compteur remis à zéro à minuit), puis chaque défi coûte PRIX_DEFI pièces
@@ -3230,46 +3280,57 @@ const RECOMPENSES_DEFI = [
 ];
 const seriesPromo = () => [...new Set(Object.values(PROMOS).map(p => p.serie))].sort((a, b) => a - b);
 const promosDeSerie = serie => Object.keys(PROMOS).map(Number).filter(id => PROMOS[id].serie === serie && jeuxParId.get(id));
-const niveauDefi = serie => ({ id: `defi-${serie}`, serie, nom: t('Série {n}', { n: serie }), max: 'mythique', intelligence: 0.5, stat: defiDeSerie(serie).stat ?? null });
+const niveauDefi = serie => ({ id: `defi-${serie}`, serie, nom: t('Série {n}', { n: serie }), max: 'mythique', intelligence: 0.67, stat: defiDeSerie(serie).stat ?? null });
 
 // Légendaires et Mythiques du jeu, calculées une seule fois
 let cartesHautesCache = null;
 const cartesHautes = () => (cartesHautesCache ??= tousLesJeux.filter(j => estHauteRarete(j.rarete)).map(j => creerCarte(j)));
+// Cartes des decks adverses des défis promo, calculées une seule fois : les Légendaires, et les Mythiques (une seule par deck, le « boss »)
+let cartesDefiCache = null, mythiquesDefiCache = null;
+const cartesDefi = () => (cartesDefiCache ??= tousLesJeux.filter(j => j.rarete === 'legendaire').map(j => creerCarte(j)));
+const mythiquesDefi = () => (mythiquesDefiCache ??= tousLesJeux.filter(j => j.rarete === 'mythique').map(j => creerCarte(j)));
 
-// Deck de l'ordinateur selon la série, sur des copies (holo et Full Art posés dessus)
+// Deck de l'ordinateur selon la série : une Mythique « boss » qui suit la règle de la série et 2 Légendaires
+// (en série 8, la carte Duo tient le rôle du boss)
 function deckDefiPromo(serie) {
     const force = c => c.attaque + c.popularite;
-    const parmi = (cartes, n) => melanger(cartes.slice(0, n)).slice(0, TAILLE_DECK);
+    const parmi = (cartes, n, combien = TAILLE_DECK - 1) => melanger(cartes.slice(0, n)).slice(0, combien);
+    // Le boss : une Mythique parmi celles qui conviennent (à défaut, n'importe laquelle)
+    const boss = convient => auHasard(mythiquesDefi().filter(convient).length ? mythiquesDefi().filter(convient) : mythiquesDefi());
     const regle = defiDeSerie(serie);
     if (regle.deck === 'synergie') {
-        // Un genre ou thème partagé par au moins 3 des cartes les plus populaires ; 3 de ses 30 premières
-        const populaires = [...cartesHautes()].sort((a, b) => b.popularite - a.popularite).slice(0, 80);
+        // Un genre ou thème partagé par au moins 3 des Légendaires les plus populaires : 2 de ses 30 premières,
+        // et une Mythique du même thème
+        const populaires = [...cartesDefi()].sort((a, b) => b.popularite - a.popularite).slice(0, 80);
         const parTag = {};
         for (const c of populaires) for (const tag of [...c.genres, ...(c.tags || [])]) (parTag[tag] ??= []).push(c);
-        const groupe = auHasard(Object.values(parTag).filter(g => g.length >= TAILLE_DECK));
-        return parmi(groupe, 30);
+        const [tag, groupe] = auHasard(Object.entries(parTag).filter(([, g]) => g.length >= TAILLE_DECK));
+        return melanger([boss(c => aLeGenre(c, tag)), ...parmi(groupe, 30)]);
     }
     if (regle.deck === 'genre') {
-        // 3 Légendaires ou Mythiques du genre, parmi ses 60 plus fortes (le bonus de la règle s'applique des deux côtés)
-        const duGenre = cartesHautes().filter(c => aLeGenre(c, regle.genre)).sort((a, b) => force(b) - force(a));
-        return parmi(duGenre, 60);
+        // 2 Légendaires du genre parmi ses 60 plus fortes, et une Mythique du genre (le bonus de la règle s'applique des deux côtés)
+        const duGenre = cartesDefi().filter(c => aLeGenre(c, regle.genre)).sort((a, b) => force(b) - force(a));
+        return melanger([boss(c => aLeGenre(c, regle.genre)), ...parmi(duGenre, 60)]);
     }
     if (regle.deck === 'duo') {
-        // Une carte Duo de la série (la meilleure des deux jeux dans chaque stat) et 2 Légendaires ou Mythiques au hasard
+        // Une carte Duo de la série (la meilleure des deux jeux dans chaque stat) et 2 Légendaires au hasard
         const duo = creerCarte(jeuxParId.get(auHasard(promosDeSerie(serie))));
-        return melanger([duo, ...melanger(cartesHautes().filter(c => c.id !== duo.id)).slice(0, TAILLE_DECK - 1)]);
+        return melanger([duo, ...melanger(cartesDefi().filter(c => c.id !== duo.id)).slice(0, TAILLE_DECK - 1)]);
     }
     if (regle.deck === 'anciens') {
-        const anciens = [...cartesHautes()].sort((a, b) => b.anciennete - a.anciennete || force(b) - force(a));
-        return parmi(anciens, 40);
+        // Une des 10 plus vieilles Mythiques, et 2 Légendaires parmi les 40 plus vieilles
+        const parAge = cartes => [...cartes].sort((a, b) => b.anciennete - a.anciennete || force(b) - force(a));
+        return melanger([auHasard(parAge(mythiquesDefi()).slice(0, 10)), ...parmi(parAge(cartesDefi()), 40)]);
     }
-    // Un spécialiste par stat : une carte au hasard parmi les 60 meilleures en Qualité, puis en Popularité,
-    // puis en Ancienneté (à égalité, la plus forte), sans prendre deux fois le même jeu
+    // Un spécialiste par stat (Qualité, Popularité, Ancienneté), sans prendre deux fois le même jeu : pour une stat tirée
+    // au hasard, une Mythique parmi les 10 meilleures dans cette stat ; pour les deux autres, une Légendaire parmi les 60 meilleures
+    const statBoss = auHasard(STATS_DECK);
     const deck = [];
     for (const stat of STATS_DECK) {
-        const meilleures = [...cartesHautes()].filter(c => !deck.some(d => d.id === c.id))
+        const vivier = stat === statBoss ? mythiquesDefi() : cartesDefi();
+        const meilleures = vivier.filter(c => !deck.some(d => d.id === c.id))
             .sort((a, b) => b[stat] - a[stat] || force(b) - force(a));
-        deck.push(auHasard(meilleures.slice(0, 60)));
+        deck.push(auHasard(meilleures.slice(0, stat === statBoss ? 10 : 60)));
     }
     return deck;
 }
@@ -3704,6 +3765,10 @@ const RENDUS_ECRAN = {
 // ---------- Démarrage ----------
 
 function init() {
+    document.addEventListener('keydown', suivreKonami);
+    // Pour les curieux qui ouvrent la console (F12)
+    console.log(`%cGameCards%c\n${t('Tu fouilles dans la console ? Bien vu. Code secret :')} ${atob('REVWVE9PTFM=')}`,
+        'font: 900 22px sans-serif; color: #f5c542', 'font: 14px sans-serif');
     traduirePage();
 
     // Accueil : paquets et ouverture
