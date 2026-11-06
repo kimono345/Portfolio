@@ -950,6 +950,66 @@ main {
 
 /* ── Dernières trouvailles ── */
 .recentes { margin-top: 2.2rem; }
+/* ── Quêtes du jour (accueil) : trois cartes de quête, une couleur par difficulté, et la ligne du bonus ── */
+.quetes {
+    margin-top: 1.2rem;
+    padding: 1.3rem 1.4rem;
+    background: var(--fond-2);
+    border: 1px solid var(--bord);
+    border-radius: var(--rayon);
+}
+.quetes-tete { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
+#quetes-chrono { color: var(--texte-doux); font-size: 0.85rem; font-family: 'Space Mono', monospace; }
+.quetes-liste { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.7rem; }
+.quete {
+    --niveau: #6fd3a0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--niveau) 35%, var(--bord));
+    border-radius: 14px;
+    background: linear-gradient(160deg, color-mix(in srgb, var(--niveau) 10%, transparent), var(--fond-3) 70%);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.quete-moyenne { --niveau: #6fb4ff; }
+.quete-difficile { --niveau: #c58bff; }
+.quete-niveau { align-self: flex-start; padding: 0.15rem 0.6rem; border-radius: 999px; background: color-mix(in srgb, var(--niveau) 18%, transparent); color: var(--niveau); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.quete-texte { font-weight: 700; line-height: 1.3; flex: 1; }
+.quete-progres {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--texte-doux);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+}
+.quete-progres i { height: 6px; border-radius: 999px; background: linear-gradient(90deg, var(--niveau) var(--v), var(--fond-4) var(--v)); }
+.quete-pied { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; min-height: 2rem; }
+.quete-gain { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 0.85rem; color: var(--accent); white-space: nowrap; }
+.quete-bouton { padding: 0.3rem 0.9rem; font-size: 0.82rem; }
+.quete-remplacer { padding: 0.25rem 0.6rem; border: 1px solid var(--bord); border-radius: 999px; background: none; color: var(--texte-doux); font: inherit; font-size: 0.78rem; cursor: pointer; }
+.quete-remplacer:hover { color: var(--texte); border-color: var(--texte-doux); }
+.quete-faite { color: var(--niveau, #6fd3a0); font-size: 0.82rem; font-weight: 700; }
+.quete.terminee:not(.recuperee) { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 18px rgba(255, 184, 0, 0.2); }
+.quete.recuperee { opacity: 0.6; }
+.quetes-bonus {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    margin-top: 0.8rem;
+    padding: 0.7rem 1rem;
+    border: 1px dashed var(--bord);
+    border-radius: 12px;
+    color: var(--texte-doux);
+    font-size: 0.9rem;
+}
+.quetes-bonus b { color: var(--texte); font-family: 'Space Mono', monospace; }
+.quetes-bonus.pret { border-style: solid; border-color: var(--accent); }
+
 .recentes-tete { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.9rem; }
 .recentes-tete a { font-weight: 600; text-decoration: none; font-size: 0.92rem; }
 .recentes-liste {
@@ -1865,7 +1925,7 @@ main {
     background: #ffe3f3;
     box-shadow: none;
 }
-.carte.promo-neon.promo-serie-0 .full-art-fond img { filter: saturate(1.15) contrast(1.05); }
+.carte.promo-neon.promo-serie-0 .full-art-fond img { object-position: 50% 0; filter: none; } /* illustration en paysage : on garde le centre */
 /* Haut et bas rosés pour les textes ; lignes de balayage d'écran cathodique sur toute l'illustration */
 .carte.promo-neon.promo-serie-0 .full-art-fond::after {
     background:

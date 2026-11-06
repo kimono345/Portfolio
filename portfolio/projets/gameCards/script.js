@@ -453,9 +453,10 @@ const PROMOS = {
 
     // Carte secrète, hors séries (série 0) : récompense du succès secret « Overdose ». Les trois stats au maximum,
     // style « angel.exe » : une fenêtre de vieil ordinateur rose bonbon (style.css)
-    [-1451940]: { steam: 1451940, serie: 0, numero: 0, secrete: true, stats: { attaque: 100, popularite: 100 }, nom: 'Needy Girl Overdose' }, // NEEDY STREAMER OVERLOAD
+    // (identifiant à part : -1451940 est déjà la promo Série 5 #10 du même jeu)
+    [-1451999]: { steam: 1451940, serie: 0, numero: 0, secrete: true, stats: { attaque: 100, popularite: 100 }, image: 'promos/secrete.jpg', nom: 'Needy Girl Overdose' }, // NEEDY STREAMER OVERLOAD
 };
-const ID_CARTE_SECRETE = -1451940;
+const ID_CARTE_SECRETE = -1451999;
 // Carte promo d'une carte (ou undefined) ; une promo sans `steam` est un jeu hors Steam (séries 2, 4 et 6)
 const promoDe = carte => PROMOS[carte.id];
 const horsSteam = carte => Boolean(promoDe(carte)) && !promoDe(carte).steam;
@@ -594,6 +595,7 @@ const CLES = {
     gainsJour: 'gameCards.gainsJour',
     marche: 'gameCards.marche',
     codes: 'gameCards.codes',
+    quetes: 'gameCards.quetes',
 };
 
 function lire(cle, defaut) {
@@ -624,7 +626,7 @@ const etat = {
         ...lire(CLES.charges, {}),
     },
     godPacks: lire(CLES.godPacks, { nombre: 0, premier: null }), // trophée : combien, et la date du premier
-    stats: { boosters: 0, prestiges: 0, duelsGagnes: 0, duelsParfaits: 0, ventes: 0, decksGagnes: 0, decksHardcore: 0, draftsGagnes: 0, defisGagnes: 0, logo: 0, nuit: 0, pireMalchance: 0, ...lire(CLES.stats, {}) },
+    stats: { boosters: 0, prestiges: 0, duelsGagnes: 0, duelsParfaits: 0, ventes: 0, decksGagnes: 0, decksHardcore: 0, draftsGagnes: 0, defisGagnes: 0, logo: 0, nuit: 0, pireMalchance: 0, quetes: 0, joursQuetes: 0, ...lire(CLES.stats, {}) },
     succes: lire(CLES.succes, {}),        // { id du succès: date d'obtention }
     // { id du succès: date de récupération de la récompense }. Les anciennes sauvegardes avaient reçu
     // leurs récompenses tout de suite : leurs succès déjà obtenus comptent comme récupérés.
@@ -635,6 +637,8 @@ const etat = {
     gainsJour: lire(CLES.gainsJour, { jour: null }), // victoires payées aujourd'hui, mode par mode
     marche: lire(CLES.marche, { jour: null, offres: [], achetes: [] }), // offres du jour (identifiants) et celles achetées
     codes: lire(CLES.codes, {}),          // { code cadeau utilisé: date }
+    // Quêtes du jour : [{ id, progres, recuperee }], une seule remplacée par jour, bonus des 3 récupéré ou non
+    quetes: lire(CLES.quetes, { jour: null, liste: [], remplacee: false, bonus: false }),
 };
 
 // Tous les jeux de data/jeux.json (chargés au démarrage), et les mêmes rangés par rareté
@@ -1001,10 +1005,27 @@ async function chargerJeux() {
     majCollectionDepuisDonnees(); 
 }
 
+// La carte secrète a d'abord été rangée sous -1451940, l'identifiant de la promo Série 5 #10 du même jeu :
+// si « Overdose » a été récupéré sans que la carte secrète soit dans la collection, l'exemplaire versé
+// par le succès quitte la promo Série 5 (retirée si elle n'était là que grâce à lui) et la carte secrète arrive
+function reparerCarteSecrete() {
+    const recuperee = etat.succesRecuperes.overdose;
+    if (!recuperee || etat.collection[ID_CARTE_SECRETE] || !jeuxParId.get(ID_CARTE_SECRETE)) return;
+    const s5 = etat.collection[-1451940];
+    if (s5?.exemplaires > 1) {
+        s5.exemplaires--;
+        s5.fullArts = Math.max(0, (s5.fullArts || 0) - 1);
+    } else if (s5 && s5.obtenue >= recuperee - 60000) {
+        delete etat.collection[-1451940];
+    }
+    ajouterACollection(creerCarte(jeuxParId.get(ID_CARTE_SECRETE)), false, true);
+}
+
 // Les cartes déjà obtenues gardent une copie de leurs stats : on les recalcule
 // pour qu'elles suivent les règles actuelles (exemplaires, holos et date sont conservés).
 // Une carte dont le jeu a disparu des données (doublon, DLC retiré…) quitte la collection, ses exemplaires sont remboursés.
 function majCollectionDepuisDonnees() {
+    reparerCarteSecrete();
     let retirees = 0;
     let rembourse = 0;
     for (const entree of possedees()) {
@@ -1119,6 +1140,7 @@ function vendreExemplaire(id, variante) {
     if (--entree.exemplaires === 0) delete etat.collection[id];
     etat.pieces += prix;
     etat.stats.ventes++;
+    progresserQuetes('vente');
     return prix;
 }
 
@@ -1182,6 +1204,7 @@ function majEntete() {
 
 // Appelée chaque seconde : réserve et minuteur de chaque paquet, boutons de l'écran de bilan
 function majPaquets() {
+    majChronoQuetes();
     const dispo = {};
     for (const type of Object.values(TYPES_BOOSTER)) {
         const charges = dispo[type.id] = chargesDispo(type);
@@ -1331,6 +1354,12 @@ async function ouvrirBooster(mode, nombreBoosters = 1, type = TYPES_BOOSTER.stan
         }
     }
     finOuverture(tirage, nombreBoosters, gain);
+    progresserQuetes('booster', nombreBoosters);
+    if (type.prestige) progresserQuetes('prestige', nombreBoosters);
+    progresserQuetes('epique', tirage.filter(t => indexRarete(t.carte.rarete) <= INDEX_EPIQUE).length);
+    progresserQuetes('legendaire', tirage.filter(t => estHauteRarete(t.carte.rarete)).length);
+    progresserQuetes('holo', tirage.filter(t => t.holo).length);
+    progresserQuetes('nouvelle', tirage.filter(t => t.nouvelle).length);
 }
 
 // Écran d'ouverture (boosters ou paquet Full Art) : on cache les paquets, on prépare la scène
@@ -1656,6 +1685,7 @@ function afficherAccueil() {
         ? t('<b>{n}</b> / {total} jeux découverts', { n: nombre(jeuxPossedes().length), total: nombre(total) })
         : t('Chargement des jeux…');
     $('#progression-raretes').innerHTML = progressionRaretesHTML();
+    afficherQuetes();
     majTropheeGodPack();
     majMalchance();
 
@@ -2445,6 +2475,8 @@ function finDuel() {
     if (victoire) {
         etat.stats.duelsGagnes++;
         if (duel.ordi === 0) etat.stats.duelsParfaits++;
+        progresserQuetes('duel');
+        if (duel.ordi === 0) progresserQuetes('duel-parfait');
     }
     // Le détail de la dernière manche reste affiché au-dessus du résultat
     $('#duel-message').innerHTML += victoire
@@ -2535,6 +2567,9 @@ const SUCCES = [
     // Commerce
     { id: 'marchand', nom: t('Marchand'), description: t('Revendre un doublon'), cible: 1, recompense: { pieces: 10 }, valeur: () => etat.stats.ventes },
     { id: 'grossiste', nom: t('Grossiste'), description: t('Revendre 100 doublons'), cible: 100, recompense: { pieces: 100 }, valeur: () => etat.stats.ventes },
+    // Quêtes du jour
+    { id: 'aventurier', nom: t('Aventurier'), description: t('Terminer 10 quêtes du jour'), cible: 10, recompense: { boosters: 10 }, valeur: () => etat.stats.quetes },
+    { id: 'queteur', nom: t('Quêteur assidu'), description: t('Terminer les 3 quêtes du jour, 7 jours'), cible: 7, recompense: { prestiges: 2 }, valeur: () => etat.stats.joursQuetes },
     // Secrets : le nom se voit, le détail reste flou tant qu'ils ne sont pas débloqués
     { id: 'curieux', secret: true, nom: t('Curieux'), description: t('Cliquer 10 fois d’affilée sur le logo'), cible: 1, recompense: { pieces: 100 }, valeur: () => etat.stats.logo },
     { id: 'fouineur', secret: true, nom: t('Fouineur'), description: t('Trouver 3 codes secrets'), cible: 3, recompense: { pieces: 200 }, valeur: codesSecretsTrouves },
@@ -2545,6 +2580,148 @@ const SUCCES = [
     { id: 'overdose', secret: true, nom: t('Overdose'), description: t('Débloquer tous les autres succès secrets'), cible: 6, recompense: { carteSecrete: true },
         valeur: () => SUCCES.filter(x => x.secret && x.id !== 'overdose' && etat.succes[x.id]).length },
 ];
+
+// ---------- Quêtes journalières ----------
+
+// Chaque jour à minuit, 3 quêtes tirées au hasard : une facile, une moyenne, une difficile.
+// `evenement` : l'action qui fait avancer la quête (voir progresserQuetes) ; seul ce qui est fait après le tirage compte
+const NIVEAUX_QUETE = [
+    { id: 'facile', nom: t('Facile') },
+    { id: 'moyenne', nom: t('Moyenne') },
+    { id: 'difficile', nom: t('Difficile') },
+];
+const QUETES = [
+    { id: 'f-boosters', niveau: 'facile', texte: t('Ouvrir 3 boosters'), evenement: 'booster', cible: 3, recompense: { pieces: 50 } },
+    { id: 'f-duel', niveau: 'facile', texte: t('Gagner 1 duel'), evenement: 'duel', cible: 1, recompense: { boosters: 1 } },
+    { id: 'f-ventes', niveau: 'facile', texte: t('Revendre 5 doublons'), evenement: 'vente', cible: 5, recompense: { pieces: 50 } },
+    { id: 'f-draft', niveau: 'facile', texte: t('Jouer 1 draft'), evenement: 'draft-joue', cible: 1, recompense: { boosters: 1 } },
+    { id: 'm-boosters', niveau: 'moyenne', texte: t('Ouvrir 10 boosters'), evenement: 'booster', cible: 10, recompense: { boosters: 3 } },
+    { id: 'm-duels', niveau: 'moyenne', texte: t('Gagner 3 duels'), evenement: 'duel', cible: 3, recompense: { pieces: 100 } },
+    { id: 'm-decks', niveau: 'moyenne', texte: t('Gagner 1 duel de decks'), evenement: 'decks-gagne', cible: 1, recompense: { pieces: 100 } },
+    { id: 'm-epique', niveau: 'moyenne', texte: t('Obtenir une carte Épique ou mieux'), evenement: 'epique', cible: 1, recompense: { boosters: 3 } },
+    { id: 'm-nouvelles', niveau: 'moyenne', texte: t('Découvrir 3 nouvelles cartes en boosters'), evenement: 'nouvelle', cible: 3, recompense: { pieces: 100 } },
+    { id: 'm-draft', niveau: 'moyenne', texte: t('Gagner 1 draft'), evenement: 'draft-gagne', cible: 1, recompense: { boosters: 3 } },
+    { id: 'd-prestige', niveau: 'difficile', texte: t('Ouvrir 1 booster Prestige'), evenement: 'prestige', cible: 1, recompense: { pieces: 200 } },
+    { id: 'd-legendaire', niveau: 'difficile', texte: t('Obtenir une Légendaire ou une Mythique'), evenement: 'legendaire', cible: 1, recompense: { prestiges: 1 } },
+    { id: 'd-defi', niveau: 'difficile', texte: t('Gagner 1 défi promo'), evenement: 'defi-gagne', cible: 1, recompense: { prestiges: 1 } },
+    { id: 'd-parfait', niveau: 'difficile', texte: t('Gagner un duel 3 à 0'), evenement: 'duel-parfait', cible: 1, recompense: { pieces: 200 } },
+    { id: 'd-holo', niveau: 'difficile', texte: t('Obtenir une carte holo'), evenement: 'holo', cible: 1, recompense: { pieces: 200 } },
+    { id: 'd-decks', niveau: 'difficile', texte: t('Gagner un duel de decks en Difficile ou plus'), evenement: 'decks-difficile', cible: 1, recompense: { prestiges: 1 } },
+];
+const BONUS_QUETES = { boosters: 10 }; // les 3 quêtes du jour terminées
+const queteDe = q => QUETES.find(x => x.id === q.id);
+
+// Les quêtes d'aujourd'hui (tirées au premier appel de la journée)
+function quetesDuJour() {
+    if (etat.quetes.jour !== jourLocal() || etat.quetes.liste.some(q => !queteDe(q))) {
+        etat.quetes = {
+            jour: jourLocal(),
+            liste: NIVEAUX_QUETE.map(n => ({ id: auHasard(QUETES.filter(q => q.niveau === n.id)).id, progres: 0, recuperee: false })),
+            remplacee: false,
+            bonus: false,
+        };
+        sauvegarder();
+    }
+    return etat.quetes;
+}
+const queteTerminee = q => q.progres >= queteDe(q).cible;
+
+// Une action du joueur fait avancer les quêtes concernées ; une quête qui se termine est annoncée
+function progresserQuetes(evenement, n = 1) {
+    if (!n) return;
+    const { liste } = quetesDuJour();
+    let change = false;
+    for (const q of liste) {
+        const quete = queteDe(q);
+        if (quete.evenement !== evenement || queteTerminee(q)) continue;
+        q.progres = Math.min(quete.cible, q.progres + n);
+        change = true;
+        if (!queteTerminee(q)) continue;
+        etat.stats.quetes++;
+        toast(t('Quête terminée : {quete} ! Récupère ta récompense sur l’accueil', { quete: quete.texte }), 'gain');
+        jouerSon('succes');
+    }
+    if (!change) return;
+    if (liste.every(queteTerminee) && !etat.quetes.compteeJour) {
+        etat.quetes.compteeJour = true;
+        etat.stats.joursQuetes++;
+    }
+    sauvegarder();
+    afficherQuetes();
+    verifierSucces();
+}
+
+function recupererQuete(index) {
+    const q = quetesDuJour().liste[index];
+    if (!q || q.recuperee || !queteTerminee(q)) return;
+    q.recuperee = true;
+    encaisserRecompense(queteDe(q).recompense, t('Quête du jour'));
+    afficherQuetes();
+}
+
+function recupererBonusQuetes() {
+    const quetes = quetesDuJour();
+    if (quetes.bonus || !quetes.liste.every(queteTerminee)) return;
+    quetes.bonus = true;
+    encaisserRecompense(BONUS_QUETES, t('Bonus des quêtes'));
+    afficherQuetes();
+}
+
+// Une fois par jour : une quête pas encore terminée est remplacée par une autre du même niveau
+function remplacerQuete(index) {
+    const quetes = quetesDuJour();
+    const q = quetes.liste[index];
+    if (!q || quetes.remplacee || queteTerminee(q)) return;
+    const autres = QUETES.filter(x => x.niveau === queteDe(q).niveau && !quetes.liste.some(l => l.id === x.id));
+    if (!autres.length) return;
+    quetes.liste[index] = { id: auHasard(autres).id, progres: 0, recuperee: false };
+    quetes.remplacee = true;
+    sauvegarder();
+    afficherQuetes();
+}
+
+// Temps restant avant les quêtes de demain (appelé chaque seconde avec les paquets)
+function majChronoQuetes() {
+    const minuit = new Date();
+    minuit.setHours(24, 0, 0, 0);
+    const chrono = $('#quetes-chrono');
+    if (chrono) chrono.textContent = t('Nouvelles quêtes dans {temps}', { temps: formatDuree(minuit - Date.now()) });
+    if (etat.quetes.jour && etat.quetes.jour !== jourLocal()) afficherQuetes(); // minuit est passé
+}
+
+function afficherQuetes() {
+    const bloc = $('#quetes');
+    if (!bloc) return;
+    const quetes = quetesDuJour();
+    bloc.innerHTML = quetes.liste.map((q, index) => {
+        const quete = queteDe(q);
+        const finie = queteTerminee(q);
+        return `
+            <article class="quete quete-${quete.niveau}${finie ? ' terminee' : ''}${q.recuperee ? ' recuperee' : ''}">
+                <span class="quete-niveau">${NIVEAUX_QUETE.find(n => n.id === quete.niveau).nom}</span>
+                <p class="quete-texte">${quete.texte}</p>
+                <span class="quete-progres"><i style="--v: ${(q.progres / quete.cible) * 100}%"></i>${nombre(q.progres)} / ${nombre(quete.cible)}</span>
+                <div class="quete-pied">
+                    <span class="quete-gain">${texteRecompense(quete.recompense)}</span>
+                    ${q.recuperee
+                        ? `<span class="quete-faite">✓ ${t('Récupérée')}</span>`
+                        : finie
+                            ? `<button class="btn btn-or quete-bouton" data-quete-recuperer="${index}">${t('Récupérer')}</button>`
+                            : quetes.remplacee ? '' : `<button class="quete-remplacer" data-quete-remplacer="${index}" title="${t('Une fois par jour')}">↻ ${t('Remplacer')}</button>`}
+                </div>
+            </article>`;
+    }).join('');
+    const finies = quetes.liste.filter(queteTerminee).length;
+    $('#quetes-bonus').innerHTML = `
+        <span>${t('Bonus : termine les 3 quêtes')} · <b>${finies} / 3</b></span>
+        ${quetes.bonus
+            ? `<span class="quete-faite">✓ ${t('Récupéré')}</span>`
+            : finies === 3
+                ? `<button class="btn btn-or quete-bouton" data-quetes-bonus>${texteRecompense(BONUS_QUETES)}</button>`
+                : `<span class="quete-gain">${texteRecompense(BONUS_QUETES)}</span>`}`;
+    $('#quetes-bonus').classList.toggle('pret', finies === 3 && !quetes.bonus);
+    majChronoQuetes();
+}
 
 // Codes secrets trouvés (les easter eggs, Konami compris), sur ce total
 function codesSecretsTrouves() { return Object.keys(etat.codes).filter(code => code === 'KONAMI' || CODES_CADEAUX[btoa(code)]?.secret).length; }
@@ -3594,12 +3771,16 @@ function finPartieDecks(carteMoi, carteOrdi, stat) {
         gagnant = ecart > 0 ? 'moi' : ecart < 0 ? 'ordi' : null;
         d.message += ` ${t('Score à égalité : départage au total des stats des dernières cartes ({a} contre {b}).', { a: totalStats(carteMoi), b: totalStats(carteOrdi) })}`;
     }
+    if (d.mode === 'draft') progresserQuetes('draft-joue');
     if (gagnant === 'moi' && d.mode === 'promo') {
         etat.stats.defisGagnes++;
+        progresserQuetes('defi-gagne');
         d.message += t('<br><b class="victoire">Victoire {a} à {b} !</b> {recompense}', { a: moi, b: ordi, recompense: recompenseDefi(d.niveau.serie) });
     } else if (gagnant === 'moi') {
         if (d.mode === 'draft') etat.stats.draftsGagnes++;
         else etat.stats.decksGagnes++;
+        progresserQuetes(d.mode === 'draft' ? 'draft-gagne' : 'decks-gagne');
+        if (d.mode === 'decks' && ['difficile', 'impossible', 'hardcore'].includes(d.niveau.id)) progresserQuetes('decks-difficile');
         if (d.niveau.id === 'hardcore') etat.stats.decksHardcore++;
         d.message += annoncerVictoire(payerVictoire(d.mode, d.niveau.gain), moi, ordi);
     } else if (gagnant === 'ordi') {
@@ -3996,6 +4177,14 @@ function init() {
         tousLesSucces = !tousLesSucces;
         afficherProfil();
         if (!tousLesSucces) $('#succes-grille').scrollIntoView({ block: 'nearest' });
+    });
+    // Quêtes du jour (accueil)
+    $('#bloc-quetes').addEventListener('click', e => {
+        const bouton = e.target.closest('[data-quete-recuperer], [data-quete-remplacer], [data-quetes-bonus]');
+        if (!bouton || !donneesPretes()) return;
+        if (bouton.dataset.queteRecuperer !== undefined) recupererQuete(Number(bouton.dataset.queteRecuperer));
+        else if (bouton.dataset.queteRemplacer !== undefined) remplacerQuete(Number(bouton.dataset.queteRemplacer));
+        else recupererBonusQuetes();
     });
     $('#succes-grille').addEventListener('click', e => {
         const bouton = e.target.closest('[data-recuperer]');
