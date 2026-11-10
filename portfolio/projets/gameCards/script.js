@@ -67,7 +67,7 @@ const PRIX_BOOSTER = 50; //50
 // quand il n'en reste plus, on peut en acheter (`prix` pièces). `gain` : pièces gagnées à chaque ouverture.
 // `paquet` : le paquet de l'accueil.
 const TYPES_BOOSTER = {
-    standard: { id: 'standard', nom: t('booster'), prix: PRIX_BOOSTER, gain: 5, recharge: 60 * 1000, stockMax: 10, paquet: '#paquet-gratuit' },
+    standard: { id: 'standard', nom: t('booster'), prix: PRIX_BOOSTER, gain: 5, recharge: 5 * 60 * 1000, stockMax: 10, paquet: '#paquet-gratuit' },
     prestige: { id: 'prestige', nom: 'Prestige', prix: 250, gain: 25, recharge: 24 * 60 * 60 * 1000, stockMax: 1, prestige: true, paquet: '#paquet-prestige' },
 };
 const CHANCE_HOLO = 0.02;
@@ -2865,7 +2865,7 @@ function noteGain(taux) {
 // Trois étapes, chacune illustrée par l'icône de son onglet
 const ETAPES_GUIDE = [
     { ecran: 'accueil', titre: t('Ouvre des boosters'),
-      texte: t('Chaque booster contient 5 cartes de vrais jeux Steam. Un booster gratuit arrive chaque minute (jusqu’à 10 en réserve), et un Prestige, plus généreux, chaque jour.') },
+      texte: t('Chaque booster contient 5 cartes de vrais jeux Steam. Un booster gratuit arrive toutes les 5 minutes (jusqu’à 10 en réserve), et un Prestige, plus généreux, chaque jour.') },
     { ecran: 'collection', titre: t('Collectionne'),
       texte: t('Les cartes vont de Commune à Mythique, et leurs 3 stats (Qualité, Popularité, Ancienneté) viennent des vraies données Steam. Holo, EX et Full Art sont des versions rares. Revends tes doublons pour gagner des pièces.') },
     { ecran: 'duel', titre: t('Affronte l’ordinateur'),
