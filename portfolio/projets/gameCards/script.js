@@ -601,6 +601,7 @@ const CLES = {
     codes: 'gameCards.codes',
     quetes: 'gameCards.quetes',
     cadeaux: 'gameCards.cadeaux',
+    decks: 'gameCards.decks',
 };
 
 function lire(cle, defaut) {
@@ -645,6 +646,8 @@ const etat = {
     // Quêtes du jour : [{ id, progres, recuperee }], une seule remplacée par jour, bonus des 3 récupéré ou non
     quetes: lire(CLES.quetes, { jour: null, liste: [], remplacee: false, bonus: false }),
     cadeaux: lire(CLES.cadeaux, []),     // boosters de série à ouvrir (onglet Cadeaux) : le numéro de série de chacun
+    // Duel de decks : les decks enregistrés ({ nom, cartes: [identifiants] }) et le dernier deck joué
+    decks: { sauves: [], dernier: [], ...lire(CLES.decks, {}) },
 };
 
 // Tous les jeux de data/jeux.json (chargés au démarrage), et les mêmes rangés par rareté
@@ -3156,13 +3159,73 @@ function niveauxDeckHTML() {
         </div>`;
 }
 
+// ---------- Decks enregistrés ----------
+
+const DECKS_MAX = 12;
+
+// Les cartes d'un deck enregistré encore jouables à ce niveau (possédées, sous la rareté max)
+const cartesJouables = (ids, niveau) => ids.filter(id => etat.collection[id] && autoriseeAuNiveau(etat.collection[id].rarete, niveau));
+
+function sauverDeck() {
+    const d = deckDuel;
+    if (d.choix.length !== TAILLE_DECK) return;
+    if (etat.decks.sauves.some(deck => deck.cartes.length === d.choix.length && deck.cartes.every(id => d.choix.includes(id)))) {
+        return toast(t('Ce deck est déjà enregistré'));
+    }
+    if (etat.decks.sauves.length >= DECKS_MAX) return toast(t('{n} decks maximum : supprimes-en un d’abord', { n: DECKS_MAX }));
+    const nom = prompt(t('Nom du deck :'), t('Deck {n}', { n: etat.decks.sauves.length + 1 }))?.trim();
+    if (nom === undefined) return;
+    etat.decks.sauves.push({ nom: (nom || t('Deck {n}', { n: etat.decks.sauves.length + 1 })).slice(0, 30), cartes: [...d.choix] });
+    sauvegarder();
+    toast(t('Deck « {nom} » enregistré', { nom: etat.decks.sauves.at(-1).nom }), 'gain');
+}
+
+function chargerDeck(ids) {
+    const d = deckDuel;
+    d.choix = cartesJouables(ids, d.niveau).slice(0, TAILLE_DECK);
+    d.dernierAjout = null;
+}
+
+function supprimerDeck(index) {
+    const deck = etat.decks.sauves[index];
+    if (!deck || !confirm(t('Supprimer le deck « {nom} » ?', { nom: deck.nom }))) return;
+    etat.decks.sauves.splice(index, 1);
+    sauvegarder();
+}
+
+// Le dernier deck joué, puis les decks enregistrés : un clic les remet dans les emplacements.
+// Un deck dont une carte manque ou dépasse la rareté max du niveau est grisé.
+function decksSauvesHTML() {
+    const d = deckDuel;
+    const decks = [
+        ...(etat.decks.dernier.length ? [{ nom: t('Dernier deck joué'), cartes: etat.decks.dernier, dernier: true }] : []),
+        ...etat.decks.sauves.map((deck, index) => ({ ...deck, index })),
+    ];
+    if (!decks.length) return '';
+    return `
+        <div class="decks-sauves">${decks.map(deck => {
+            const jouable = cartesJouables(deck.cartes, d.niveau).length === deck.cartes.length;
+            const noms = deck.cartes.map(id => etat.collection[id]?.nom ?? '?').map(echapper).join(' · ');
+            return `
+            <div class="deck-sauve${deck.dernier ? ' deck-dernier' : ''}">
+                <button class="deck-sauve-charger" data-deck-action="${deck.dernier ? 'charger-dernier' : 'charger'}" data-index="${deck.index ?? ''}"${jouable ? '' : ' disabled'}
+                        title="${jouable ? noms : t('Une carte manque ou dépasse la rareté max de ce niveau')}">
+                    <b>${deck.dernier ? '↺ ' : ''}${echapper(deck.nom)}</b><span>${noms}</span>
+                </button>
+                ${deck.dernier ? '' : `<button class="deck-sauve-supprimer" data-deck-action="supprimer" data-index="${deck.index}" aria-label="${t('Supprimer le deck « {nom} »', { nom: echapper(deck.nom) })}">✕</button>`}
+            </div>`;
+        }).join('')}</div>`;
+}
+
 function choixDeckHTML() {
     const d = deckDuel;
     const recherche = d.recherche.trim().toLowerCase();
     const valeur = c => (d.tri === 'total' ? totalStats(c) : c[d.tri]);
+    // Les cartes du dernier deck joué d'abord, puis le tri choisi
+    const dernier = new Set(etat.decks.dernier);
     const cartes = cartesDuNiveau(d.niveau)
         .filter(e => !recherche || e.nom.toLowerCase().includes(recherche))
-        .sort((a, b) => valeur(b) - valeur(a) || totalStats(b) - totalStats(a));
+        .sort((a, b) => dernier.has(b.id) - dernier.has(a.id) || valeur(b) - valeur(a) || totalStats(b) - totalStats(a));
     const choisies = d.choix.map(id => etat.collection[id]).filter(Boolean);
     return `
         <p class="duel-message">${t('Niveau {niveau} : clique sur tes cartes pour remplir les {n} emplacements de ton deck.',
@@ -3182,8 +3245,10 @@ function choixDeckHTML() {
             ${d.mode === 'promo'
                 ? `<button class="btn" data-deck-action="series">${t('Changer de série')}</button>`
                 : `<button class="btn" data-deck-action="niveaux">${t('Changer de difficulté')}</button>`}
+            <button class="btn" data-deck-action="sauver"${d.choix.length === TAILLE_DECK ? '' : ' disabled'}>💾 ${t('Enregistrer le deck')}</button>
             <button class="btn btn-principal" data-deck-action="lancer"${d.choix.length === TAILLE_DECK ? '' : ' disabled'}>${t('Lancer la partie')}${d.mode === 'promo' && !defisGratuitsRestants() ? ` · ${PRIX_DEFI} ${PIECE}` : ''}</button>
         </div>
+        ${decksSauvesHTML()}
         <div class="deck-outils">
             <label class="recherche">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -3337,6 +3402,8 @@ function lancerPartieDecks() {
     d.choix = d.choix.filter(id => etat.collection[id]);
     if (!donneesPretes() || d.choix.length < TAILLE_DECK) return afficherDuelDecks();
     const moi = d.choix.map(id => ({ ...etat.collection[id] }));
+    etat.decks.dernier = [...d.choix]; // proposé en premier à la prochaine composition
+    sauvegarder();
     if (d.mode === 'promo') {
         if (!payerDefi()) return afficherDuelDecks();
         return demarrerPartieDecks(avecBonusRegle(moi), avecBonusRegle(deckDefiPromo(d.niveau.serie)));
@@ -3842,6 +3909,14 @@ function actionDuelDecks(element) {
         d.limite += CARTES_CHOIX_DECK;
     } else if (deckAction === 'lancer') {
         return lancerPartieDecks();
+    } else if (deckAction === 'sauver') {
+        sauverDeck();
+    } else if (deckAction === 'charger') {
+        chargerDeck(etat.decks.sauves[Number(element.dataset.index)]?.cartes ?? []);
+    } else if (deckAction === 'charger-dernier') {
+        chargerDeck(etat.decks.dernier);
+    } else if (deckAction === 'supprimer') {
+        supprimerDeck(Number(element.dataset.index));
     } else if (deckAction === 'suivante') {
         return mancheDecks();
     } else if (deckAction === 'decisive') {
