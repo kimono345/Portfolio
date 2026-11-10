@@ -600,6 +600,7 @@ const CLES = {
     marche: 'gameCards.marche',
     codes: 'gameCards.codes',
     quetes: 'gameCards.quetes',
+    cadeaux: 'gameCards.cadeaux',
 };
 
 function lire(cle, defaut) {
@@ -643,6 +644,7 @@ const etat = {
     codes: lire(CLES.codes, {}),          // { code cadeau utilisé: date }
     // Quêtes du jour : [{ id, progres, recuperee }], une seule remplacée par jour, bonus des 3 récupéré ou non
     quetes: lire(CLES.quetes, { jour: null, liste: [], remplacee: false, bonus: false }),
+    cadeaux: lire(CLES.cadeaux, []),     // boosters de série à ouvrir (onglet Cadeaux) : le numéro de série de chacun
 };
 
 // Tous les jeux de data/jeux.json (chargés au démarrage), et les mêmes rangés par rareté
@@ -2195,11 +2197,8 @@ function activerCode(code, recompense) {
     if (serie) obtenirSerie(serie);
     if (boosterSerie) {
         const numero = boosterSerie === 'hasard' ? auHasard(seriesPromo()) : boosterSerie;
-        const carte = creerCarte(jeuxParId.get(auHasard(promosDeSerie(numero))));
-        const nouvelle = ajouterACollection(carte, false, true); // toutes les promos sont Full Art
-        sauvegarder();
-        verifierSucces();
-        ouvrirPaquetPromo(carte, nouvelle, numero);
+        ajouterCadeau(numero);
+        toast(t('🎁 Un booster Série {n}, dans tes cadeaux !', { n: numero }), 'gain');
     }
 }
 
@@ -2255,23 +2254,7 @@ function obtenirSerie(serie) {
     verifierSucces();
 }
 
-// ---------- Écran règles ----------
-
-const chanceRarete = rarete => `${nombre(rarete.chance)} %`;
-
-function afficherRegles() {
-    $('#legende-raretes').innerHTML = RARETES.map(r => `
-        <tr class="rarete-${r.id}">
-            <td><span class="pastille"></span>${r.nom}</td>
-            <td>${r.promo ? t('codes cadeaux') : r.id === 'mythique' ? t('choisis à la main') : r.quota ? t('{n} suivants', { n: nombre(r.quota) }) : t('tous les autres')}</td>
-            <td>${r.promo ? '—' : chanceRarete(r)}</td>
-            <td>${r.chanceGarantie ? `${nombre(r.chanceGarantie)} %` : '—'}</td>
-            <td>${r.promo ? '—' : `${nombre(r.chanceDuel)} %`}</td>
-            <td>${r.revente} ${PIECE}${r.promo ? ` <span class="gris">(${t('doublons')})</span>` : ''}</td>
-            <td>${r.promo ? '—' : `${nombre(r.prix)} ${PIECE}`}</td>
-            <td>${nombreDeRarete(r.id)} / ${nombre(totalDeRarete(r.id))}</td>
-        </tr>`).join('');
-}
+// ---------- Réinitialisation ----------
 
 // Efface tout ce que le jeu a enregistré (clés "gameCards.")
 function effacerSauvegarde() {
@@ -2844,7 +2827,7 @@ const ETAPES_GUIDE = [
     { ecran: 'collection', titre: t('Collectionne'),
       texte: t('Les cartes vont de Commune à Mythique, et leurs 3 stats (Qualité, Popularité, Ancienneté) viennent des vraies données Steam. Holo, EX et Full Art sont des versions rares. Revends tes doublons pour gagner des pièces.') },
     { ecran: 'duel', titre: t('Affronte l’ordinateur'),
-      texte: t('Duel, duel de decks et draft rapportent des pièces, surtout ta première victoire du jour. Les règles complètes sont dans l’onglet Règles.') },
+      texte: t('Duel, duel de decks et draft rapportent des pièces, surtout ta première victoire du jour.') },
 ];
 let etapeGuide = 0;
 
@@ -3579,56 +3562,80 @@ function tirerRecompenseDefi() {
 // Récompense d'une victoire, versée tout de suite (rien n'est perdu si la fenêtre est fermée) puis annoncée
 // dans une fenêtre : un booster rejoint la réserve, les pièces le compte, une promo la collection.
 // Renvoie la phrase du résultat
+// Pas de fenêtre : la partie continue sans interruption, la récompense est écrite dans le message de fin.
+// Le booster de série rejoint l'onglet Cadeaux, à ouvrir plus tard.
 function recompenseDefi(serie) {
     const recompense = tirerRecompenseDefi();
-    let promo = null;
     if (recompense.id === 'pieces') etat.pieces += recompense.pieces;
     else if (recompense.id === 'booster') etat.charges.standard.charges++;
-    else {
-        const carte = creerCarte(jeuxParId.get(auHasard(promosDeSerie(serie))));
-        promo = { carte, serie, nouvelle: ajouterACollection(carte, false, true) }; // toutes les promos sont Full Art
-    }
+    else ajouterCadeau(serie);
     sauvegarder();
     majEntete();
     verifierSucces();
+    jouerSon('succes');
     const texte = {
         pieces: t('+{n} pièces', { n: recompense.pieces }),
         booster: t('+1 booster ajouté à ta réserve'),
-        serie: t('Un booster Série {n} !', { n: serie }),
+        serie: t('🎁 Un booster Série {n}, dans tes cadeaux !', { n: serie }),
     }[recompense.id];
-    setTimeout(() => annoncerRecompenseDefi(texte, promo), 900);
     return t('Récompense : <b>{texte}</b>', { texte });
 }
 
-// Promo du booster de série, révélée après le « OK » de la fenêtre
-let promoARevele = null;
+// ---------- Cadeaux : boosters de série en attente d'ouverture ----------
 
-function annoncerRecompenseDefi(texte, promo) {
-    promoARevele = promo;
-    jouerSon('succes');
-    $('#modale-contenu').innerHTML = `
-        <div class="echange echange-resultat recompense-defi">
-            <h2>${t('Victoire !')}</h2>
-            <p class="echange-intro">${t('Ta récompense :')}</p>
-            <p class="recompense-defi-gain">${promo ? '🎁' : texte.includes('booster') ? '📦' : '🪙'} <b>${texte}</b></p>
-            ${promo ? `<p class="echange-intro">${t('Il contient une carte promo de la série.')}</p>` : ''}
-            <div class="echange-actions"><button class="btn btn-principal" data-recompense-ok>${promo ? t('Ouvrir') : 'OK'}</button></div>
-        </div>`;
-    ouvrirModale();
+// `etat.cadeaux` : la série de chaque booster reçu (Défi Promo, code cadeau), dans l'ordre d'arrivée
+function ajouterCadeau(serie) {
+    etat.cadeaux.push(serie);
+    sauvegarder();
+    majBadgeCadeaux();
+    if (!$('#ecran-cadeaux').hidden) afficherCadeaux();
 }
 
-// « OK » : fermeture ; « Ouvrir » (booster de série) : on déchire son paquet, puis la promo se révèle,
-// comme un paquet Full Art (sans son halo arc-en-ciel). Le bouton « Retour » ramène ensuite à la partie
-function validerRecompenseDefi() {
-    const promo = promoARevele;
-    promoARevele = null;
-    $('#modale').close();
-    if (!promo) return;
-    retourApresOuverture = location.hash || '#duel';
-    ouvrirPaquetPromo(promo.carte, promo.nouvelle, promo.serie);
+function majBadgeCadeaux() {
+    const n = etat.cadeaux.length;
+    $('#compte-cadeaux').textContent = n || '';
+    $('#compte-cadeaux').hidden = !n;
 }
 
-// Booster d'une série (Défi Promo ou code cadeau) : son paquet à déchirer, puis la promo se révèle
+// Un paquet par série, avec le nombre de boosters de cette série
+function afficherCadeaux() {
+    const parSerie = new Map();
+    for (const serie of etat.cadeaux) parSerie.set(serie, (parSerie.get(serie) || 0) + 1);
+    $('#resume-cadeaux').textContent = etat.cadeaux.length
+        ? tn(etat.cadeaux.length, '{n} booster à ouvrir', '{n} boosters à ouvrir')
+        : t('Aucun booster à ouvrir');
+    $('#cadeaux-vide').hidden = parSerie.size > 0;
+    $('#cadeaux-grille').replaceChildren(...[...parSerie].sort(([a], [b]) => a - b).map(([serie, n]) => {
+        const paquet = paquetPromo(serie);
+        paquet.hidden = false;
+        paquet.removeAttribute('tabindex');
+        paquet.removeAttribute('aria-hidden');
+        paquet.dataset.cadeau = serie;
+        paquet.setAttribute('aria-label', t('Ouvrir un booster Série {n}', { n: serie }));
+        const caseCadeau = document.createElement('div');
+        caseCadeau.className = 'cadeau';
+        caseCadeau.append(paquet);
+        caseCadeau.insertAdjacentHTML('beforeend', `<span class="cadeau-legende">${t('Série {n}', { n: serie })} <b>×${n}</b></span>`);
+        return caseCadeau;
+    }));
+}
+
+// Ouvre un booster de la série : la promo est tirée maintenant, puis le paquet se déchire.
+// « Retour » ramène ensuite aux cadeaux.
+function ouvrirCadeau(serie) {
+    const index = etat.cadeaux.indexOf(serie);
+    if (index < 0 || ouvertureEnCours || !donneesPretes()) return;
+    etat.cadeaux.splice(index, 1);
+    const carte = creerCarte(jeuxParId.get(auHasard(promosDeSerie(serie))));
+    const nouvelle = ajouterACollection(carte, false, true); // toutes les promos sont Full Art
+    sauvegarder();
+    majBadgeCadeaux();
+    verifierSucces();
+    retourApresOuverture = '#cadeaux';
+    ouvrirPaquetPromo(carte, nouvelle, serie);
+}
+
+// Booster d'une série (onglet Cadeaux) : son paquet à déchirer, puis la promo se révèle
 function ouvrirPaquetPromo(carte, nouvelle, serie) {
     fileFullArt = fileFullArt.then(() => ouvrirPaquetFullArt(carte, nouvelle, t('Booster Série {n}', { n: serie }),
         { paquet: paquetPromo(serie), aide: t('Une carte <b>Promo</b>… laquelle ?'), classe: 'sans-prisme' }));
@@ -3960,9 +3967,9 @@ function afficherEcran(nom) {
 const RENDUS_ECRAN = {
     accueil: afficherAccueil,
     collection: afficherCollection,
-    regles: afficherRegles,
     catalogue: afficherCatalogue,
     profil: afficherProfil,
+    cadeaux: afficherCadeaux,
 };
 
 // ---------- Démarrage ----------
@@ -4060,7 +4067,6 @@ function init() {
         const echange = e.target.closest('[data-echanger]');
         if (echange) return echangerDoublons(echange.dataset.echanger);
         if (e.target.closest('[data-echange-encore]')) return proposerEchange();
-        if (e.target.closest('[data-recompense-ok]')) return validerRecompenseDefi();
         const choixVente = e.target.closest('[data-choix-vente]');
         if (choixVente) return choisirVente(Number(choixVente.dataset.choixVente));
         const fiche = e.target.closest('[data-fiche]');
@@ -4093,6 +4099,12 @@ function init() {
         setTimeout(proposerConnexion, 300);
     });
     $('#btn-guide').addEventListener('click', () => afficherGuide());
+    // Cadeaux : un clic sur le paquet d'une série en ouvre un booster
+    $('#cadeaux-grille').addEventListener('click', e => {
+        const paquet = e.target.closest('[data-cadeau]');
+        if (paquet) ouvrirCadeau(Number(paquet.dataset.cadeau));
+    });
+    majBadgeCadeaux();
     // Jeu resté ouvert : la récompense du lendemain est proposée au retour sur l'onglet
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState !== 'visible' || !donneesPretes()) return;
