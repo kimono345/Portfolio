@@ -3589,7 +3589,7 @@ const DEFIS_PROMO = {
 const defiDeSerie = serie => DEFIS_PROMO[serie] ?? DEFIS_PROMO[1];
 // Défis gratuits chaque jour (compteur remis à zéro à minuit), puis chaque défi coûte PRIX_DEFI pièces
 const DEFIS_GRATUITS = 3;
-const PRIX_DEFI = 100;
+const PRIX_DEFI = 0;
 function defisJour() {
     if (etat.defisJour?.jour !== jourLocal()) etat.defisJour = { jour: jourLocal(), joues: 0 };
     return etat.defisJour;

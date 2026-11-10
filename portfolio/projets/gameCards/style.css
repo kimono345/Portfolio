@@ -3517,9 +3517,9 @@ body.konami { animation: konami 1.6s ease-in-out; }
 .deck-sauve-charger:disabled { opacity: 0.45; cursor: not-allowed; }
 .deck-sauve-supprimer { padding: 0 0.7rem; border-left: 1px solid var(--bord) !important; color: var(--texte-doux) !important; }
 
-.deck-outils { display: flex; flex-wrap: wrap; gap: 0.6rem; max-width: 640px; margin: 1.2rem auto; }
-.deck-outils .recherche { flex: 1 1 240px; }
-#deck-genre { flex: 0 1 220px; min-width: 0; }
+.deck-outils { display: flex; flex-wrap: wrap; gap: 0.6rem; max-width: 820px; margin: 1.2rem auto; }
+.deck-outils .recherche { flex: 1 1 200px; }
+#deck-genre { flex: 0 1 200px; min-width: 0; }
 .deck-outils select {
     padding: 0.62rem 0.8rem;
     border-radius: 10px;
