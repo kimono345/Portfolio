@@ -3498,9 +3498,9 @@ const infoDefisJourHTML = () => {
 // Récompense d'une victoire, tirée au hasard (chances en %) : un booster pour la réserve, des pièces,
 // ou un booster de la série avec une de ses promos (doublons gardés)
 const RECOMPENSES_DEFI = [
-    { id: 'booster', chance: 60 },
-    { id: 'pieces', chance: 30, pieces: 200 },
-    { id: 'serie', chance: 10 },
+    { id: 'booster', chance: 10 },
+    { id: 'pieces', chance: 10, pieces: 200 },
+    { id: 'serie', chance: 80 },
 ];
 const seriesPromo = () => [...new Set(Object.values(PROMOS).map(p => p.serie))].filter(n => n > 0).sort((a, b) => a - b); // sans la carte secrète
 const promosDeSerie = serie => Object.keys(PROMOS).map(Number).filter(id => PROMOS[id].serie === serie && jeuxParId.get(id));
