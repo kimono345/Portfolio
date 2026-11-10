@@ -3251,6 +3251,25 @@ body.konami { animation: konami 1.6s ease-in-out; }
 /* Choix de l'exemplaire à vendre : une carte par variante possédée */
 .modale-vente { width: min(720px, calc(100% - 32px)); text-align: center; }
 .modale-vente h2 { font-size: 1.4rem; }
+/* Fenêtre de confirmation ou de saisie (à la place de confirm() et prompt() du navigateur) */
+.modale-dialogue { width: min(440px, calc(100% - 32px)); text-align: center; }
+.dialogue { display: grid; gap: 1rem; }
+.dialogue h2 { font-size: 1.35rem; }
+.dialogue-message { color: var(--texte-doux); line-height: 1.5; }
+.dialogue-message b { color: var(--texte); }
+.dialogue-champ {
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--bord);
+    border-radius: 12px;
+    background: var(--fond-3);
+    color: var(--texte);
+    font: inherit;
+    font-weight: 600;
+    text-align: center;
+}
+.dialogue-champ:focus { outline: none; border-color: var(--neon-1); box-shadow: 0 0 0 3px color-mix(in srgb, var(--neon-1) 25%, transparent); }
+.dialogue-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.7rem; margin-top: 0.3rem; }
+.dialogue-actions .btn { flex: 1 1 140px; }
 .vente-nom { color: var(--texte-doux); margin: 0.2rem 0 1.3rem; }
 .vente-options { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
 .vente-option {
@@ -3500,6 +3519,7 @@ body.konami { animation: konami 1.6s ease-in-out; }
 
 .deck-outils { display: flex; flex-wrap: wrap; gap: 0.6rem; max-width: 640px; margin: 1.2rem auto; }
 .deck-outils .recherche { flex: 1 1 240px; }
+#deck-genre { flex: 0 1 220px; min-width: 0; }
 .deck-outils select {
     padding: 0.62rem 0.8rem;
     border-radius: 10px;

@@ -574,6 +574,40 @@ const ouvrirModale = () => {
     if (!$('#modale').open) $('#modale').showModal();
 };
 
+// Fenêtre de confirmation du jeu, à la place de confirm() et prompt() du navigateur.
+// `message` est du HTML : les noms qu'on y met doivent passer par echapper().
+// Renvoie une promesse : true / false, ou, avec `champ` ({ valeur, max }), le texte saisi / null si annulé.
+function demander({ titre, message = '', ok = t('Confirmer'), annuler = t('Annuler'), danger = false, champ = null }) {
+    const dialogue = $('#modale-dialogue');
+    if (dialogue.open) dialogue.close();
+    dialogue.innerHTML = `
+        <form method="dialog" class="dialogue">
+            <h2 id="dialogue-titre">${titre}</h2>
+            ${message ? `<p class="dialogue-message">${message}</p>` : ''}
+            ${champ ? `<input class="dialogue-champ" type="text" maxlength="${champ.max ?? 40}" value="${echapper(champ.valeur ?? '')}" aria-labelledby="dialogue-titre">` : ''}
+            <div class="dialogue-actions">
+                <button type="button" class="btn" data-dialogue-annuler>${annuler}</button>
+                <button type="submit" class="btn ${danger ? 'btn-danger' : 'btn-principal'}" value="oui">${ok}</button>
+            </div>
+        </form>`;
+    const saisie = dialogue.querySelector('.dialogue-champ');
+    dialogue.querySelector('[data-dialogue-annuler]').addEventListener('click', () => dialogue.close('non'));
+    return new Promise(resolve => {
+        dialogue.addEventListener('close', () => {
+            const oui = dialogue.returnValue === 'oui';
+            resolve(champ ? (oui ? saisie.value.trim() : null) : oui);
+        }, { once: true });
+        dialogue.returnValue = '';
+        dialogue.showModal();
+        if (saisie) {
+            saisie.focus();
+            saisie.select();
+        } else {
+            dialogue.querySelector('[type="submit"]').focus();
+        }
+    });
+}
+
 function toast(message, type = 'info') {
     const el = document.createElement('div');
     el.className = `toast toast-${type}`;
@@ -1157,7 +1191,8 @@ function exemplairesParVariante(entree) {
     return { normale: entree.exemplaires - entree.holos - ex - fullArt, holo: entree.holos, ex, fullArt };
 }
 
-const prixVariante = (entree, variante) => RARETES[indexRarete(entree.rarete)].revente * VARIANTES[variante].multiplicateur;
+// Une Promo (toujours Full Art) se revend à son prix de base : pas de multiplicateur de variante
+const prixVariante = (entree, variante) => RARETES[indexRarete(entree.rarete)].revente * (entree.promo ? 1 : VARIANTES[variante].multiplicateur);
 
 // Vend un exemplaire de la variante choisie ; le dernier exemplaire fait sortir la carte de la collection
 function vendreExemplaire(id, variante) {
@@ -1862,11 +1897,14 @@ function echangerDoublons(rarete) {
     verifierSucces();
 }
 
-function vendreDepuisFiche(id, variante) {
+async function vendreDepuisFiche(id, variante) {
     const entree = etat.collection[id];
     if (!entree || (entree.promo && entree.exemplaires < 2)) return; // une promo garde toujours un exemplaire
-    if (entree.exemplaires === 1
-        && !confirm(t('C’est ton seul exemplaire de « {nom} » : la carte quittera ta collection. La vendre quand même ?', { nom: entree.nom }))) return;
+    if (entree.exemplaires === 1 && !(await demander({
+        titre: t('Vendre ton dernier exemplaire ?'),
+        message: t('C’est ton seul exemplaire de « {nom} » : la carte quittera ta collection. La vendre quand même ?', { nom: echapper(entree.nom) }),
+        ok: t('Vendre'), danger: true,
+    }))) return;
     const prix = vendreExemplaire(id, variante);
     if (!prix) return;
     sauvegarder();
@@ -1883,9 +1921,13 @@ function vendreDepuisFiche(id, variante) {
     verifierSucces();
 }
 
-function vendreTousLesDoublons() {
+async function vendreTousLesDoublons() {
     const valeur = valeurTousDoublons();
-    if (!valeur || !confirm(t('Revendre tous tes doublons pour {n} pièces ? Tu gardes un exemplaire de chaque jeu (la holo en priorité).', { n: nombre(valeur) }))) return;
+    if (!valeur || !(await demander({
+        titre: t('Vendre tous tes doublons ?'),
+        message: t('Revendre tous tes doublons pour {n} pièces ? Tu gardes un exemplaire de chaque jeu (la holo en priorité).', { n: nombre(valeur) }),
+        ok: t('Vendre'),
+    }))) return;
     for (const e of possedees()) while (e.exemplaires > 1) vendreDoublon(e.id);
     sauvegarder();
     majEntete();
@@ -1936,10 +1978,15 @@ function boutonFusionHTML(e) {
                 ✨ ${t('Fusionner en holo')} · ${Math.min(normales, EXEMPLAIRES_FUSION)}/${EXEMPLAIRES_FUSION}</button>`;
 }
 
-function fusionnerHolo(id) {
+async function fusionnerHolo(id) {
     const entree = etat.collection[id];
     if (!entree || exemplairesParVariante(entree).normale < EXEMPLAIRES_FUSION) return;
-    if (!confirm(t('Fusionner {n} exemplaires normaux de « {nom} » en 1 holo ?', { n: EXEMPLAIRES_FUSION, nom: entree.nom }))) return;
+    if (!(await demander({
+        titre: t('Fusionner en holo ?'),
+        message: t('Fusionner {n} exemplaires normaux de « {nom} » en 1 holo ?', { n: EXEMPLAIRES_FUSION, nom: echapper(entree.nom) }),
+        ok: t('Fusionner'),
+    }))) return;
+    if (exemplairesParVariante(entree).normale < EXEMPLAIRES_FUSION) return;
     entree.exemplaires -= EXEMPLAIRES_FUSION - 1;
     entree.holos++;
     sauvegarder();
@@ -2103,13 +2150,18 @@ function filtrerCatalogue() {
     afficherCatalogue();
 }
 
-function acheterCarte(id) {
+async function acheterCarte(id) {
     const jeu = jeuxParId.get(id);
     if (!jeu || jeu.promo || etat.collection[id]) return; // une promo ne s'obtient qu'avec son code cadeau
     const carte = creerCarte(jeu);
     const prix = RARETES[indexRarete(carte.rarete)].prix;
     if (etat.pieces < prix) return toast(t('Il te manque {n} pièces pour acheter {nom}', { n: nombre(prix - etat.pieces), nom: carte.nom }));
-    if (!confirm(t('Acheter {nom} pour {n} pièces ?', { nom: carte.nom, n: nombre(prix) }))) return;
+    if (!(await demander({
+        titre: t('Acheter la carte ?'),
+        message: t('Acheter {nom} pour {n} pièces ?', { nom: `<b>${echapper(carte.nom)}</b>`, n: nombre(prix) }),
+        ok: t('Acheter'),
+    }))) return;
+    if (etat.pieces < prix || etat.collection[id]) return;
     etat.pieces -= prix;
     ajouterACollection(carte, false);
     sauvegarder();
@@ -2158,12 +2210,17 @@ function afficherMarche() {
     }).join('');
 }
 
-function acheterMarche(id) {
+async function acheterMarche(id) {
     const offre = offresDuJour().find(carte => carte.id === id);
     if (!offre || etat.marche.achetes.includes(id) || etat.collection[id]) return;
     const prix = prixMarche(offre);
     if (etat.pieces < prix) return toast(t('Il te manque {n} pièces pour acheter {nom}', { n: nombre(prix - etat.pieces), nom: offre.nom }));
-    if (!confirm(t('Acheter {nom} pour {n} pièces ?', { nom: offre.nom, n: nombre(prix) }))) return;
+    if (!(await demander({
+        titre: t('Acheter la carte ?'),
+        message: t('Acheter {nom} pour {n} pièces ?', { nom: `<b>${echapper(offre.nom)}</b>`, n: nombre(prix) }),
+        ok: t('Acheter'),
+    }))) return;
+    if (etat.pieces < prix || etat.marche.achetes.includes(id) || etat.collection[id]) return;
     etat.pieces -= prix;
     etat.marche.achetes.push(id);
     ajouterACollection(offre, false);
@@ -2288,10 +2345,13 @@ function effacerSauvegarde() {
 }
 
 // Efface la sauvegarde et repart de zéro
-function reinitialiser() {
-    const message = t('Supprimer définitivement ta sauvegarde ?\n\nTu perdras tes {cartes} cartes et tes {pieces} pièces. Cette action ne peut pas être annulée.',
-        { cartes: nombre(nombreCartes()), pieces: nombre(etat.pieces) });
-    if (!confirm(message)) return;
+async function reinitialiser() {
+    if (!(await demander({
+        titre: t('Supprimer ta sauvegarde ?'),
+        message: t('Tu perdras tes {cartes} cartes et tes {pieces} pièces. Cette action ne peut pas être annulée.',
+            { cartes: nombre(nombreCartes()), pieces: nombre(etat.pieces) }),
+        ok: t('Supprimer'), danger: true,
+    }))) return;
     effacerSauvegarde();
     location.hash = '#accueil';
     location.reload();
@@ -3039,7 +3099,7 @@ const deckDuel = {
     mode: 'decks',   // 'decks' (deck de ta collection), 'draft' ou 'promo' (Défi Promo)
     // Draft en cours : { propositions (les 3 cartes du choix), moi, ordi (cartes prises), exclus (jeux déjà sortis) }
     draft: null,
-    etape: 'niveau', niveau: null, choix: [], dernierAjout: null, recherche: '', tri: 'total', limite: CARTES_CHOIX_DECK,
+    etape: 'niveau', niveau: null, choix: [], dernierAjout: null, recherche: '', genre: '', tri: 'total', limite: CARTES_CHOIX_DECK,
     moi: [], ordi: [], score: { moi: 0, ordi: 0 }, attaquant: 'moi',
     attente: null,   // 'attaque' (choisir une carte puis une stat), 'defense' (choisir une carte), ou rien
     carte: null,     // index de la carte choisie pour attaquer
@@ -3182,16 +3242,23 @@ const DECKS_MAX = 12;
 // Les cartes d'un deck enregistré encore jouables à ce niveau (possédées, sous la rareté max)
 const cartesJouables = (ids, niveau) => ids.filter(id => etat.collection[id] && autoriseeAuNiveau(etat.collection[id].rarete, niveau));
 
-function sauverDeck() {
+async function sauverDeck() {
     const d = deckDuel;
     if (d.choix.length !== TAILLE_DECK) return;
     if (etat.decks.sauves.some(deck => deck.cartes.length === d.choix.length && deck.cartes.every(id => d.choix.includes(id)))) {
         return toast(t('Ce deck est déjà enregistré'));
     }
     if (etat.decks.sauves.length >= DECKS_MAX) return toast(t('{n} decks maximum : supprimes-en un d’abord', { n: DECKS_MAX }));
-    const nom = prompt(t('Nom du deck :'), t('Deck {n}', { n: etat.decks.sauves.length + 1 }))?.trim();
-    if (nom === undefined) return;
-    etat.decks.sauves.push({ nom: (nom || t('Deck {n}', { n: etat.decks.sauves.length + 1 })).slice(0, 30), cartes: [...d.choix] });
+    const cartes = [...d.choix];
+    const parDefaut = t('Deck {n}', { n: etat.decks.sauves.length + 1 });
+    const nom = await demander({
+        titre: t('Enregistrer le deck'),
+        message: cartes.map(id => echapper(etat.collection[id]?.nom ?? '?')).join(' · '),
+        champ: { valeur: parDefaut, max: 30 },
+        ok: t('Enregistrer'),
+    });
+    if (nom === null || etat.decks.sauves.length >= DECKS_MAX) return;
+    etat.decks.sauves.push({ nom: (nom || parDefaut).slice(0, 30), cartes });
     sauvegarder();
     toast(t('Deck « {nom} » enregistré', { nom: etat.decks.sauves.at(-1).nom }), 'gain');
 }
@@ -3202,10 +3269,15 @@ function chargerDeck(ids) {
     d.dernierAjout = null;
 }
 
-function supprimerDeck(index) {
+async function supprimerDeck(index) {
     const deck = etat.decks.sauves[index];
-    if (!deck || !confirm(t('Supprimer le deck « {nom} » ?', { nom: deck.nom }))) return;
-    etat.decks.sauves.splice(index, 1);
+    if (!deck || !(await demander({
+        titre: t('Supprimer le deck ?'),
+        message: t('Supprimer le deck « {nom} » ?', { nom: echapper(deck.nom) }),
+        ok: t('Supprimer'), danger: true,
+    }))) return;
+    const position = etat.decks.sauves.indexOf(deck);
+    if (position >= 0) etat.decks.sauves.splice(position, 1);
     sauvegarder();
 }
 
@@ -3239,8 +3311,11 @@ function choixDeckHTML() {
     const valeur = c => (d.tri === 'total' ? totalStats(c) : c[d.tri]);
     // Les cartes du dernier deck joué d'abord, puis le tri choisi
     const dernier = new Set(etat.decks.dernier);
-    const cartes = cartesDuNiveau(d.niveau)
-        .filter(e => !recherche || e.nom.toLowerCase().includes(recherche))
+    const jouables = cartesDuNiveau(d.niveau);
+    // Le filtre ne propose que les genres, thèmes et distinctions présents parmi les cartes jouables à ce niveau
+    const genresPresents = new Set(jouables.flatMap(e => [...e.genres, ...(e.tags || []), ...distinctionsDe(e)]));
+    const cartes = jouables
+        .filter(e => (!recherche || e.nom.toLowerCase().includes(recherche)) && (!d.genre || aLeGenre(e, d.genre)))
         .sort((a, b) => dernier.has(b.id) - dernier.has(a.id) || valeur(b) - valeur(a) || totalStats(b) - totalStats(a));
     const choisies = d.choix.map(id => etat.collection[id]).filter(Boolean);
     return `
@@ -3270,6 +3345,7 @@ function choixDeckHTML() {
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
                 <input type="search" id="deck-recherche" value="${echapper(d.recherche)}" placeholder="${t('Rechercher un jeu…')}" aria-label="${t('Rechercher un jeu')}">
             </label>
+            <select id="deck-genre" aria-label="${t('Filtrer par genre')}">${optionsGenresHTML(d.genre, genresPresents)}</select>
             <select id="deck-tri" aria-label="${t('Trier')}">
                 ${Object.entries(TRIS_DECK).map(([cle, nom]) => `<option value="${cle}"${cle === d.tri ? ' selected' : ''}>${nom}</option>`).join('')}
             </select>
@@ -3903,9 +3979,9 @@ function actionDuelDecks(element) {
     } else if (deckAction === 'draft') {
         nouveauDraft();
     } else if (niveau) {
-        Object.assign(d, { niveau: NIVEAUX_DECK.find(n => n.id === niveau), choix: [], recherche: '', limite: CARTES_CHOIX_DECK, etape: 'deck' });
+        Object.assign(d, { niveau: NIVEAUX_DECK.find(n => n.id === niveau), choix: [], recherche: '', genre: '', limite: CARTES_CHOIX_DECK, etape: 'deck' });
     } else if (serie) {
-        Object.assign(d, { niveau: niveauDefi(Number(serie)), choix: [], recherche: '', limite: CARTES_CHOIX_DECK, etape: 'deck' });
+        Object.assign(d, { niveau: niveauDefi(Number(serie)), choix: [], recherche: '', genre: '', limite: CARTES_CHOIX_DECK, etape: 'deck' });
     } else if (deckAction === 'series') {
         d.etape = 'serie';
     } else if (choixDeck) {
@@ -3926,13 +4002,13 @@ function actionDuelDecks(element) {
     } else if (deckAction === 'lancer') {
         return lancerPartieDecks();
     } else if (deckAction === 'sauver') {
-        sauverDeck();
+        return sauverDeck().then(afficherDuelDecks);
     } else if (deckAction === 'charger') {
         chargerDeck(etat.decks.sauves[Number(element.dataset.index)]?.cartes ?? []);
     } else if (deckAction === 'charger-dernier') {
         chargerDeck(etat.decks.dernier);
     } else if (deckAction === 'supprimer') {
-        supprimerDeck(Number(element.dataset.index));
+        return supprimerDeck(Number(element.dataset.index)).then(afficherDuelDecks);
     } else if (deckAction === 'suivante') {
         return mancheDecks();
     } else if (deckAction === 'decisive') {
@@ -4044,7 +4120,11 @@ async function importerSauvegarde(fichier) {
         const cles = Object.keys(donnees).filter(cle => cle.startsWith('gameCards.') && typeof donnees[cle] === 'string');
         if (!cles.length) throw new Error('sauvegarde vide');
         const date = new Date(contenu.date).toLocaleDateString(LOCALE);
-        if (!confirm(t('Remplacer ta progression actuelle par la sauvegarde du {date} ?', { date }))) return;
+        if (!(await demander({
+            titre: t('Importer la sauvegarde ?'),
+            message: t('Remplacer ta progression actuelle par la sauvegarde du {date} ?', { date }),
+            ok: t('Remplacer'), danger: true,
+        }))) return;
         effacerSauvegarde();
         for (const cle of cles) localStorage.setItem(cle, donnees[cle]);
         location.hash = '#accueil';
@@ -4185,9 +4265,10 @@ function init() {
         if (vendre) {
             const id = Number(vendre.dataset.vendre);
             if ($('#modale-vente').open) $('#modale-vente').close();
-            vendreDepuisFiche(id, vendre.dataset.variante);
-            if ($('#modale').open) afficherFiche(id);
-            return;
+            // La fiche se met à jour une fois la vente faite (ou annulée dans la fenêtre de confirmation)
+            return vendreDepuisFiche(id, vendre.dataset.variante).then(() => {
+                if ($('#modale').open) afficherFiche(id);
+            });
         }
         const marche = e.target.closest('[data-marche]');
         if (marche) return acheterMarche(Number(marche.dataset.marche));
@@ -4263,8 +4344,9 @@ function init() {
     });
     // Recherche pendant la composition du deck : on garde le curseur dans le champ
     $('#mode-decks').addEventListener('change', e => {
-        if (e.target.id !== 'deck-tri') return;
-        Object.assign(deckDuel, { tri: e.target.value, limite: CARTES_CHOIX_DECK });
+        if (e.target.id === 'deck-genre') Object.assign(deckDuel, { genre: e.target.value, limite: CARTES_CHOIX_DECK });
+        else if (e.target.id === 'deck-tri') Object.assign(deckDuel, { tri: e.target.value, limite: CARTES_CHOIX_DECK });
+        else return;
         afficherDuelDecks();
     });
     $('#mode-decks').addEventListener('input', e => {

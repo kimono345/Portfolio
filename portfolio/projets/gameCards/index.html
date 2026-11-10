@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@700&family=Cinzel:wght@700&family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=278">
+    <link rel="stylesheet" href="style.css?v=280">
 </head>
 <body>
 
@@ -446,6 +446,9 @@
         </button>
         <div class="modale-contenu" id="modale-contenu"></div>
     </dialog>
+
+    <!-- Confirmation ou saisie (remplace confirm() et prompt() du navigateur), par-dessus tout le reste -->
+    <dialog class="modale modale-dialogue" id="modale-dialogue" aria-labelledby="dialogue-titre"></dialog>
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
