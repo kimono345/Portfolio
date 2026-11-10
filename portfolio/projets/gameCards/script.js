@@ -65,6 +65,7 @@ const CHANCE_DOUBLON = 0.05;
 
 const CARTES_PAR_BOOSTER = 5;
 const BOOSTERS_PAR_LOT = 10; // ouverture ×10
+const BOOSTERS_MAX_ACHAT = 100; // achat « Tout dépenser » : autant de boosters que les pièces le permettent, au plus 100
 const PRIX_BOOSTER = 50; //50
 
 // Les deux boosters. Chacun se recharge gratuitement (`recharge` ms), avec une réserve de `stockMax` ;
@@ -1098,7 +1099,17 @@ function piocher(index, exclus = new Set()) {
 // Si toute la rareté est déjà possédée, n'importe quelle carte de la rareté.
 function piocherNouvelle(index, exclus = new Set()) {
     if (estHauteRarete(RARETES[index].id) && Math.random() < CHANCE_DOUBLON) return piocher(index, exclus);
-    const nouvelles = jeuxParRarete[RARETES[index].id].filter(j => !etat.collection[j.id] && !exclus.has(j.id));
+    const bac = jeuxParRarete[RARETES[index].id];
+    const estNouvelle = j => !etat.collection[j.id] && !exclus.has(j.id);
+    // Quelques essais au hasard d'abord (rapide quand la rareté est loin d'être complète), puis la liste des manquantes
+    for (let essai = 0; essai < 30; essai++) {
+        const jeu = auHasard(bac);
+        if (estNouvelle(jeu)) {
+            exclus.add(jeu.id);
+            return creerCarte(jeu);
+        }
+    }
+    const nouvelles = bac.filter(estNouvelle);
     if (!nouvelles.length) return piocher(index, exclus);
     const jeu = auHasard(nouvelles);
     exclus.add(jeu.id);
@@ -1262,6 +1273,8 @@ function cliquerPaquet(type) {
 
 function proposerAchat(type) {
     const prixLot = type.prix * BOOSTERS_PAR_LOT;
+    // Autant de boosters que les pièces le permettent, jusqu’à BOOSTERS_MAX_ACHAT
+    const maxi = Math.min(BOOSTERS_MAX_ACHAT, Math.floor(etat.pieces / type.prix));
     $('#modale-contenu').innerHTML = `
         <div class="achat">
             <h2>${t('Plus de {type} gratuit', { type: type.nom })}</h2>
@@ -1271,6 +1284,9 @@ function proposerAchat(type) {
                     ${t('Acheter 1 {type}', { type: type.nom })} · ${nombre(type.prix)} ${PIECE}</button>
                 <button class="btn btn-or btn-grand" data-acheter-booster="${type.id}" data-nombre="${BOOSTERS_PAR_LOT}"${etat.pieces < prixLot ? ' disabled' : ''}>
                     ${t('Ouvrir')} ×${BOOSTERS_PAR_LOT} · ${nombre(prixLot)} ${PIECE}</button>
+                ${maxi > BOOSTERS_PAR_LOT ? `
+                <button class="btn btn-or btn-grand" data-acheter-booster="${type.id}" data-nombre="${maxi}">
+                    ${t('Tout dépenser')} ×${maxi} · ${nombre(type.prix * maxi)} ${PIECE}</button>` : ''}
             </div>
             <p class="achat-solde">${t('Tu as')} ${nombre(etat.pieces)} ${PIECE}${etat.pieces < type.prix ? t(' : revends des doublons ou gagne des duels pour en avoir plus.') : ''}</p>
         </div>`;

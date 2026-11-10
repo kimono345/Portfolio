@@ -335,6 +335,7 @@ const EN = {
     'Retirer {nom} du deck': 'Remove {nom} from the deck',
     'Changer de difficulté': 'Change difficulty',
     'Lancer la partie': 'Start the game',
+    'Tout dépenser': 'Spend it all',
     'Enregistrer le deck': 'Save deck',
     'Ce deck est déjà enregistré': 'This deck is already saved',
     '{n} decks maximum : supprimes-en un d’abord': '{n} decks max: delete one first',
