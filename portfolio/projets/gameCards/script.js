@@ -22,15 +22,15 @@
 // Les fourchettes se chevauchent : une carte rare est en général plus forte, mais une excellente Légendaire
 // peut dépasser une Mythique moyenne sur son point fort.
 const RARETES = [
-    { id: 'mythique',    nom: t('Mythique'),    quota: null, stats: [55, 100], chance: 0.1, chanceGarantie: 0.1, chancePrestige: 0.2,  chancePrestigeGarantie: 1,  chanceDuel: 3,  chanceDraft: 2,  revente: 300, prix: 10000 },
-    { id: 'legendaire',  nom: t('Légendaire'),  quota: 110,  stats: [45, 95],  chance: 0.5, chanceGarantie: 0.9, chancePrestige: 1,    chancePrestigeGarantie: 5,  chanceDuel: 7,  chanceDraft: 8,  revente: 100, prix: 4000 },
+    { id: 'mythique',    nom: t('Mythique'),    quota: null, stats: [55, 100], chance: 0.1, chanceGarantie: 0.1, chancePrestige: 0.2,  chancePrestigeGarantie: 1,  chanceDuel: 3,  chanceDraft: 2,  revente: 1500, prix: 10000 },
+    { id: 'legendaire',  nom: t('Légendaire'),  quota: 110,  stats: [45, 95],  chance: 0.5, chanceGarantie: 0.9, chancePrestige: 1,    chancePrestigeGarantie: 5,  chanceDuel: 7,  chanceDraft: 8,  revente: 500, prix: 4000 },
     { id: 'epique',      nom: t('Épique'),      quota: 600,  stats: [35, 90],  chance: 2, chanceGarantie: 12,  chancePrestige: 6,    chancePrestigeGarantie: 94, chanceDuel: 12, chanceDraft: 20, revente: 40,  prix: 1500 },
     { id: 'rare',        nom: t('Rare'),        quota: 1500, stats: [25, 85],  chance: 6, chanceGarantie: 30,  chancePrestige: 22.8, chancePrestigeGarantie: 0,  chanceDuel: 18, chanceDraft: 30, revente: 15,  prix: 600 },
     { id: 'peu-commune', nom: t('Peu commune'), quota: 3000, stats: [15, 80],  chance: 18, chanceGarantie: 57,  chancePrestige: 70,   chancePrestigeGarantie: 0,  chanceDuel: 25, chanceDraft: 25, revente: 5,   prix: 250 },
     { id: 'commune',     nom: t('Commune'),     quota: null, stats: [5, 75],   chance: 73.4, chanceGarantie: 0,   chancePrestige: 0,    chancePrestigeGarantie: 0,  chanceDuel: 35, chanceDraft: 15, revente: 2,   prix: 100 },
     // Promo : hors du tirage (toutes ses chances à 0), obtenue seulement avec un code cadeau (voir PROMOS) ;
     // ni vendue ni achetée, stats choisies à la main
-    { id: 'promo',       nom: t('Promo'),       quota: null, stats: [30, 100],  chance: 0, chanceGarantie: 0,     chancePrestige: 0,    chancePrestigeGarantie: 0,  chanceDuel: 0,  chanceDraft: 0,  revente: 0,   prix: 0, promo: true },
+    { id: 'promo',       nom: t('Promo'),       quota: null, stats: [30, 100],  chance: 0, chanceGarantie: 0,     chancePrestige: 0,    chancePrestigeGarantie: 0,  chanceDuel: 0,  chanceDraft: 0,  revente: 300, prix: 0, promo: true },
 ];
 const CHANCE_HOLO_PRESTIGE = 0.08; // contre 2 % dans un booster normal
 
@@ -58,6 +58,10 @@ const PART_MYTHIQUE_GOD_PACK = 0.25; // en plus de la Mythique garantie
 
 // Compteur de malchance : après 50 boosters sans Légendaire ni Mythique, le suivant en garantit une
 const MALCHANCE_MAX = 50;
+
+// Les boosters ne donnent que des cartes pas encore possédées ; seule exception, une Légendaire ou Mythique
+// est un doublon 1 fois sur 20 (bien revendu, voir `revente`)
+const CHANCE_DOUBLON = 0.05;
 
 const CARTES_PAR_BOOSTER = 5;
 const BOOSTERS_PAR_LOT = 10; // ouverture ×10
@@ -1084,6 +1088,18 @@ function piocher(index, exclus = new Set()) {
     return creerCarte(jeu);
 }
 
+// Pioche d'un booster : seulement des cartes pas encore possédées (ni déjà sorties dans `exclus`).
+// Exception : une Légendaire ou Mythique peut, rarement (CHANCE_DOUBLON), être un doublon.
+// Si toute la rareté est déjà possédée, n'importe quelle carte de la rareté.
+function piocherNouvelle(index, exclus = new Set()) {
+    if (estHauteRarete(RARETES[index].id) && Math.random() < CHANCE_DOUBLON) return piocher(index, exclus);
+    const nouvelles = jeuxParRarete[RARETES[index].id].filter(j => !etat.collection[j.id] && !exclus.has(j.id));
+    if (!nouvelles.length) return piocher(index, exclus);
+    const jeu = auHasard(nouvelles);
+    exclus.add(jeu.id);
+    return creerCarte(jeu);
+}
+
 // ---------- Collection et monnaie ----------
 
 function ajouterACollection(carte, holo, fullArt = false, ex = false) {
@@ -1271,19 +1287,19 @@ function variante(carte, chanceHolo, chanceFullArt) {
 }
 
 // God pack : une Mythique garantie, puis des Légendaires (et parfois d'autres Mythiques), une chance sur 4 d'être holo
-function tirerGodPack() {
-    const exclus = new Set();
+function tirerGodPack(exclus) {
     return Array.from({ length: CARTES_PAR_BOOSTER }, (_, i) => {
         const index = i === 0 || Math.random() < PART_MYTHIQUE_GOD_PACK ? INDEX_MYTHIQUE : INDEX_LEGENDAIRE;
-        return { ...variante(piocher(index, exclus), CHANCE_HOLO_GOD_PACK, CHANCE_FULL_ART_GOD_PACK), godPack: true };
+        return { ...variante(piocherNouvelle(index, exclus), CHANCE_HOLO_GOD_PACK, CHANCE_FULL_ART_GOD_PACK), godPack: true };
     });
 }
 
-// Les 5 cartes d'un booster : 4 au hasard + une 5ᵉ garantie (ou, très rarement, un god pack)
-function tirerBooster(type, legendaireGarantie = false) {
+// Les 5 cartes d'un booster : 4 au hasard + une 5ᵉ garantie (ou, très rarement, un god pack).
+// `exclus` : cartes déjà sorties pendant cette ouverture (partagé entre les boosters d'un ×10)
+function tirerBooster(type, legendaireGarantie = false, exclus = new Set()) {
     if (prochainGodPack || Math.random() < CHANCE_GOD_PACK) {
         prochainGodPack = false;
-        return tirerGodPack();
+        return tirerGodPack(exclus);
     }
     const [cleChance, cleGarantie] = type.prestige ? ['chancePrestige', 'chancePrestigeGarantie'] : ['chance', 'chanceGarantie'];
     const chanceHolo = type.prestige ? CHANCE_HOLO_PRESTIGE : CHANCE_HOLO;
@@ -1292,8 +1308,7 @@ function tirerBooster(type, legendaireGarantie = false) {
     indices.push(legendaireGarantie
         ? tirerRarete('chance', HAUTES_RARETES)
         : tirerRarete(cleGarantie));
-    const exclus = new Set();
-    return indices.map(index => variante(piocher(index, exclus), chanceHolo, CHANCE_FULL_ART));
+    return indices.map(index => variante(piocherNouvelle(index, exclus), chanceHolo, CHANCE_FULL_ART));
 }
 
 // `mode` : 'gratuit' (pris dans la réserve) ou 'achat' (payé en pièces)
@@ -1307,8 +1322,9 @@ async function ouvrirBooster(mode, nombreBoosters = 1, type = TYPES_BOOSTER.stan
     ouvertureEnCours = true;
 
     const boosters = [];
+    const exclus = new Set();
     for (let i = 0; i < nombreBoosters; i++) {
-        const booster = tirerBooster(type, etat.malchance >= MALCHANCE_MAX - 1);
+        const booster = tirerBooster(type, etat.malchance >= MALCHANCE_MAX - 1, exclus);
         const hauteRarete = booster.some(t => estHauteRarete(t.carte.rarete));
         etat.malchance = hauteRarete ? 0 : etat.malchance + 1;
         etat.stats.pireMalchance = Math.max(etat.stats.pireMalchance, etat.malchance);
@@ -1341,18 +1357,6 @@ async function ouvrirBooster(mode, nombreBoosters = 1, type = TYPES_BOOSTER.stan
         await dechirerPaquet(modele, cartes[0].godPack, rang);
         if (!seance.passer) await defilerPile(cartes, rang);
     }
-    // ×10 passé : on fait quand même défiler les Épiques, Légendaires et Mythiques pas encore vues (la plus rare en dernier) ;
-    // « Tout passer » une seconde fois mène au récapitulatif
-    if (seance.passer && nombreBoosters > 1) {
-        const meilleures = tirage.filter(t => indexRarete(t.carte.rarete) <= INDEX_EPIQUE && !seance.vues.has(t))
-            .sort((a, b) => indexRarete(b.carte.rarete) - indexRarete(a.carte.rarete));
-        seance.passer = false;
-        if (meilleures.length) {
-            $('#btn-passer').textContent = t('Voir le récapitulatif');
-            await annoncerMeilleures(meilleures);
-            if (!seance.passer) await defilerPile(meilleures, `${t('Meilleures cartes')} · `);
-        }
-    }
     finOuverture(tirage, nombreBoosters, gain);
     progresserQuetes('booster', nombreBoosters);
     if (type.prestige) progresserQuetes('prestige', nombreBoosters);
@@ -1374,7 +1378,6 @@ function debutOuverture(multiple) {
     $('#ouverture-aide').hidden = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
     seance.passer = false;
-    seance.vues = new Set();
 }
 
 // Fin de l'ouverture : récapitulatif des cartes et bilan (`gain` : pièces rapportées par les boosters)
@@ -1429,8 +1432,7 @@ function majTropheeGodPack() {
 // ---------- Séance d'ouverture (paquet à déchirer, pile de cartes) ----------
 
 // `reprendre` débloque l'étape en cours (geste, clic, clavier) ; `passer` saute tout jusqu'au récapitulatif
-// (en ×10, d'abord jusqu'aux meilleures cartes pas encore vues) ; `vues` : les cartes déjà montrées dans la pile
-const seance = { passer: false, reprendre: null, vues: new Set() };
+const seance = { passer: false, reprendre: null };
 
 function passerOuverture() {
     seance.passer = true;
@@ -1549,32 +1551,6 @@ function glisserCarte(element) {
     });
 }
 
-// Transition du ×10 passé : « Les meilleures cartes du lot », le nombre de cartes par rareté (la plus rare en premier),
-// puis un clic (ou Espace, Entrée) pour les faire défiler
-async function annoncerMeilleures(cartes) {
-    const parRarete = RARETES.filter(r => indexRarete(r.id) <= INDEX_EPIQUE)
-        .map(r => [r, cartes.filter(c => c.carte.rarete === r.id).length]).filter(([, n]) => n);
-    const ecran = document.createElement('button');
-    ecran.type = 'button';
-    ecran.className = 'intermede';
-    ecran.innerHTML = `
-        <span class="intermede-sur-titre">${t('Paquets passés')}</span>
-        <strong class="intermede-titre">${t('Les meilleures cartes du lot')}</strong>
-        <span class="intermede-raretes">${parRarete.map(([r, n]) => `<span class="intermede-rarete rarete-${r.id}">${r.nom} <b>×${n}</b></span>`).join('')}</span>
-        <span class="intermede-suite">${t('Touche pour les découvrir')}</span>`;
-    $('#ouverture-scene').replaceChildren(ecran);
-    $('#ouverture-aide').innerHTML = t('Les autres cartes t’attendent dans le récapitulatif');
-    jouerSonRarete(parRarete[0][0].id);
-    await new Promise(resolve => {
-        seance.reprendre = resolve;
-        ecran.addEventListener('click', resolve, { once: true });
-    });
-    seance.reprendre = null;
-    if (seance.passer) return;
-    ecran.classList.add('intermede-sortie');
-    await attendre(350);
-}
-
 // Pile de cartes face visible : on les fait défiler une par une, la plus rare arrive en dernier
 async function defilerPile(cartes, rang) {
     const pile = document.createElement('div');
@@ -1589,7 +1565,6 @@ async function defilerPile(cartes, rang) {
     for (let i = 0; i < elements.length && !seance.passer; i++) {
         elements.forEach((element, k) => element.style.setProperty('--rang', k - i));
         const dessus = elements[i];
-        seance.vues.add(cartes[i]);
         if (estHauteRarete(cartes[i].carte.rarete) || cartes[i].ex) dessus.classList.add(cartes[i].fullArt ? 'apparition-full-art' : 'apparition-rare');
         jouerSonRarete(cartes[i].ex ? 'epique' : cartes[i].carte.rarete);
 
@@ -1865,7 +1840,7 @@ function echangerDoublons(rarete) {
 
 function vendreDepuisFiche(id, variante) {
     const entree = etat.collection[id];
-    if (!entree) return;
+    if (!entree || (entree.promo && entree.exemplaires < 2)) return; // une promo garde toujours un exemplaire
     if (entree.exemplaires === 1
         && !confirm(t('C’est ton seul exemplaire de « {nom} » : la carte quittera ta collection. La vendre quand même ?', { nom: entree.nom }))) return;
     const prix = vendreExemplaire(id, variante);
@@ -1887,7 +1862,7 @@ function vendreDepuisFiche(id, variante) {
 function vendreTousLesDoublons() {
     const valeur = valeurTousDoublons();
     if (!valeur || !confirm(t('Revendre tous tes doublons pour {n} pièces ? Tu gardes un exemplaire de chaque jeu (la holo en priorité).', { n: nombre(valeur) }))) return;
-    for (const e of possedees()) while (!e.promo && e.exemplaires > 1) vendreDoublon(e.id); // une promo ne se vend pas
+    for (const e of possedees()) while (e.exemplaires > 1) vendreDoublon(e.id);
     sauvegarder();
     majEntete();
     afficherCollection();
@@ -1914,7 +1889,7 @@ const variantesPossedees = e => Object.entries(exemplairesParVariante(e)).filter
 
 // Une seule variante : vente directe. Plusieurs : « Vendre… » ouvre la fenêtre du choix de l'exemplaire
 function boutonsVenteHTML(e) {
-    if (e.promo) return ''; // une carte promo ne s'obtient qu'une fois : elle ne se vend pas
+    if (e.promo && e.exemplaires < 2) return ''; // une promo ne se vend qu'en doublon : on garde toujours un exemplaire
     const variantes = variantesPossedees(e);
     if (variantes.length === 1) {
         const [variante] = variantes[0];
@@ -2292,7 +2267,7 @@ function afficherRegles() {
             <td>${r.promo ? '—' : chanceRarete(r)}</td>
             <td>${r.chanceGarantie ? `${nombre(r.chanceGarantie)} %` : '—'}</td>
             <td>${r.promo ? '—' : `${nombre(r.chanceDuel)} %`}</td>
-            <td>${r.promo ? '—' : `${r.revente} ${PIECE}`}</td>
+            <td>${r.revente} ${PIECE}${r.promo ? ` <span class="gris">(${t('doublons')})</span>` : ''}</td>
             <td>${r.promo ? '—' : `${nombre(r.prix)} ${PIECE}`}</td>
             <td>${nombreDeRarete(r.id)} / ${nombre(totalDeRarete(r.id))}</td>
         </tr>`).join('');
@@ -2566,7 +2541,7 @@ const SUCCES = [
     { id: 'roi-draft', nom: t('Roi du draft'), description: t('Gagner 30 drafts'), cible: 30, recompense: { prestiges: 1 }, valeur: () => etat.stats.draftsGagnes },
     // Commerce
     { id: 'marchand', nom: t('Marchand'), description: t('Revendre un doublon'), cible: 1, recompense: { pieces: 10 }, valeur: () => etat.stats.ventes },
-    { id: 'grossiste', nom: t('Grossiste'), description: t('Revendre 100 doublons'), cible: 100, recompense: { pieces: 100 }, valeur: () => etat.stats.ventes },
+    { id: 'grossiste', nom: t('Grossiste'), description: t('Revendre 10 doublons'), cible: 10, recompense: { pieces: 100 }, valeur: () => etat.stats.ventes },
     // Quêtes du jour
     { id: 'aventurier', nom: t('Aventurier'), description: t('Terminer 10 quêtes du jour'), cible: 10, recompense: { boosters: 10 }, valeur: () => etat.stats.quetes },
     { id: 'queteur', nom: t('Quêteur assidu'), description: t('Terminer les 3 quêtes du jour, 7 jours'), cible: 7, recompense: { prestiges: 2 }, valeur: () => etat.stats.joursQuetes },
@@ -2593,13 +2568,13 @@ const NIVEAUX_QUETE = [
 const QUETES = [
     { id: 'f-boosters', niveau: 'facile', texte: t('Ouvrir 3 boosters'), evenement: 'booster', cible: 3, recompense: { pieces: 50 } },
     { id: 'f-duel', niveau: 'facile', texte: t('Gagner 1 duel'), evenement: 'duel', cible: 1, recompense: { boosters: 1 } },
-    { id: 'f-ventes', niveau: 'facile', texte: t('Revendre 5 doublons'), evenement: 'vente', cible: 5, recompense: { pieces: 50 } },
+    { id: 'f-nouvelles', niveau: 'facile', texte: t('Découvrir 10 nouvelles cartes en boosters'), evenement: 'nouvelle', cible: 10, recompense: { pieces: 50 } },
     { id: 'f-draft', niveau: 'facile', texte: t('Jouer 1 draft'), evenement: 'draft-joue', cible: 1, recompense: { boosters: 1 } },
     { id: 'm-boosters', niveau: 'moyenne', texte: t('Ouvrir 10 boosters'), evenement: 'booster', cible: 10, recompense: { boosters: 3 } },
     { id: 'm-duels', niveau: 'moyenne', texte: t('Gagner 3 duels'), evenement: 'duel', cible: 3, recompense: { pieces: 100 } },
     { id: 'm-decks', niveau: 'moyenne', texte: t('Gagner 1 duel de decks'), evenement: 'decks-gagne', cible: 1, recompense: { pieces: 100 } },
     { id: 'm-epique', niveau: 'moyenne', texte: t('Obtenir une carte Épique ou mieux'), evenement: 'epique', cible: 1, recompense: { boosters: 3 } },
-    { id: 'm-nouvelles', niveau: 'moyenne', texte: t('Découvrir 3 nouvelles cartes en boosters'), evenement: 'nouvelle', cible: 3, recompense: { pieces: 100 } },
+    { id: 'm-nouvelles', niveau: 'moyenne', texte: t('Découvrir 40 nouvelles cartes en boosters'), evenement: 'nouvelle', cible: 40, recompense: { pieces: 100 } },
     { id: 'm-draft', niveau: 'moyenne', texte: t('Gagner 1 draft'), evenement: 'draft-gagne', cible: 1, recompense: { boosters: 3 } },
     { id: 'd-prestige', niveau: 'difficile', texte: t('Ouvrir 1 booster Prestige'), evenement: 'prestige', cible: 1, recompense: { pieces: 200 } },
     { id: 'd-legendaire', niveau: 'difficile', texte: t('Obtenir une Légendaire ou une Mythique'), evenement: 'legendaire', cible: 1, recompense: { prestiges: 1 } },
@@ -2768,7 +2743,7 @@ function verserRecompense(r) {
     if (r.boosters) etat.charges.standard.charges += r.boosters;
     if (r.prestiges) etat.charges.prestige.charges += r.prestiges;
     if (r.fullArt) {
-        carte = piocher(tirerRarete('chance', HAUTES_RARETES));
+        carte = piocherNouvelle(tirerRarete('chance', HAUTES_RARETES));
         nouvelle = ajouterACollection(carte, false, true);
     }
     // La carte secrète arrive elle aussi dans un paquet à ouvrir
