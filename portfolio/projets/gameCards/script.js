@@ -1244,6 +1244,9 @@ function majPaquets() {
     const reserve = dispo.standard;
     $('#btn-tout-ouvrir').hidden = reserve < 2;
     $('#btn-tout-ouvrir').textContent = t('Ouvrir les {n} boosters gratuits', { n: reserve });
+    // Pareil pour les Prestige (la réserve peut dépasser 1 grâce aux récompenses)
+    $('#btn-tout-ouvrir-prestige').hidden = dispo.prestige < 2;
+    $('#btn-tout-ouvrir-prestige').textContent = t('Ouvrir les {n} Prestige', { n: dispo.prestige });
 
     $('#lien-accueil').classList.toggle('pret', Object.values(dispo).some(n => n > 0));
 }
@@ -3605,6 +3608,8 @@ function afficherCadeaux() {
         ? tn(etat.cadeaux.length, '{n} booster à ouvrir', '{n} boosters à ouvrir')
         : t('Aucun booster à ouvrir');
     $('#cadeaux-vide').hidden = parSerie.size > 0;
+    $('#btn-ouvrir-cadeaux').hidden = etat.cadeaux.length < 2;
+    $('#btn-ouvrir-cadeaux').textContent = t('Ouvrir les {n} boosters', { n: etat.cadeaux.length });
     $('#cadeaux-grille').replaceChildren(...[...parSerie].sort(([a], [b]) => a - b).map(([serie, n]) => {
         const paquet = paquetPromo(serie);
         paquet.hidden = false;
@@ -3633,6 +3638,37 @@ function ouvrirCadeau(serie) {
     verifierSucces();
     retourApresOuverture = '#cadeaux';
     ouvrirPaquetPromo(carte, nouvelle, serie);
+}
+
+// Tous les cadeaux d'un coup : les promos sont tirées maintenant, puis un seul paquet à déchirer
+// (celui de la série la plus présente), la pile des promos à faire défiler et le récapitulatif
+function ouvrirTousLesCadeaux() {
+    if (etat.cadeaux.length < 2 || ouvertureEnCours || !donneesPretes()) return;
+    const series = etat.cadeaux;
+    etat.cadeaux = [];
+    const tirage = series.map(serie => {
+        const carte = creerCarte(jeuxParId.get(auHasard(promosDeSerie(serie))));
+        return { carte, fullArt: true, holo: false, ex: false, nouvelle: ajouterACollection(carte, false, true) };
+    });
+    sauvegarder();
+    majBadgeCadeaux();
+    verifierSucces();
+    retourApresOuverture = '#cadeaux';
+    const compte = new Map();
+    for (const serie of series) compte.set(serie, (compte.get(serie) || 0) + 1);
+    const principale = [...compte].sort((a, b) => b[1] - a[1])[0][0];
+
+    fileFullArt = fileFullArt.then(async () => {
+        while (ouvertureEnCours) await attendre(300);
+        ouvertureEnCours = true;
+        location.hash = '#accueil';
+        afficherEcran('accueil');
+        debutOuverture(false);
+        const rang = `${t('{n} boosters promo', { n: series.length })} · `;
+        await dechirerPaquet(paquetPromo(principale), false, rang);
+        if (!seance.passer) await defilerPile(tirage, rang);
+        finOuverture(tirage, 1); // récapitulatif simple : les promos ne se rangent pas avec les autres raretés
+    });
 }
 
 // Booster d'une série (onglet Cadeaux) : son paquet à déchirer, puis la promo se révèle
@@ -3987,6 +4023,8 @@ function init() {
     $('#paquet-prestige').addEventListener('click', () => cliquerPaquet(TYPES_BOOSTER.prestige));
     $('#btn-tout-ouvrir').addEventListener('click', () =>
         ouvrirBooster('gratuit', chargesDispo(TYPES_BOOSTER.standard), TYPES_BOOSTER.standard));
+    $('#btn-tout-ouvrir-prestige').addEventListener('click', () =>
+        ouvrirBooster('gratuit', chargesDispo(TYPES_BOOSTER.prestige), TYPES_BOOSTER.prestige));
     // Fenêtre d'achat (plus de booster gratuit)
     $('#modale-contenu').addEventListener('click', e => {
         const bouton = e.target.closest('[data-acheter-booster]');
@@ -4104,6 +4142,7 @@ function init() {
         const paquet = e.target.closest('[data-cadeau]');
         if (paquet) ouvrirCadeau(Number(paquet.dataset.cadeau));
     });
+    $('#btn-ouvrir-cadeaux').addEventListener('click', ouvrirTousLesCadeaux);
     majBadgeCadeaux();
     // Jeu resté ouvert : la récompense du lendemain est proposée au retour sur l'onglet
     document.addEventListener('visibilitychange', () => {
