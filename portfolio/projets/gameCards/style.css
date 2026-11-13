@@ -349,6 +349,22 @@ main {
 .btn-or .piece { filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3)); }
 .btn-grand { padding: 0.9rem 2rem; font-size: 1.05rem; }
 
+/* Barre de fin de partie (les 4 modes) : « Rejouer » en grand, le reste en petit sur une ligne */
+.fin-partie { display: grid; justify-items: center; gap: 0.8rem; width: 100%; }
+.fin-partie .btn-grand { display: inline-flex; align-items: center; gap: 0.5rem; }
+.fin-partie kbd {
+    margin-left: 0.3rem;
+    padding: 0.1rem 0.4rem;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 6px;
+    font-family: "Space Mono", monospace;
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+@media (hover: none) { .fin-partie kbd { display: none; } } /* pas de clavier sur mobile */
+.fin-partie-liens { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+.btn-petit { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.85rem; font-size: 0.85rem; }
+
 /* =========================================================
    ACCUEIL — choix du booster
    ========================================================= */

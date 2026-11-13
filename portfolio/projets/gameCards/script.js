@@ -479,6 +479,12 @@ const ICONES = {
     medaille: '<svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="m8 0 1.669.864 1.858.282.842 1.68 1.337 1.32L13.4 6l.306 1.854-1.337 1.32-.842 1.68-1.858.282L8 12l-1.669-.864-1.858-.282-.842-1.68-1.337-1.32L2.6 6l-.306-1.854 1.337-1.32.842-1.68L6.331.864z"/><path d="M4 11.794V16l4-1 4 1v-4.206l-2.018.306L8 13.126 6.018 12.1z"/></svg>',
     trophee: '<svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5.5A.5.5 0 0 1 3 0h10a.5.5 0 0 1 .5.5q0 .807-.034 1.536a3 3 0 1 1-1.133 5.89c-.79 1.865-1.878 2.777-2.833 3.011v2.173l1.425.356c.194.048.377.135.537.255L13.3 15.1a.5.5 0 0 1-.3.9H3a.5.5 0 0 1-.3-.9l1.838-1.379c.16-.12.343-.207.537-.255L6.5 13.11v-2.173c-.955-.234-2.043-1.146-2.833-3.012a3 3 0 1 1-1.132-5.89A33 33 0 0 1 2.5.5m.099 2.54a2 2 0 0 0 .72 3.935c-.333-1.05-.588-2.346-.72-3.935m10.083 3.935a2 2 0 0 0 .72-3.935c-.133 1.59-.388 2.885-.72 3.935"/></svg>',
     sablier: '<svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 15a.5.5 0 1 1 0-1h1v-1a4.5 4.5 0 0 1 2.557-4.06c.29-.139.443-.377.443-.59v-.7c0-.213-.154-.451-.443-.59A4.5 4.5 0 0 1 3.5 3V2h-1a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-1v1a4.5 4.5 0 0 1-2.557 4.06c-.29.139-.443.377-.443.59v.7c0 .213.154.451.443.59A4.5 4.5 0 0 1 12.5 13v1h1a.5.5 0 0 1 0 1zm2-13v1c0 .537.12 1.045.337 1.5h6.326c.216-.455.337-.963.337-1.5V2zm3 6.35c0 .701-.478 1.236-1.011 1.492A3.5 3.5 0 0 0 4.5 13s.866-1.299 3-1.48zm1 0v3.17c2.134.181 3 1.48 3 1.48a3.5 3.5 0 0 0-1.989-3.158C8.978 9.586 8.5 9.052 8.5 8.351z"/></svg>',
+    // Fin de partie : rejouer, changer de deck, de difficulté (ou de série), de mode, revenir à l'accueil
+    rejouer: '<svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></svg>',
+    deck: '<svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="m14.12 10.163 1.715.858c.22.11.22.424 0 .534L8.267 15.34a.6.6 0 0 1-.534 0L.165 11.555a.299.299 0 0 1 0-.534l1.716-.858 5.317 2.659c.505.252 1.1.252 1.604 0l5.317-2.66zM7.733.063a.6.6 0 0 1 .534 0l7.568 3.784a.3.3 0 0 1 0 .535L8.267 8.165a.6.6 0 0 1-.534 0L.165 4.382a.299.299 0 0 1 0-.535z"/><path d="m14.12 6.576 1.715.858c.22.11.22.424 0 .534l-7.568 3.784a.6.6 0 0 1-.534 0L.165 7.968a.299.299 0 0 1 0-.534l1.716-.858 5.317 2.659c.505.252 1.1.252 1.604 0z"/></svg>',
+    reglages: '<svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path fill-rule="evenodd" d="M11.5 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M9.05 3a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0V3zM4.5 7a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M2.05 8a2.5 2.5 0 0 1 4.9 0H16v1H6.95a2.5 2.5 0 0 1-4.9 0H0V8zm9.45 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m-2.45 1a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0v-1z"/></svg>',
+    modes: '<svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5zM2.5 2a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5zm6.5.5A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5zM1 10.5A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5zm6.5.5A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5z"/></svg>',
+    accueil: '<svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5a.5.5 0 0 0 .5-.5v-4h2v4a.5.5 0 0 0 .5.5H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM2.5 14V7.707l5.5-5.5 5.5 5.5V14H10v-4a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5v4z"/></svg>',
 };
 // Couronne de laurier dorée : deux branches qui se croisent en bas, des paires de feuilles en amande
 // le long d'une courbe de Bézier. Le dégradé doré (#degrade-laurier) est défini une fois dans index.html.
@@ -2522,7 +2528,7 @@ function finDuel() {
     $('#duel-message').innerHTML += victoire
         ? annoncerVictoire(payerVictoire('duel', GAIN_DUEL), duel.joueur, duel.ordi)
         : t('<br><b class="defaite">Défaite {a} à {b}.</b> Retente ta chance !', { a: duel.joueur, b: duel.ordi });
-    actionsDuel(`<button class="btn btn-principal btn-grand" data-action="demarrer">${t('Rejouer')}</button>`);
+    actionsDuel(finPartieHTML({ rejouer: 'data-action="demarrer"' }));
     jouerSon(victoire ? 'succes' : 'mauvaise');
     verifierSucces();
 }
@@ -3357,6 +3363,27 @@ function choixDeckHTML() {
         ${cartes.length > d.limite ? `<div class="plus"><button class="btn" data-deck-action="plus">${t('Afficher plus')}</button></div>` : ''}`;
 }
 
+// Barre de fin de partie, la même dans les 4 modes : « Rejouer » en grand (Entrée le déclenche aussi),
+// puis en petit : changer de deck, de difficulté ou de série (selon le mode), de mode, et l'accueil.
+// `rejouer` : attribut du bouton principal ; `deck` : bouton « Changer de deck » ; `reglage` : { action, texte }
+function finPartieHTML({ rejouer, texte = t('Rejouer'), deck = false, reglage = null }) {
+    const petit = (attribut, icone, libelle) => `<button class="btn btn-petit" ${attribut}>${ICONES[icone]} ${libelle}</button>`;
+    return `
+        <div class="fin-partie">
+            <button class="btn btn-principal btn-grand" ${rejouer} data-rejouer>${ICONES.rejouer} ${texte}<kbd aria-hidden="true">${t('Entrée')}</kbd></button>
+            <div class="fin-partie-liens">
+                ${deck ? petit('data-deck-action="rejouer"', 'deck', t('Changer de deck')) : ''}
+                ${reglage ? petit(`data-deck-action="${reglage.action}"`, 'reglages', reglage.texte) : ''}
+                ${petit('data-fin="modes"', 'modes', t('Changer de mode'))}
+                ${petit('data-fin="accueil"', 'accueil', t('Accueil'))}
+            </div>
+        </div>`;
+}
+
+// Duel de decks et Défi Promo : relancer tout de suite avec le même deck, sans repasser par la composition
+// (en Défi Promo, le prix s'affiche quand les défis gratuits du jour sont épuisés)
+const texteRejouerDeck = () => `${t('Rejouer avec ce deck')}${deckDuel.mode === 'promo' && !defisGratuitsRestants() ? ` · ${PRIX_DEFI} ${PIECE}` : ''}`;
+
 function actionsDeckHTML() {
     const d = deckDuel;
     if (d.verrou) return '';
@@ -3366,15 +3393,15 @@ function actionsDeckHTML() {
     if (d.actions === 'suivante') return `<button class="btn btn-principal btn-grand" data-deck-action="suivante">${t('Manche suivante')}</button>`;
     if (d.actions === 'decisive') return `<button class="btn btn-principal btn-grand" data-deck-action="decisive">${t('Révéler les dernières cartes')}</button>`;
     if (d.actions === 'fin' && d.mode === 'promo') {
-        return `<button class="btn btn-principal btn-grand" data-deck-action="rejouer">${t('Rejouer')}</button>
-            <button class="btn" data-deck-action="series">${t('Changer de série')}</button>`;
+        return finPartieHTML({ rejouer: 'data-deck-action="rejouer-direct"', texte: texteRejouerDeck(), deck: true,
+            reglage: { action: 'series', texte: t('Changer de série') } });
     }
     if (d.actions === 'fin' && d.mode === 'draft') {
-        return `<button class="btn btn-principal btn-grand" data-deck-action="draft">${t('Nouveau draft')}</button>`;
+        return finPartieHTML({ rejouer: 'data-deck-action="draft"', texte: t('Nouveau draft') });
     }
     if (d.actions === 'fin') {
-        return `<button class="btn btn-principal btn-grand" data-deck-action="rejouer">${t('Rejouer')}</button>
-            <button class="btn" data-deck-action="niveaux">${t('Changer de difficulté')}</button>`;
+        return finPartieHTML({ rejouer: 'data-deck-action="rejouer-direct"', texte: texteRejouerDeck(), deck: true,
+            reglage: { action: 'niveaux', texte: t('Changer de difficulté') } });
     }
     return '';
 }
@@ -4016,6 +4043,11 @@ function actionDuelDecks(element) {
     } else if (deckAction === 'rejouer') {
         d.choix = d.choix.filter(id => etat.collection[id]);
         d.etape = 'deck';
+    } else if (deckAction === 'rejouer-direct') {
+        // Une carte du deck n'est plus dans la collection : retour à la composition
+        d.choix = d.choix.filter(id => etat.collection[id]);
+        if (d.choix.length === TAILLE_DECK) return lancerPartieDecks();
+        d.etape = 'deck';
     }
     afficherDuelDecks();
 }
@@ -4321,6 +4353,29 @@ function init() {
         if (document.visibilityState !== 'visible' || !donneesPretes()) return;
         majBadgeSucces();
         if (!ouvertureEnCours) proposerConnexion();
+    });
+
+    // Fin de partie (les 4 modes) : « Changer de mode » ramène au choix des modes, « Accueil » aux boosters
+    document.addEventListener('click', e => {
+        const fin = e.target.closest('[data-fin]');
+        if (!fin) return;
+        // La partie terminée ne réapparaît pas en revenant dans ce mode : composition du deck, ou nouveau draft
+        if (deckDuel.actions === 'fin') {
+            deckDuel.actions = null;
+            if (deckDuel.mode === 'draft') deckDuel.mode = '';
+            else deckDuel.etape = 'deck';
+        }
+        if (fin.dataset.fin === 'modes') changerModeJeu(null);
+        else location.hash = '#accueil';
+    });
+    // Entrée relance la partie quand la barre de fin est affichée (sauf dans un champ, une fenêtre ou sur un bouton)
+    document.addEventListener('keydown', e => {
+        if (e.key !== 'Enter' || e.repeat || e.target.closest('input, textarea, select, button, a')) return;
+        if (document.querySelector('dialog[open]') || $('#ecran-duel').hidden) return;
+        const rejouer = [...document.querySelectorAll('#ecran-duel [data-rejouer]')].find(b => b.offsetParent !== null);
+        if (!rejouer) return;
+        e.preventDefault();
+        rejouer.click();
     });
 
     // Duel

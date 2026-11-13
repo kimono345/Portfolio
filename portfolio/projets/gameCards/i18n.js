@@ -400,6 +400,11 @@ const EN = {
     '<br><b class="victoire">Victoire {a} à {b} !</b> Tu gagnes {n} pièces.': '<br><b class="victoire">Victory {a} to {b}!</b> You win {n} coins.',
     '<br><b class="defaite">Défaite {a} à {b}.</b> Retente ta chance !': '<br><b class="defaite">Defeat {a} to {b}.</b> Try again!',
     'Rejouer': 'Play again',
+    'Rejouer avec ce deck': 'Replay with this deck',
+    'Changer de deck': 'Change deck',
+    'Changer de mode': 'Change mode',
+    'Accueil': 'Home',
+    'Entrée': 'Enter',
 
     ' (première victoire du jour : ×3)': ' (first win of the day: ×3)',
     ' (gains réduits de moitié pour aujourd’hui)': ' (rewards halved for today)',
