@@ -3064,6 +3064,7 @@ function changerModeJeu(mode) {
     if (mode === 'draft' && deckDuel.mode !== 'draft') nouveauDraft();
     if (mode === 'promo' && deckDuel.mode !== 'promo') Object.assign(deckDuel, { mode: 'promo', etape: 'serie' });
     if (surLaTable) afficherDuelDecks();
+    else $('#ecran-duel').classList.remove('en-partie');
     window.scrollTo(0, 0); // nouveau mode (ou retour au choix des modes) : en haut de la page
 }
 
@@ -3466,29 +3467,37 @@ function plateauDeckHTML() {
                 ${carteOrdi}${total(c?.ordi)}
             </div>
         </div>`;
+    // Comme une table de jeu, à la hauteur de l'écran : score et bonus, la main de l'ordinateur en éventail en haut,
+    // la table au milieu, ta main en éventail en bas
     return `
-        <div class="duel-score">
-            <div class="duel-joueur-score"><span>${t('Toi')}</span><div class="pips">${pips('moi')}</div></div>
-            <div class="duel-infos"><div class="duel-vs">VS</div><span>${d.niveau.nom}</span></div>
-            <div class="duel-joueur-score"><span>${t('Ordi')}</span><div class="pips">${pips('ordi')}</div></div>
-        </div>
-        ${synergiesPartieHTML()}
-        ${regleDefiHTML()}
-        <div class="decks-main decks-ordi">${mainOrdi.map(() => dos).join('')}</div>
-        ${table}
-        <p class="duel-message${d.actions === 'fin' ? ' resultat-final' : ''}">${d.message}</p>
-        <div class="duel-actions">${actionsDeckHTML()}</div>
-        <div class="decks-main">${d.moi.map((carte, i) => `
-            <button class="carte-main${d.carte === i ? ' choisie' : ''}" data-carte-main="${i}"${d.attente && !d.verrou ? '' : ' disabled'}>
-                ${carteHTML(carte, { bonus: bonusCombat(carte) })}
-            </button>`).join('')}</div>`;
+        <div class="plateau">
+            <div class="plateau-haut">
+                <div class="duel-score">
+                    <div class="duel-joueur-score"><span>${t('Toi')}</span><div class="pips">${pips('moi')}</div></div>
+                    <div class="duel-infos"><div class="duel-vs">VS</div><span>${d.niveau.nom}</span></div>
+                    <div class="duel-joueur-score"><span>${t('Ordi')}</span><div class="pips">${pips('ordi')}</div></div>
+                </div>
+                ${synergiesPartieHTML()}
+            </div>
+            <div class="decks-main decks-ordi eventail">${mainOrdi.map(() => dos).join('')}</div>
+            ${table}
+            <p class="duel-message${d.actions === 'fin' ? ' resultat-final' : ''}">${d.message}</p>
+            <div class="duel-actions">${actionsDeckHTML()}</div>
+            <div class="decks-main eventail">${d.moi.map((carte, i) => `
+                <button class="carte-main${d.carte === i ? ' choisie' : ''}" data-carte-main="${i}"${d.attente && !d.verrou ? '' : ' disabled'}>
+                    ${carteHTML(carte, { bonus: bonusCombat(carte) })}
+                </button>`).join('')}</div>
+        </div>`;
 }
 
 // Synergies de la partie, sous le score. Celle de l'ordinateur ne dit pas son thème (ce serait un indice sur ses cartes)
+// Bonus de la partie en pastilles : synergies, et la règle du Défi Promo en version courte (la règle complète au survol)
 function synergiesPartieHTML() {
     const { moi, ordi } = deckDuel.synergies ?? {};
-    if (!moi && !ordi) return '';
+    const defi = deckDuel.mode === 'promo' && deckDuel.niveau ? defiDeSerie(deckDuel.niveau.serie) : null;
+    if (!moi && !ordi && !defi) return '';
     return `<p class="synergies-partie">
+        ${defi ? `<span class="synergie-deck regle-courte" title="${echapper(defi.regle)}">🎁 ${defi.court}</span>` : ''}
         ${moi ? `<span class="synergie-deck active">${t('✦ Ta synergie « {tag} » : +{n}', { tag: echapper(moi), n: BONUS_SYNERGIE })}</span>` : ''}
         ${ordi ? `<span class="synergie-deck active par-ordi">${t('✦ Synergie de l’ordinateur : +{n}', { n: BONUS_SYNERGIE })}</span>` : ''}
     </p>`;
@@ -3500,6 +3509,8 @@ let etapeAffichee = null;
 function afficherDuelDecks() {
     const d = deckDuel;
     if (d.etape !== etapeAffichee) window.scrollTo(0, 0);
+    // En partie, l’écran Jouer passe en mode compact (titre masqué, plateau à la hauteur de l’écran)
+    $('#ecran-duel').classList.toggle('en-partie', d.etape === 'partie');
     etapeAffichee = d.etape;
     const zone = $('#mode-decks');
     if (d.etape === 'niveau') zone.innerHTML = niveauxDeckHTML();
