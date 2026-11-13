@@ -3702,14 +3702,26 @@ body.konami { animation: konami 1.6s ease-in-out; }
 /* En partie : le titre « Jouer » disparaît, le bouton des modes se range en haut à gauche */
 #ecran-duel { position: relative; }
 #ecran-duel.en-partie .titre-ecran { display: none; }
-#ecran-duel.en-partie .retour-modes { position: absolute; top: 0; left: 0; margin: 0; z-index: 2; }
+#ecran-duel.en-partie .retour-modes {
+    position: absolute;
+    top: 0.5rem;
+    left: max(0px, calc(50% - 340px)); /* à gauche du score, sur la même ligne */
+    margin: 0;
+    z-index: 2;
+    padding: 0.35rem 0.8rem;
+    border-color: transparent;
+    background: transparent;
+    color: var(--texte-doux);
+    font-size: 0.85rem;
+}
+#ecran-duel.en-partie .retour-modes:hover { color: var(--texte); background: var(--fond-3); }
 main:has(#ecran-duel.en-partie:not([hidden])) { padding-top: 0.9rem; padding-bottom: 0.6rem; }
 
 .plateau {
     /* Largeur des cartes calculée sur la hauteur de l'écran (une carte fait 1,4 fois sa largeur) :
        ce qui reste après l'en-tête, le score, la main adverse, l'annonce, le message et les boutons
        se partage entre la table (55 %) et ta main (45 %) */
-    --reste: calc(100dvh - 500px);
+    --reste: calc(100dvh - 440px);
     --carte-table: clamp(110px, calc(var(--reste) * 0.55 / 1.4), 210px);
     --carte-main: clamp(90px, calc(var(--reste) * 0.45 / 1.4), 160px);
 }
@@ -3723,6 +3735,8 @@ main:has(#ecran-duel.en-partie:not([hidden])) { padding-top: 0.9rem; padding-bot
 }
 .plateau .decks-combat { grid-template-columns: repeat(2, var(--carte-table)); gap: 1.2rem; }
 .plateau .stat-annoncee { min-height: 2.5rem; margin-bottom: 1.8rem; padding: 0.35rem 1.2rem; font-size: 1.1rem; }
+/* Rien d’annoncé : le bandeau ne garde que la place des titres « Ta carte » / « Ordinateur » */
+.plateau .stat-annoncee.vide { min-height: 0; height: 0; padding: 0; border: 0; margin-bottom: 1.7rem; }
 .plateau .duel-message { min-height: 2.4em; margin: 0.6rem auto 0.4rem; }
 
 /* Mains en éventail : les cartes se chevauchent et s'ouvrent autour d'un point sous la main */
@@ -3730,36 +3744,45 @@ main:has(#ecran-duel.en-partie:not([hidden])) { padding-top: 0.9rem; padding-bot
 .eventail > * {
     --r: 0deg;
     --y: 0px;
+    --s: 1;
     position: relative;
     flex: none;
     transform-origin: 50% 120%;
-    transform: rotate(var(--r)) translateY(var(--y));
+    transform: rotate(var(--r)) translateY(var(--y)) scale(var(--s));
     transition: transform 0.2s;
 }
-.eventail > :nth-child(1):not(:only-child) { --r: -9deg; --y: 6px; }
-.eventail > :nth-child(3) { --r: 9deg; --y: 6px; }
-.eventail > :nth-child(2):last-child { --r: 6deg; --y: 2px; }
-.eventail > :nth-child(1):nth-last-child(2) { --r: -6deg; --y: 2px; }
-.eventail > * + * { margin-left: calc(var(--largeur-eventail) * -0.22); }
+.eventail > :nth-child(1):not(:only-child) { --r: -7deg; --y: 5px; }
+.eventail > :nth-child(3) { --r: 7deg; --y: 5px; }
+.eventail > :nth-child(2):last-child { --r: 5deg; --y: 2px; }
+.eventail > :nth-child(1):nth-last-child(2) { --r: -5deg; --y: 2px; }
+.eventail > * + * { margin-left: calc(var(--largeur-eventail) * -0.36); }
 
-/* Ta main, en bas : la carte survolée ou choisie se lève et passe devant */
+/* Ta main, en bas : la carte survolée s'agrandit et passe devant ; la carte choisie se redresse et reste levée */
 .plateau > .eventail:last-child { --largeur-eventail: var(--carte-main); margin-top: 0.6rem; padding-top: 0.8rem; }
 .plateau > .eventail:last-child .carte-main { width: var(--carte-main); }
-.eventail .carte-main:not(:disabled):hover { --y: -14px; z-index: 2; transform: rotate(var(--r)) translateY(var(--y)); }
-.eventail .carte-main.choisie { --y: -22px; z-index: 3; transform: rotate(0deg) translateY(var(--y)); }
+.eventail .carte-main:not(:disabled):hover {
+    --y: -18px;
+    --s: 1.22;
+    z-index: 4;
+    transform: rotate(var(--r)) translateY(var(--y)) scale(var(--s));
+}
+.eventail .carte-main.choisie { --y: -22px; --s: 1.1; z-index: 3; transform: rotate(0deg) translateY(var(--y)) scale(var(--s)); }
+.eventail .carte-main.choisie:not(:disabled):hover { --s: 1.22; transform: rotate(0deg) translateY(var(--y)) scale(var(--s)); }
 
 /* Main de l'ordinateur, en haut : petits dos de cartes, l'éventail tourné vers le bas */
 .plateau .decks-ordi { --largeur-eventail: 50px; min-height: 0; margin-bottom: 0.4rem; }
 .plateau .decks-ordi .dos-carte { width: 50px; transform-origin: 50% -20%; }
-.plateau .decks-ordi > :nth-child(1):not(:only-child) { --r: 9deg; }
-.plateau .decks-ordi > :nth-child(3) { --r: -9deg; }
-.plateau .decks-ordi > :nth-child(2):last-child { --r: -6deg; }
-.plateau .decks-ordi > :nth-child(1):nth-last-child(2) { --r: 6deg; }
+.plateau .decks-ordi > :nth-child(1):not(:only-child) { --r: 7deg; }
+.plateau .decks-ordi > :nth-child(3) { --r: -7deg; }
+.plateau .decks-ordi > :nth-child(2):last-child { --r: -5deg; }
+.plateau .decks-ordi > :nth-child(1):nth-last-child(2) { --r: 5deg; }
 .plateau .decks-ordi > * { --y: 0px; }
 
 /* Écran étroit : les cartes se règlent sur la largeur */
 @media (max-width: 760px) {
     .plateau { --carte-table: clamp(110px, 38vw, 200px); --carte-main: clamp(90px, 33vw, 150px); }
+    /* Pas la place à côté du score : le bouton des modes repasse au-dessus */
+    #ecran-duel.en-partie .retour-modes { position: static; margin: 0 auto 0.4rem; }
 }
 /* Dos de carte (main de l'ordinateur, carte posée face cachée) */
 .dos-carte {
