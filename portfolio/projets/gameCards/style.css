@@ -1336,12 +1336,20 @@ main {
     100% { transform: translateY(130px) rotate(calc(var(--sens, 1) * -6deg)) scale(0.94); opacity: 0; }
 }
 
-/* Dans la pile, la première carte arrive face cachée et se retourne */
-.pile-carte.retournement { animation: retournement 0.5s ease-in-out both; }
-.pile-carte .dos-retourne { position: absolute; inset: 0; z-index: 5; animation: dos-retourne 0.5s both; }
+/* Dans la pile, toutes les cartes arrivent face cachée ; celle du dessus se soulève, pivote en 3D
+   (le dos laisse place à la face à mi-course) et retombe avec un éclat de lumière.
+   « backwards » : l'animation ne bloque pas ensuite le glissé de la carte (translate / rotate). */
+.pile { perspective: 1100px; }
+.pile-carte .dos-retourne { position: absolute; inset: 0; z-index: 5; border-radius: 14px; }
 .pile-carte .dos-retourne span { font-size: 1.6rem; padding: 0.3rem 0.7rem; border-width: 3px; }
-@keyframes retournement { 0%, 100% { scale: 1 1; } 50% { scale: 0 1; } }
-@keyframes dos-retourne { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+.pile-carte.retournement { z-index: 10 !important; animation: retournement 0.6s cubic-bezier(0.45, 0, 0.3, 1) backwards; }
+.pile-carte.retournement .dos-retourne { animation: dos-retourne 0.6s backwards; }
+@keyframes retournement {
+    0% { rotate: y 0deg; translate: 0 0; scale: 1; filter: none; }
+    50% { rotate: y 90deg; translate: 0 -16px; scale: 1.06; filter: brightness(1.7); }
+    100% { rotate: y 0deg; translate: 0 0; scale: 1; filter: none; }
+}
+@keyframes dos-retourne { 0%, 49.9% { opacity: 1; } 50%, 100% { opacity: 0; } }
 
 @media (prefers-reduced-motion: reduce) {
     .paquet-seul { translate: none !important; }

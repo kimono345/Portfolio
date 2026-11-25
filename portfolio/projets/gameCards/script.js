@@ -1729,11 +1729,16 @@ async function defilerPile(cartes, rang) {
     const elements = [...pile.children];
     // Juste après l'ouverture du paquet : la pile arrive face cachée (comme les cartes sorties du paquet)
     // et la première carte se retourne
+    // Toute la pile est face cachée (sinon on verrait la carte du dessous pendant le retournement),
+    // la carte du dessus pivote en 3D, puis les dos des autres cartes s'effacent (elles sont cachées dessous)
     if (seance.retourner && elements[0]) {
         seance.retourner = false;
+        for (const element of elements) element.insertAdjacentHTML('beforeend', '<span class="dos-carte dos-retourne" aria-hidden="true"><span>GC</span></span>');
         elements[0].classList.add('retournement');
-        elements[0].insertAdjacentHTML('beforeend', '<span class="dos-carte dos-retourne" aria-hidden="true"><span>GC</span></span>');
-        setTimeout(() => elements[0].querySelector('.dos-retourne')?.remove(), 600);
+        setTimeout(() => {
+            elements[0].classList.remove('retournement');
+            pile.querySelectorAll('.dos-retourne').forEach(dos => dos.remove());
+        }, 650);
     }
 
     for (let i = 0; i < elements.length && !seance.passer; i++) {
