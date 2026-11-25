@@ -1117,16 +1117,30 @@ main {
 @keyframes eclair-full-art { from { opacity: 1; } to { opacity: 0; } }
 .paquet-seul { width: clamp(200px, 50vw, 260px); cursor: default; touch-action: none; }
 
-/* Déchirure : on attrape le bandeau du haut, il se soulève au fil du geste (--dechirure de 0 à 1),
-   en pivotant depuis le côté opposé au geste (--sens : 1 vers la droite, -1 vers la gauche) */
-.paquet-seul .paquet-haut {
-    cursor: grab;
-    transform-origin: calc(50% + var(--sens, 1) * 50%) 100%;
-    transform: rotate(calc(var(--sens, 1) * var(--dechirure, 0) * 20deg)) translateY(calc(var(--dechirure, 0) * -10px));
-    transition: transform 0.25s ease;
+/* Déchirure qui suit le doigt (--dechirure de 0 à 1, --sens : 1 vers la droite, -1 vers la gauche).
+   Le bandeau est coupé en deux morceaux (voir preparerDechirure) : la partie déjà découpée se soulève
+   et se recourbe autour du bout de la découpe, la partie encore attachée reste en place.
+   --dechirure est déclarée pour pouvoir s'animer : lâché trop tôt, le bandeau se recolle en douceur. */
+@property --dechirure { syntax: '<number>'; inherits: true; initial-value: 0; }
+.paquet-seul { transition: transform 0.18s ease-out, filter 0.3s, --dechirure 0.3s ease-out; }
+.paquet-seul.en-dechirure { transition: transform 0.18s ease-out, filter 0.3s; cursor: grabbing; }
+.bande, .bande-clip { position: absolute; inset: 0; pointer-events: none; }
+.bande-coupee .paquet-haut { border-bottom: 0; }
+/* La ligne lumineuse, la lumière et les étincelles suivent le bas du bandeau */
+.paquet-seul .geste-dechirer, .paquet-seul .lumiere-dechirure, .paquet-seul .etincelle-dechirure { top: 11%; }
+/* Chaque morceau ne garde que sa partie du bandeau */
+.bande-coupee .bande-clip {
+    clip-path: inset(-60% calc((1 + var(--sens, 1)) / 2 * (1 - var(--dechirure, 0)) * 100%) 0 calc((1 - var(--sens, 1)) / 2 * (1 - var(--dechirure, 0)) * 100%));
 }
-.paquet-seul.en-dechirure, .paquet-seul.en-dechirure .paquet-haut { cursor: grabbing; }
-.paquet-seul.en-dechirure .paquet-haut { transition: none; }
+.bande-attachee .bande-clip {
+    clip-path: inset(0 calc((1 - var(--sens, 1)) / 2 * var(--dechirure, 0) * 100%) 0 calc((1 + var(--sens, 1)) / 2 * var(--dechirure, 0) * 100%));
+}
+/* La partie découpée pivote autour du bout de la découpe (là où est le doigt) et s'éclaire comme une feuille d'alu */
+.bande-coupee {
+    transform-origin: calc(((1 + var(--sens, 1)) / 2 * var(--dechirure, 0) + (1 - var(--sens, 1)) / 2 * (1 - var(--dechirure, 0))) * 100%) 11%;
+    transform: rotate(calc(var(--sens, 1) * var(--dechirure, 0) * 26deg)) translateY(calc(var(--dechirure, 0) * -3px));
+    filter: brightness(calc(1 + var(--dechirure, 0) * 0.35)) drop-shadow(0 calc(var(--dechirure, 0) * 6px) 4px rgba(0, 0, 0, 0.45));
+}
 .paquet-seul.en-dechirure .geste-dechirer i { display: none; }
 /* Ligne lumineuse qui suit la découpe, depuis le bord où le geste a commencé */
 .geste-dechirer::after {
@@ -1141,7 +1155,7 @@ main {
     box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.85);
 }
 /* Rappel du geste (clic au lieu d'un glissé, ou lâché trop tôt) */
-.paquet-seul.indice .paquet-haut { animation: indice-dechirer 0.5s ease; }
+.paquet-seul.indice .bande { animation: indice-dechirer 0.5s ease; }
 .paquet-seul.indice .geste-dechirer i { animation-duration: 0.9s; }
 
 /* Indication du geste : un point lumineux glisse le long de la ligne de découpe */
@@ -1219,7 +1233,7 @@ main {
 
 /* Empilement : les cartes cachées derrière l'emballage, le bandeau du haut devant */
 .paquet-seul .paquet-corps { z-index: 1; }
-.paquet-seul .paquet-haut { z-index: 2; }
+.paquet-seul .bande { z-index: 2; }
 .paquet-seul .geste-dechirer, .paquet-seul .lumiere-dechirure { z-index: 3; }
 
 /* Lumière qui filtre par l'entaille, sur la partie déjà découpée, de plus en plus forte */
@@ -1279,18 +1293,21 @@ main {
 .cartes-sortent .dos-carte:nth-child(2) { rotate: 3deg; }
 .cartes-sortent .dos-carte span { font-size: 1.3rem; padding: 0.25rem 0.6rem; border-width: 3px; }
 
-/* Ouverture : le haut s'envole en tournoyant, la lumière éclate, les cartes montent, puis l'emballage tombe */
-.paquet-seul.dechire .paquet-haut { animation: haut-envole 0.75s cubic-bezier(0.25, 0.6, 0.45, 1) forwards; }
+/* Ouverture (environ 1,5 s) : le bandeau se détache et s'envole dans le sens du geste, la lumière éclate,
+   les cartes glissent lentement hors du paquet, l'emballage tombe, puis la pile descend au centre,
+   à la taille de la pile qui suit (le JS calcule --monte, --vers-centre et --echelle-pile) */
+.paquet-seul.dechire .bande-coupee { animation: bande-envole 0.65s cubic-bezier(0.3, 0.5, 0.5, 1) forwards; }
 .paquet-seul.dechire .lumiere-dechirure::before { animation: eclat-entaille 0.6s ease-out forwards; }
 .paquet-seul.dechire .lumiere-dechirure::after { animation: rayons-ouverture 1.1s ease-out forwards; }
-.paquet-seul.dechire .cartes-sortent { animation: cartes-sortent 0.7s 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.15) forwards; }
-.paquet-seul.dechire .paquet-corps { animation: corps-ouvert 1.15s ease-in forwards; }
+.paquet-seul.dechire .cartes-sortent { animation: cartes-sortent 1.3s 0.15s ease-in-out forwards; }
+.paquet-seul.dechire .cartes-sortent .dos-carte { rotate: 0deg; transition: rotate 0.4s 1s ease; }
+.paquet-seul.dechire .paquet-corps { animation: corps-ouvert 1.25s ease-in forwards; }
 .paquet-seul.dechire { filter: drop-shadow(0 0 50px rgba(255, 245, 215, 0.55)) brightness(1.12); transition: filter 0.3s; }
 
-@keyframes haut-envole {
-    0% { transform: rotate(calc(var(--sens, 1) * 20deg)) translateY(-10px); opacity: 1; }
-    40% { transform: translate(calc(var(--sens, 1) * 90px), -130px) rotate(calc(var(--sens, 1) * 75deg)); opacity: 1; }
-    100% { transform: translate(calc(var(--sens, 1) * 210px), -40px) rotate(calc(var(--sens, 1) * 160deg)); opacity: 0; }
+@keyframes bande-envole {
+    0% { translate: 0 0; rotate: 0deg; opacity: 1; }
+    35% { translate: calc(var(--sens, 1) * 70px) -90px; rotate: calc(var(--sens, 1) * 40deg); opacity: 1; }
+    100% { translate: calc(var(--sens, 1) * 190px) -20px; rotate: calc(var(--sens, 1) * 130deg); opacity: 0; }
 }
 @keyframes eclat-entaille {
     0% { left: 0; width: 100%; opacity: 1; scale: 1 1; }
@@ -1301,17 +1318,30 @@ main {
     0% { opacity: 0.9; scale: 0.5; rotate: 0deg; }
     100% { opacity: 0; scale: 1.7; rotate: 50deg; }
 }
+/* Les cartes montent doucement hors du paquet (derrière l'emballage), marquent un temps,
+   puis passent devant et descendent au centre en grandissant jusqu'à la taille de la pile */
 @keyframes cartes-sortent {
-    to { translate: 0 -62%; }
+    0% { translate: 0 0; scale: 1; z-index: 0; }
+    50% { translate: 0 var(--monte, -60%); scale: 1; z-index: 0; }
+    62% { translate: 0 var(--monte, -60%); scale: 1; z-index: 0; }
+    63% { z-index: 5; }
+    100% { translate: 0 var(--vers-centre, 0px); scale: var(--echelle-pile, 1); z-index: 5; }
 }
-/* Petit tassement quand le haut part, puis l'emballage glisse vers le bas et disparaît */
+/* Petit tassement quand le bandeau part, puis l'emballage glisse vers le bas et disparaît pendant que les cartes sont sorties */
 @keyframes corps-ouvert {
     0% { transform: none; opacity: 1; }
-    10% { transform: scale(1.03, 0.96); }
-    22% { transform: none; }
-    60% { transform: none; opacity: 1; }
-    100% { transform: translateY(110px) rotate(calc(var(--sens, 1) * -6deg)) scale(0.94); opacity: 0; }
+    8% { transform: scale(1.03, 0.96); }
+    18% { transform: none; }
+    62% { transform: none; opacity: 1; }
+    100% { transform: translateY(130px) rotate(calc(var(--sens, 1) * -6deg)) scale(0.94); opacity: 0; }
 }
+
+/* Dans la pile, la première carte arrive face cachée et se retourne */
+.pile-carte.retournement { animation: retournement 0.5s ease-in-out both; }
+.pile-carte .dos-retourne { position: absolute; inset: 0; z-index: 5; animation: dos-retourne 0.5s both; }
+.pile-carte .dos-retourne span { font-size: 1.6rem; padding: 0.3rem 0.7rem; border-width: 3px; }
+@keyframes retournement { 0%, 100% { scale: 1 1; } 50% { scale: 0 1; } }
+@keyframes dos-retourne { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
 
 @media (prefers-reduced-motion: reduce) {
     .paquet-seul { translate: none !important; }

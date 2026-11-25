@@ -1461,6 +1461,7 @@ function debutOuverture(multiple) {
     $('#ouverture-aide').hidden = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
     seance.passer = false;
+    seance.retourner = false;
 }
 
 // Fin de l'ouverture : récapitulatif des cartes et bilan (`gain` : pièces rapportées par les boosters)
@@ -1515,7 +1516,8 @@ function majTropheeGodPack() {
 // ---------- Séance d'ouverture (paquet à déchirer, pile de cartes) ----------
 
 // `reprendre` débloque l'étape en cours (geste, clic, clavier) ; `passer` saute tout jusqu'au récapitulatif
-const seance = { passer: false, reprendre: null };
+// `retourner` : le paquet vient d'être ouvert, la première carte de la pile arrive face cachée et se retourne
+const seance = { passer: false, reprendre: null, retourner: false };
 
 function passerOuverture() {
     seance.passer = true;
@@ -1541,7 +1543,32 @@ function clonerPaquet(modele) {
         <span class="geste-dechirer" aria-hidden="true"><i></i></span>
         <span class="lumiere-dechirure" aria-hidden="true"></span>
         <span class="cartes-sortent" aria-hidden="true">${'<span class="dos-carte"><span>GC</span></span>'.repeat(3)}</span>`);
+    preparerDechirure(paquet);
     return paquet;
+}
+
+// Ligne de déchirure irrégulière, tirée au hasard pour chaque paquet : le bandeau du haut est coupé en deux morceaux
+// (la partie déjà découpée, qui se soulève, et celle encore attachée), et le haut de l'emballage reçoit le bord
+// complémentaire, qui apparaît quand le bandeau part. Hauteurs en % du paquet : bandeau de 12 %, déchirure entre 9 et 12 %.
+function preparerDechirure(paquet) {
+    const haut = paquet.querySelector('.paquet-haut');
+    const corps = paquet.querySelector('.paquet-corps');
+    if (!haut || !corps) return;
+    const segments = 28;
+    const points = Array.from({ length: segments + 1 }, (_, i) => ({
+        x: (i / segments) * 100,
+        y: 9 + (i % 2 ? 0.3 : 1.1) + Math.random() * 1.5, // dents alternées, plus ou moins profondes
+    }));
+    const bordHaut = points.map(p => `${p.x.toFixed(1)}% ${((p.y / 12) * 100).toFixed(1)}%`).reverse();
+    const bordCorps = points.map(p => `${p.x.toFixed(1)}% ${(((p.y - 9) / 91) * 100).toFixed(2)}%`);
+    corps.style.clipPath = `polygon(${bordCorps.join(', ')}, 100% 100%, 0 100%)`;
+    const morceau = cote => `<span class="bande bande-${cote}" aria-hidden="true"><span class="bande-clip">${haut.outerHTML}</span></span>`;
+    haut.insertAdjacentHTML('afterend', morceau('attachee') + morceau('coupee'));
+    haut.remove();
+    // Les deux morceaux couvrent jusqu'au bas de la déchirure (le paquet a l'air intact au repos) ;
+    // seul le morceau découpé a le bord déchiqueté
+    for (const bandeau of paquet.querySelectorAll('.bande .paquet-haut')) bandeau.style.height = '12%';
+    paquet.querySelector('.bande-coupee .paquet-haut').style.clipPath = `polygon(0 0, 100% 0, ${bordHaut.join(', ')})`;
 }
 
 // Part de la largeur du paquet à parcourir le long du haut pour le déchirer
@@ -1620,10 +1647,23 @@ async function dechirerPaquet(modele, divin, rang) {
     vibrer([18, 40, 30]);
     if (divin) await revelationGodPack(paquet);
     paquet.classList.remove('divin');
-    // Le haut s'envole en tournoyant, la lumière éclate, les cartes montent hors du paquet, puis l'emballage tombe
+    // Trajet des cartes : elles montent hors du paquet (--monte), puis rejoignent le centre de la scène
+    // à la taille de la pile qui va suivre (--vers-centre, --echelle-pile)
+    const cartes = paquet.querySelector('.cartes-sortent');
+    if (cartes) {
+        const r = cartes.getBoundingClientRect();
+        const rp = paquet.getBoundingClientRect();
+        const largeurPile = Math.min(310, Math.max(230, innerWidth * 0.72)); // comme .pile dans style.css
+        cartes.style.setProperty('--monte', `${(-0.6 * r.height).toFixed(0)}px`);
+        cartes.style.setProperty('--vers-centre', `${(rp.top + rp.height / 2 - 15 - (r.top + r.height / 2)).toFixed(0)}px`);
+        cartes.style.setProperty('--echelle-pile', (largeurPile / r.width).toFixed(3));
+    }
+    // Le bandeau s'envole, la lumière éclate, les cartes glissent hors du paquet face cachée,
+    // l'emballage tombe et la pile se place au centre ; la première carte se retournera dans la pile
     paquet.classList.add('dechire');
-    setTimeout(() => jouerSon('ouverture'), 180);
-    await attendre(1150);
+    setTimeout(() => jouerSon('ouverture'), 150);
+    seance.retourner = true;
+    await attendre(1500);
 }
 
 // Vibration courte sur mobile (sans effet ailleurs)
@@ -1687,6 +1727,14 @@ async function defilerPile(cartes, rang) {
         </div>`).join('');
     $('#ouverture-scene').replaceChildren(pile);
     const elements = [...pile.children];
+    // Juste après l'ouverture du paquet : la pile arrive face cachée (comme les cartes sorties du paquet)
+    // et la première carte se retourne
+    if (seance.retourner && elements[0]) {
+        seance.retourner = false;
+        elements[0].classList.add('retournement');
+        elements[0].insertAdjacentHTML('beforeend', '<span class="dos-carte dos-retourne" aria-hidden="true"><span>GC</span></span>');
+        setTimeout(() => elements[0].querySelector('.dos-retourne')?.remove(), 600);
+    }
 
     for (let i = 0; i < elements.length && !seance.passer; i++) {
         elements.forEach((element, k) => element.style.setProperty('--rang', k - i));
