@@ -1240,8 +1240,16 @@ let ouvertureEnCours = false;
 // ---------- Recharges des boosters gratuits ----------
 // Un booster gratuit arrive toutes les `recharge` ms, jusqu'à `stockMax` en réserve.
 // Réserve pleine : le chrono attend, il ne repart qu'une fois un booster ouvert.
+// `charges` : la réserve gratuite (au plus stockMax), seule concernée par le chrono de recharge.
+// `bonus` : les boosters gagnés (quêtes, succès, codes, défis) : ils s'ajoutent sans toucher au chrono.
+// Les anciennes sauvegardes (et les ajouts au-delà du maximum) passent leur surplus en bonus.
 function majCharges(type) {
     const reserve = etat.charges[type.id];
+    reserve.bonus ??= 0;
+    if (reserve.charges > type.stockMax) {
+        reserve.bonus += reserve.charges - type.stockMax;
+        reserve.charges = type.stockMax;
+    }
     if (reserve.charges >= type.stockMax) {
         reserve.depuis = Date.now();
         return;
@@ -1255,7 +1263,13 @@ function majCharges(type) {
 
 function chargesDispo(type) {
     majCharges(type);
-    return etat.charges[type.id].charges;
+    return etat.charges[type.id].charges + etat.charges[type.id].bonus;
+}
+
+// Boosters gagnés : ils vont dans le bonus, le chrono de la réserve gratuite continue
+function ajouterBoosters(type, nombre) {
+    majCharges(type);
+    etat.charges[type.id].bonus += nombre;
 }
 
 // Temps avant le prochain booster gratuit (0 si la réserve est pleine)
@@ -1267,7 +1281,11 @@ function avantRecharge(type) {
 
 function consommerCharges(type, nombre) {
     majCharges(type);
-    etat.charges[type.id].charges -= nombre;
+    // Les boosters gagnés partent en premier : la réserve gratuite reste pleine plus longtemps
+    const reserve = etat.charges[type.id];
+    const duBonus = Math.min(reserve.bonus, nombre);
+    reserve.bonus -= duBonus;
+    reserve.charges -= nombre - duBonus;
 }
 
 function majEntete() {
@@ -1516,8 +1534,13 @@ function clonerPaquet(modele) {
     paquet.hidden = false;
     paquet.querySelector('.paquet-verrou')?.remove();
     paquet.setAttribute('aria-label', t('Ouvrir le paquet'));
-    // Indication du geste : un point lumineux qui glisse le long de la ligne de découpe
-    paquet.insertAdjacentHTML('beforeend', '<span class="geste-dechirer" aria-hidden="true"><i></i></span>');
+    // Indication du geste : un point lumineux qui glisse le long de la ligne de découpe.
+    // Lumière qui filtre par l'entaille (et éclate à l'ouverture), et les cartes cachées dans le paquet,
+    // derrière l'emballage, qui en sortent une fois le haut arraché
+    paquet.insertAdjacentHTML('beforeend', `
+        <span class="geste-dechirer" aria-hidden="true"><i></i></span>
+        <span class="lumiere-dechirure" aria-hidden="true"></span>
+        <span class="cartes-sortent" aria-hidden="true">${'<span class="dos-carte"><span>GC</span></span>'.repeat(3)}</span>`);
     return paquet;
 }
 
@@ -1542,6 +1565,7 @@ async function dechirerPaquet(modele, divin, rang) {
     };
 
     let sens = 1;
+    let dernierGrain = 0; // progression au dernier grain de déchirure (son, vibration, étincelles)
     await new Promise(resolve => {
         let depart = null;
         seance.reprendre = resolve;
@@ -1560,6 +1584,14 @@ async function dechirerPaquet(modele, divin, rang) {
             const progres = Math.min(1, Math.abs(dx) / (paquet.getBoundingClientRect().width * DECHIRURE_COMPLETE));
             paquet.style.setProperty('--sens', sens);
             paquet.style.setProperty('--dechirure', progres.toFixed(3));
+            // Le paquet tremble de plus en plus fort à mesure que la découpe avance
+            const force = 0.6 + progres * 2.2;
+            paquet.style.translate = `${((Math.random() - 0.5) * force).toFixed(2)}px ${((Math.random() - 0.5) * force).toFixed(2)}px`;
+            // Tous les 6 % de découpe : un grain de déchirure (son plus aigu au fil du geste), une vibration, des étincelles
+            if (Math.abs(progres - dernierGrain) >= 0.06) {
+                dernierGrain = progres;
+                grainDechirure(paquet, progres, sens);
+            }
             if (progres >= 1) {
                 depart = null;
                 resolve();
@@ -1568,8 +1600,10 @@ async function dechirerPaquet(modele, divin, rang) {
         const lacher = () => {
             if (depart === null) return;
             depart = null;
+            dernierGrain = 0;
             paquet.classList.remove('en-dechirure');
             paquet.style.setProperty('--dechirure', 0);
+            paquet.style.translate = '';
             rappelerGeste();
         };
         paquet.addEventListener('pointerup', lacher);
@@ -1580,11 +1614,38 @@ async function dechirerPaquet(modele, divin, rang) {
 
     paquet.classList.remove('en-dechirure', 'indice');
     paquet.style.setProperty('--sens', sens);
+    paquet.style.setProperty('--dechirure', 1);
+    paquet.style.translate = '';
     jouerSon('dechirure');
+    vibrer([18, 40, 30]);
     if (divin) await revelationGodPack(paquet);
     paquet.classList.remove('divin');
+    // Le haut s'envole en tournoyant, la lumière éclate, les cartes montent hors du paquet, puis l'emballage tombe
     paquet.classList.add('dechire');
-    await attendre(600);
+    setTimeout(() => jouerSon('ouverture'), 180);
+    await attendre(1150);
+}
+
+// Vibration courte sur mobile (sans effet ailleurs)
+const vibrer = motif => {
+    try { navigator.vibrate?.(motif); } catch { /* vibration indisponible */ }
+};
+
+// Un « grain » de la déchirure en cours : petit bruit de papier, vibration, et 2 ou 3 étincelles
+// qui jaillissent du bout de la découpe (là où en est le doigt)
+function grainDechirure(paquet, progres, sens) {
+    jouerSon('grain', progres);
+    vibrer(6);
+    const x = sens > 0 ? progres : 1 - progres;
+    for (let i = 0; i < 2 + Math.round(Math.random()); i++) {
+        const etincelle = document.createElement('i');
+        etincelle.className = 'etincelle-dechirure';
+        etincelle.style.left = `${(x * 100).toFixed(1)}%`;
+        etincelle.style.setProperty('--dx', `${(-sens * (10 + Math.random() * 30)).toFixed(0)}px`);
+        etincelle.style.setProperty('--dy', `${(-18 - Math.random() * 34).toFixed(0)}px`);
+        paquet.append(etincelle);
+        setTimeout(() => etincelle.remove(), 600);
+    }
 }
 
 // Attend qu'on fasse glisser la carte du dessus hors de la pile (ou un simple clic) ; renvoie le sens : 1 ou -1
@@ -1832,75 +1893,6 @@ function majResumeCollection() {
     const bouton = $('#btn-vendre-tout');
     bouton.disabled = valeur === 0;
     bouton.innerHTML = valeur ? `${t('Vendre doublons')} · +${nombre(valeur)} ${PIECE}` : t('Aucun doublon');
-    $('#btn-echanger').disabled = !echangesPossibles();
-}
-
-// ---------- Échange de doublons ----------
-
-// Doublons d'une rareté contre 1 carte au hasard de la rareté au-dessus (plus cher pour monter en Mythique)
-const DOUBLONS_ECHANGE = { commune: 5, 'peu-commune': 5, rare: 5, epique: 5, legendaire: 10 };
-
-// Exemplaires normaux qu'on peut échanger : on garde toujours un exemplaire du jeu (une variante, sinon une normale)
-function doublonsNormaux(entree) {
-    const { normale } = exemplairesParVariante(entree);
-    return entree.exemplaires > normale ? normale : Math.max(0, normale - 1);
-}
-const doublonsDeRarete = rarete => possedees().filter(e => e.rarete === rarete).reduce((n, e) => n + doublonsNormaux(e), 0);
-const echangesPossibles = () => Object.entries(DOUBLONS_ECHANGE).some(([rarete, cout]) => doublonsDeRarete(rarete) >= cout);
-
-function proposerEchange() {
-    $('#modale-contenu').innerHTML = `
-        <div class="echange">
-            <h2>${t('Échanger des doublons')}</h2>
-            <p class="echange-intro">${t('Tes doublons contre une carte de la rareté au-dessus, si possible une que tu n’as pas. Tu gardes toujours un exemplaire de chaque jeu, et tes holos, EX et Full Art ne sont jamais pris.')}</p>
-            <div class="echange-options">${Object.entries(DOUBLONS_ECHANGE).map(([rarete, cout]) => {
-                const de = RARETES[indexRarete(rarete)];
-                const vers = RARETES[indexRarete(rarete) - 1];
-                const dispo = doublonsDeRarete(rarete);
-                return `
-                <button class="echange-option" data-echanger="${rarete}"${dispo < cout ? ' disabled' : ''}>
-                    <span class="rarete-${de.id}"><b class="texte-rarete">${cout} × ${de.nom}</b></span>
-                    <span class="echange-fleche" aria-hidden="true">→</span>
-                    <span class="rarete-${vers.id}"><b class="texte-rarete">1 × ${vers.nom}</b></span>
-                    <small>${tn(dispo, '{n} doublon disponible', '{n} doublons disponibles')}</small>
-                </button>`;
-            }).join('')}</div>
-        </div>`;
-    ouvrirModale();
-}
-
-function echangerDoublons(rarete) {
-    const cout = DOUBLONS_ECHANGE[rarete];
-    if (!cout || !donneesPretes() || doublonsDeRarete(rarete) < cout) return;
-    // On prend d'abord sur les cartes qui ont le plus de doublons
-    let reste = cout;
-    const cartes = possedees().filter(e => e.rarete === rarete && doublonsNormaux(e) > 0)
-        .sort((a, b) => doublonsNormaux(b) - doublonsNormaux(a));
-    for (const entree of cartes) {
-        const pris = Math.min(reste, doublonsNormaux(entree));
-        entree.exemplaires -= pris;
-        reste -= pris;
-        if (!reste) break;
-    }
-    // La carte reçue : au hasard dans la rareté au-dessus, une qui manque à la collection si possible
-    const bac = jeuxParRarete[RARETES[indexRarete(rarete) - 1].id];
-    let jeu = auHasard(bac);
-    for (let essai = 0; essai < 30 && etat.collection[jeu.id]; essai++) jeu = auHasard(bac);
-    const carte = creerCarte(jeu);
-    const nouvelle = ajouterACollection(carte, false);
-    sauvegarder();
-    jouerSonRarete(carte.rarete);
-    $('#modale-contenu').innerHTML = `
-        <div class="echange echange-resultat">
-            <h2>${t('Échange réussi !')}</h2>
-            <div class="echange-carte">${flipHTML(carte, { retournee: true, nouvelle })}</div>
-            <div class="echange-actions">
-                ${echangesPossibles() ? `<button class="btn btn-principal" data-echange-encore>${t('Nouvel échange')}</button>` : ''}
-                <button class="btn" data-fiche="${carte.id}">${t('Voir la fiche')}</button>
-            </div>
-        </div>`;
-    if (!$('#ecran-collection').hidden) afficherCollection();
-    verifierSucces();
 }
 
 async function vendreDepuisFiche(id, variante) {
@@ -1970,45 +1962,6 @@ function boutonsVenteHTML(e) {
     return `<button class="btn btn-or" data-choix-vente="${e.id}">${t('Vendre…')}</button>`;
 }
 
-// Fusion : 3 exemplaires normaux (la carte et 2 doublons) deviennent 1 holo. Même valeur de revente
-// (une holo vaut 3 normales), mais la holo gagne son bonus en duel.
-const EXEMPLAIRES_FUSION = 3;
-
-// Bouton de la fiche : actif à 3 exemplaires normaux, grisé à 2 pour montrer que la fusion approche
-function boutonFusionHTML(e) {
-    const normales = exemplairesParVariante(e).normale;
-    if (normales < EXEMPLAIRES_FUSION - 1) return '';
-    const pret = normales >= EXEMPLAIRES_FUSION;
-    return `<button class="btn btn-fusion" data-fusion="${e.id}"${pret ? '' : ' disabled'}
-                title="${t('{n} exemplaires normaux deviennent 1 holo', { n: EXEMPLAIRES_FUSION })}">
-                ✨ ${t('Fusionner en holo')} · ${Math.min(normales, EXEMPLAIRES_FUSION)}/${EXEMPLAIRES_FUSION}</button>`;
-}
-
-async function fusionnerHolo(id) {
-    const entree = etat.collection[id];
-    if (!entree || exemplairesParVariante(entree).normale < EXEMPLAIRES_FUSION) return;
-    if (!(await demander({
-        titre: t('Fusionner en holo ?'),
-        message: t('Fusionner {n} exemplaires normaux de « {nom} » en 1 holo ?', { n: EXEMPLAIRES_FUSION, nom: echapper(entree.nom) }),
-        ok: t('Fusionner'),
-    }))) return;
-    if (exemplairesParVariante(entree).normale < EXEMPLAIRES_FUSION) return;
-    entree.exemplaires -= EXEMPLAIRES_FUSION - 1;
-    entree.holos++;
-    sauvegarder();
-    jouerSon('succes');
-    toast(t('✨ {nom} devient holo !', { nom: entree.nom }), 'gain');
-    const caseCarte = document.querySelector(`.case[data-id="${id}"]`);
-    if (caseCarte) {
-        if (filtreCollection()(entree)) caseCarte.outerHTML = caseCollectionHTML(entree);
-        else caseCarte.remove();
-        majResumeCollection();
-    }
-    if (!$('#ecran-catalogue').hidden) afficherCatalogue();
-    afficherFiche(id);
-    verifierSucces();
-}
-
 // Fenêtre par-dessus la fiche : chaque variante possédée, avec sa carte, son nombre et son prix
 function choisirVente(id) {
     const e = etat.collection[id];
@@ -2070,7 +2023,6 @@ function afficherFiche(id) {
             </p>
             <div class="fiche-actions">
                 ${e ? boutonsVenteHTML(e) : ''}
-                ${e ? boutonFusionHTML(e) : ''}
                 ${!e && !carte.promo
                     ? `<button class="btn btn-principal" data-acheter="${carte.id}"${manque > 0 ? ` disabled title="${t('Il te manque {n} pièces', { n: nombre(manque) })}"` : ''}>
                            ${t('Acheter')} · ${nombre(rarete.prix)} ${PIECE}</button>`
@@ -2811,8 +2763,8 @@ function verserRecompense(r) {
     let nouvelle = false;
     if (r.pieces) etat.pieces += r.pieces;
     // Les boosters gagnés s'ajoutent à la réserve, même au-delà de son maximum
-    if (r.boosters) etat.charges.standard.charges += r.boosters;
-    if (r.prestiges) etat.charges.prestige.charges += r.prestiges;
+    if (r.boosters) ajouterBoosters(TYPES_BOOSTER.standard, r.boosters);
+    if (r.prestiges) ajouterBoosters(TYPES_BOOSTER.prestige, r.prestiges);
     if (r.fullArt) {
         carte = piocherNouvelle(tirerRarete('chance', HAUTES_RARETES));
         nouvelle = ajouterACollection(carte, false, true);
@@ -3767,7 +3719,7 @@ function tirerRecompenseDefi() {
 function recompenseDefi(serie) {
     const recompense = tirerRecompenseDefi();
     if (recompense.id === 'pieces') etat.pieces += recompense.pieces;
-    else if (recompense.id === 'booster') etat.charges.standard.charges++;
+    else if (recompense.id === 'booster') ajouterBoosters(TYPES_BOOSTER.standard, 1);
     else ajouterCadeau(serie);
     sauvegarder();
     majEntete();
@@ -3824,11 +3776,18 @@ function afficherCadeaux() {
 
 // Ouvre un booster de la série : la promo est tirée maintenant, puis le paquet se déchire.
 // « Retour » ramène ensuite aux cadeaux.
+// Une promo au hasard de la série, ou null si aucune de ses cartes n'est chargée (le booster reste alors dans les cadeaux)
+function tirerPromo(serie) {
+    const ids = promosDeSerie(serie);
+    return ids.length ? creerCarte(jeuxParId.get(auHasard(ids))) : null;
+}
+
 function ouvrirCadeau(serie) {
     const index = etat.cadeaux.indexOf(serie);
     if (index < 0 || ouvertureEnCours || !donneesPretes()) return;
+    const carte = tirerPromo(serie);
+    if (!carte) return toast(t('Ce booster ne peut pas être ouvert pour l’instant'), 'erreur');
     etat.cadeaux.splice(index, 1);
-    const carte = creerCarte(jeuxParId.get(auHasard(promosDeSerie(serie))));
     const nouvelle = ajouterACollection(carte, false, true); // toutes les promos sont Full Art
     sauvegarder();
     majBadgeCadeaux();
@@ -3841,10 +3800,12 @@ function ouvrirCadeau(serie) {
 // (celui de la série la plus présente), la pile des promos à faire défiler et le récapitulatif
 function ouvrirTousLesCadeaux() {
     if (etat.cadeaux.length < 2 || ouvertureEnCours || !donneesPretes()) return;
-    const series = etat.cadeaux;
-    etat.cadeaux = [];
+    // Les boosters d'une série sans carte chargée restent dans les cadeaux
+    const series = etat.cadeaux.filter(serie => promosDeSerie(serie).length);
+    if (!series.length) return toast(t('Ce booster ne peut pas être ouvert pour l’instant'), 'erreur');
+    etat.cadeaux = etat.cadeaux.filter(serie => !promosDeSerie(serie).length);
     const tirage = series.map(serie => {
-        const carte = creerCarte(jeuxParId.get(auHasard(promosDeSerie(serie))));
+        const carte = tirerPromo(serie);
         return { carte, fullArt: true, holo: false, ex: false, nouvelle: ajouterACollection(carte, false, true) };
     });
     sauvegarder();
@@ -4104,6 +4065,13 @@ function jouerBruit(duree, { filtre = 'bandpass', de = 4000, a = 800, volume = 0
 
 const SONS = {
     dechirure: () => jouerBruit(0.35, { de: 6000, a: 900, volume: 0.3 }),
+    // Grain de papier pendant la découpe : de plus en plus aigu à mesure qu'elle avance (progres de 0 à 1)
+    grain: (progres = 0) => jouerBruit(0.05, { de: 2500 + progres * 4000, a: 1800 + progres * 2500, volume: 0.1 }),
+    // Ouverture du paquet : souffle, puis petit scintillement qui monte
+    ouverture: () => {
+        jouerBruit(0.45, { filtre: 'lowpass', de: 900, a: 200, volume: 0.22 });
+        [1319, 1760, 2349].forEach((f, i) => jouerNote(f, 0.05 + i * 0.06, 0.4, { volume: 0.05 }));
+    },
     carte: () => jouerBruit(0.12, { filtre: 'highpass', de: 2500, a: 5000, volume: 0.12 }),
     epique: () => [784, 1175].forEach((f, i) => jouerNote(f, i * 0.09, 0.35)),
     legendaire: () => [523, 659, 784, 1047].forEach((f, i) => jouerNote(f, i * 0.08, 0.5, { type: 'triangle' })),
@@ -4126,12 +4094,12 @@ const SONS = {
     mauvaise: () => jouerNote(180, 0, 0.35, { type: 'square', volume: 0.06 }),
 };
 
-function jouerSon(nom) {
+function jouerSon(nom, ...valeurs) {
     if (!etat.reglages.sons) return;
     try {
         contexteAudio ??= new (window.AudioContext || window.webkitAudioContext)();
         if (contexteAudio.state === 'suspended') contexteAudio.resume();
-        SONS[nom]?.();
+        SONS[nom]?.(...valeurs);
     } catch (e) {
         console.warn('Son impossible', e);
     }
@@ -4283,7 +4251,6 @@ function init() {
         afficherCollection();
     });
     $('#btn-vendre-tout').addEventListener('click', vendreTousLesDoublons);
-    $('#btn-echanger').addEventListener('click', proposerEchange);
     $('#btn-reinitialiser').addEventListener('click', reinitialiser);
 
     // Catalogue
@@ -4315,11 +4282,6 @@ function init() {
         }
         const marche = e.target.closest('[data-marche]');
         if (marche) return acheterMarche(Number(marche.dataset.marche));
-        const fusion = e.target.closest('[data-fusion]');
-        if (fusion) return fusionnerHolo(Number(fusion.dataset.fusion));
-        const echange = e.target.closest('[data-echanger]');
-        if (echange) return echangerDoublons(echange.dataset.echanger);
-        if (e.target.closest('[data-echange-encore]')) return proposerEchange();
         const choixVente = e.target.closest('[data-choix-vente]');
         if (choixVente) return choisirVente(Number(choixVente.dataset.choixVente));
         const fiche = e.target.closest('[data-fiche]');

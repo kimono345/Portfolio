@@ -3,7 +3,7 @@
 //   tarde à arriver), la copie en cache si on est hors ligne.
 //   Autres fichiers du jeu et polices : la copie en cache tout de suite, mise à jour en arrière-plan.
 //   Les images Steam ne sont pas gardées (des dizaines de milliers possibles).
-const CACHE = 'gamecards-v2';
+const CACHE = 'gamecards-v3';
 
 self.addEventListener('install', e => {
     e.waitUntil(caches.open(CACHE).then(cache => cache.add('./')).then(() => self.skipWaiting()));
